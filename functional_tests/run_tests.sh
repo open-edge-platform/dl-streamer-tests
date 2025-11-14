@@ -207,6 +207,8 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
     export MODEL_PROCS_PATH=$HOME_DIR/samples/gstreamer/model_proc
     export MODELS_PATH=$MODELS_PATH
     export ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
+    export EnableDirectSubmission=0
+    export NEOReadDebugKeys=1
     echo "LIBVA_DRIVER_NAME: ${LIBVA_DRIVER_NAME}"
     echo "GST_PLUGIN_PATH: ${GST_PLUGIN_PATH}"
     echo "LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}"
@@ -221,6 +223,8 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
     echo "GST_VAAPI_DRM_DEVICE: ${GST_VAAPI_DRM_DEVICE}"
     echo "GST_VAAPI_ALL_DRIVERS: ${GST_VAAPI_ALL_DRIVERS}"
     echo "GI_TYPELIB_PATH: ${GI_TYPELIB_PATH}"
+    echo "EnableDirectSubmission: ${EnableDirectSubmission}"
+    echo "NEOReadDebugKeys ${NEOReadDebugKeys}"
     echo "Starting test in local host mode"
 
     # Run on host tests

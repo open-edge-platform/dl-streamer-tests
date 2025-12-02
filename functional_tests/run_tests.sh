@@ -262,6 +262,7 @@ else
         -v $VIDEO_EXAMPLES_PATH:/tmp/video-examples \
         -v $LOCALHOST_RESULTS_PATH:/tmp/results \
         -v $MODELS_PATH:/tmp/models \
+        -v $(dirname "$(realpath "${BASH_SOURCE[0]}")")/:$TESTS_DIR \
         -e MODELS_PATH=/tmp/models \
         -e MODEL_PROCS_PATH=$HOME_DIR/samples/gstreamer/model_proc \
         -e LABELS_PATH=$HOME_DIR/samples/labels \

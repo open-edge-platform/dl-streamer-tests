@@ -167,6 +167,15 @@ if [[ -n "$TIMEOUT" ]]; then
 fi
 RUN_CMD+="$*" # Remaining options
 
+# Check if NPU device acceleration is available
+DEVICE_ACCEL=""
+if [[ -e /dev/accel* ]]; then
+    DEVICE_ACCEL="--device /dev/accel"
+    echo "NPU device acceleration enabled"
+else
+    echo "NPU device acceleration not enabled"
+fi
+
 # Extra parameters for docker run
 EXTRA_PARAMS=""
 RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
@@ -253,7 +262,7 @@ else
         -v $VIDEO_EXAMPLES_PATH:/tmp/video-examples \
         -v $LOCALHOST_RESULTS_PATH:/tmp/results \
         -v $MODELS_PATH:/tmp/models \
-        -v $(realpath "${BASH_SOURCE[0]}")/:$TESTS_DIR
+        -v $(realpath "${BASH_SOURCE[0]}")/:$TESTS_DIR \
         -e MODELS_PATH=/tmp/models \
         -e MODEL_PROCS_PATH=$HOME_DIR/samples/gstreamer/model_proc \
         -e LABELS_PATH=$HOME_DIR/samples/labels \

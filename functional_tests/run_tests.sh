@@ -197,7 +197,7 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
     export GST_VA_ALL_DRIVERS=1
     export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
     export TERM=xterm
-    export GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/    
+    export GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/
     export LD_LIBRARY_PATH=/opt/intel/dlstreamer/gstreamer/lib:/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/lib/gstreamer-1.0:/usr/lib:/opt/intel/dlstreamer/lib:/opt/opencv:/opt/openh264:/opt/rdkafka:/opt/ffmpeg:/usr/local/lib/gstreamer-1.0:/usr/local/lib
     export PYTHONPATH=/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:$HOME_DIR/python:/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:
     export PATH=$HOME_DIR/.virtualenvs/dlstreamer/bin:/opt/intel/dlstreamer/gstreamer/bin:/opt/intel/dlstreamer/bin:$PATH
@@ -253,6 +253,7 @@ else
         -v $VIDEO_EXAMPLES_PATH:/tmp/video-examples \
         -v $LOCALHOST_RESULTS_PATH:/tmp/results \
         -v $MODELS_PATH:/tmp/models \
+        -v $(realpath "${BASH_SOURCE[0]}")/:$TESTS_DIR
         -e MODELS_PATH=/tmp/models \
         -e MODEL_PROCS_PATH=$HOME_DIR/samples/gstreamer/model_proc \
         -e LABELS_PATH=$HOME_DIR/samples/labels \

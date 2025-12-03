@@ -113,7 +113,7 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
 else
     # Docker paths
     HOME_DIR=/home/dlstreamer/dlstreamer
-    TESTS_DIR=/home/dlstreamer/dlstreamer/tests/functional_tests
+    TESTS_DIR=/home/dlstreamer/dlstreamer/functional_tests
 
     # Localhost paths
     LOCALHOST_TESTS_DIR=$SCRIPTDIR

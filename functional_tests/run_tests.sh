@@ -268,6 +268,8 @@ else
         -e MODEL_PROCS_PATH=$HOME_DIR/samples/gstreamer/model_proc \
         -e LABELS_PATH=$HOME_DIR/samples/labels \
         -e ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so \
+        -e EnableDirectSubmission=0 \   # disable direct submission for GPU
+        -e NEOReadDebugKeys=1 \         # enable reading debug keys for GPU
         $EXTRA_PARAMS \
         $IMAGE_NAME \
         $RUN_CMD

@@ -4,7 +4,7 @@
         "sample.dir": "/home/dlstreamer/dlstreamer/samples/gstreamer",
         "dataset.video": "/tmp/video-examples",
         "dataset.artifacts": "/tmp/results/metadata",
-        "dataset.groundtruth.base": "groundtruth_ov2/docker"
+        "dataset.groundtruth.base": "groundtruth_ov2/docker/ARL"
     },
     "test_sets": {
         "yolo11s_CPU": {

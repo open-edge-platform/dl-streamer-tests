@@ -169,12 +169,13 @@ RUN_CMD+="$*" # Remaining options
 
 # Check if NPU device acceleration is available
 DEVICE_ACCEL=""
-if [[ -e /dev/accel* ]]; then
+if ls /dev/accel* >/dev/null 2>&1; then
     DEVICE_ACCEL="--device /dev/accel"
     echo "NPU device acceleration enabled"
 else
     echo "NPU device acceleration not enabled"
 fi
+echo ""
 
 # Extra parameters for docker run
 EXTRA_PARAMS=""

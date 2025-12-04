@@ -113,7 +113,7 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
 else
     # Docker paths
     HOME_DIR=/home/dlstreamer/dlstreamer
-    TESTS_DIR=/home/dlstreamer/dlstreamer/tests/functional_tests
+    TESTS_DIR=/home/dlstreamer/dlstreamer/functional_tests
 
     # Localhost paths
     LOCALHOST_TESTS_DIR=$SCRIPTDIR
@@ -167,6 +167,16 @@ if [[ -n "$TIMEOUT" ]]; then
 fi
 RUN_CMD+="$*" # Remaining options
 
+# Check if NPU device acceleration is available
+DEVICE_ACCEL=""
+if ls /dev/accel* >/dev/null 2>&1; then
+    DEVICE_ACCEL="--device /dev/accel"
+    echo "NPU device acceleration enabled"
+else
+    echo "NPU device acceleration not enabled"
+fi
+echo ""
+
 # Extra parameters for docker run
 EXTRA_PARAMS=""
 RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
@@ -197,7 +207,7 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
     export GST_VA_ALL_DRIVERS=1
     export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
     export TERM=xterm
-    export GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/    
+    export GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/
     export LD_LIBRARY_PATH=/opt/intel/dlstreamer/gstreamer/lib:/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/lib/gstreamer-1.0:/usr/lib:/opt/intel/dlstreamer/lib:/opt/opencv:/opt/openh264:/opt/rdkafka:/opt/ffmpeg:/usr/local/lib/gstreamer-1.0:/usr/local/lib
     export PYTHONPATH=/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:$HOME_DIR/python:/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:
     export PATH=$HOME_DIR/.virtualenvs/dlstreamer/bin:/opt/intel/dlstreamer/gstreamer/bin:/opt/intel/dlstreamer/bin:$PATH
@@ -253,10 +263,13 @@ else
         -v $VIDEO_EXAMPLES_PATH:/tmp/video-examples \
         -v $LOCALHOST_RESULTS_PATH:/tmp/results \
         -v $MODELS_PATH:/tmp/models \
+        -v $(dirname "$(realpath "${BASH_SOURCE[0]}")")/:$TESTS_DIR \
         -e MODELS_PATH=/tmp/models \
         -e MODEL_PROCS_PATH=$HOME_DIR/samples/gstreamer/model_proc \
         -e LABELS_PATH=$HOME_DIR/samples/labels \
         -e ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so \
+        -e EnableDirectSubmission=0 \
+        -e NEOReadDebugKeys=1 \
         $EXTRA_PARAMS \
         $IMAGE_NAME \
         $RUN_CMD

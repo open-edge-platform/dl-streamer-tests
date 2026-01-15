@@ -1,5 +1,5 @@
 # ==============================================================================
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 #
 # SPDX-License-Identifier: MIT
 # ==============================================================================
@@ -29,3 +29,11 @@ SAMPLE_COMMAND_TEMPLATE = "sample.command"
 BENCHMARK_PERFORMANCE_COMMAND_TEMPLATE="benchmark_performance.command"
 BENCHMARK_PERFORMANCE_FPS_FPI = "dataset.target_fps_kpi"
 BENCHMARK_PERFORMANCE_FPS_PASS_THRESHOLD = "dataset.percentage_fps_pass_threshold"
+
+# Environment-specific configuration keys that can have docker.* and host.* variants
+ENVIRONMENT_SPECIFIC_KEYS = [
+    SAMPLE_DIR,           # 'sample.dir'
+    GT_BASE_FOLDER_FIELD, # 'dataset.groundtruth.base'
+    "pipeline.params.gvapython.callback_module.detection_ssd_postproc",
+    "pipeline.params.gvapython.callback_module.classification_age_gender_postproc",
+]

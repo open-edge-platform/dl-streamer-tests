@@ -1,0 +1,21 @@
+{
+    "TGL": {
+        "test_config": "common/aliveness.json",
+        "test_set_properties_additions": {
+            "docker.dataset.groundtruth.base": "groundtruth_ov2/aliveness_TGL",
+            "host.dataset.groundtruth.base": "groundtruth_ov2/aliveness_TGL",
+            "test.exclude": ["npu"]
+        },
+        "test_set_properties_removals": {},
+        "excluded_tests": []
+    },
+    "ARL": {
+        "test_config": "common/aliveness.json",
+        "test_set_properties_additions": {
+            "docker.dataset.groundtruth.base": "groundtruth_ov2/aliveness_ARL",
+            "host.dataset.groundtruth.base": "groundtruth_ov2/aliveness_ARL"
+        },
+        "test_set_properties_removals": {},
+        "excluded_tests": []
+    }
+}

@@ -1,5 +1,5 @@
 # ==============================================================================
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 #
 # SPDX-License-Identifier: MIT
 # ==============================================================================
@@ -42,7 +42,7 @@ class DotNameFormatter(string.Formatter):
 
 
 class CaseParser:
-    def __init__(self, features: list, tags: list, logger: logging.Logger = None):
+    def __init__(self, features: list, tags: list, logger: logging.Logger = None, env_context: str = 'host'):
         self._logger = logger if logger else logging.getLogger()
         self._model_explorer = ModelExplorer(logger)
         self._model_proc_explorer = ModelProcExplorer(logger)
@@ -50,6 +50,29 @@ class CaseParser:
         self._global_ts_properties = None
         self._tags_set = set(tags)
         self._available_features = set(features)
+        self._env_context = env_context
+
+    def _resolve_environment_specific_configs(self, test_case_data: dict):
+        """
+        Resolve environment-specific configurations for all supported keys.
+        Converts docker.* and host.* keys to their base equivalents based on env_context.
+        """
+        for base_key in ENVIRONMENT_SPECIFIC_KEYS:
+            # Skip if key does exist (do not override)
+            if base_key in test_case_data:
+                continue
+
+            # Check environment-specific key
+            env_specific_key = f"{self._env_context}.{base_key}"
+            if env_specific_key in test_case_data:
+                test_case_data[base_key] = test_case_data[env_specific_key]
+                continue
+
+            # Fallback - check the other environment type
+            other_context = 'host' if self._env_context == 'docker' else 'docker'
+            fallback_key = f"{other_context}.{base_key}"
+            if fallback_key in test_case_data:
+                test_case_data[base_key] = test_case_data[fallback_key]
 
     def get_config_global_parameters(self):
         if self._global_ts_properties is None:
@@ -82,13 +105,6 @@ class CaseParser:
         if sample_dir:
             self._global_ts_properties[SAMPLE_DIR] = sample_dir
 
-        relative_path_fields = [ATTACHROI_DIR_FIELD, GT_BASE_FOLDER_FIELD]
-        for config_field in relative_path_fields:
-            if config_field not in self._global_ts_properties:
-                continue
-            self._global_ts_properties[config_field] = get_fixed_relative_path(
-                self._global_ts_properties[config_field])
-
         test_sets_list = list()
         ts_to_run = ts_to_run if ts_to_run else test_sets.keys()
         for test_set_name in ts_to_run:
@@ -101,6 +117,15 @@ class CaseParser:
             test_set_dict[test_set_name] = list()
             for test_case in CaseGenerator.generate(test_set):
                 test_case_data = {**self._global_ts_properties, **test_case}
+                self._resolve_environment_specific_configs(test_case_data)
+
+                relative_path_fields = [ATTACHROI_DIR_FIELD, GT_BASE_FOLDER_FIELD]
+                for config_field in relative_path_fields:
+                    if config_field not in test_case_data:
+                        continue
+                    test_case_data[config_field] = get_fixed_relative_path(
+                        test_case_data[config_field])
+
                 test_case_name = test_case_data.get('name', 'default_test_case_name')  # set default name if there is no name
                 test_case_data['name'] = test_case_name
                 case_result = CaseResult(self._logger)

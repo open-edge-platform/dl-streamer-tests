@@ -9,6 +9,7 @@ import abc
 import logging
 import re
 import shutil
+import platform
 
 from enum import Enum
 from dataclasses import dataclass, field
@@ -134,7 +135,10 @@ class BaseGTComparator:
         self._prepare_prediction_folder()
 
     def _prepare_prediction_folder(self):
-        test_prediction_folder = re.search("(.*)/.*.json", self._pred_path).group(1)
+        if platform.system() == "Windows":
+            test_prediction_folder = re.search("(.*)\\.*.json", self._pred_path).group(1)
+        else:
+            test_prediction_folder = re.search("(.*)/.*.json", self._pred_path).group(1)
         if not os.path.exists(test_prediction_folder) and not os.path.islink(test_prediction_folder):
             self._logger.info("Directory for meta publishing was not found. Create it myself...")
             self._logger.info(test_prediction_folder)

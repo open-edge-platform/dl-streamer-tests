@@ -107,6 +107,9 @@ class CaseParser:
 
         test_sets_list = list()
         ts_to_run = ts_to_run if ts_to_run else test_sets.keys()
+        if TEST_EXCLUDE in self._global_ts_properties:
+            for exclude in self._global_ts_properties[TEST_EXCLUDE]:
+                ts_to_run = [element for element in ts_to_run if exclude.lower() not in element.lower()]
         for test_set_name in ts_to_run:
             test_set = test_sets.get(test_set_name, None)
             if not test_set:

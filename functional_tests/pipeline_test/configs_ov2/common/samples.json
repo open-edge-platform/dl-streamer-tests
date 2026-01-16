@@ -6,7 +6,7 @@
         "docker.cpp_samples_output.dir": "/opt/intel/dlstreamer",
         "host.cpp_samples_output.dir": "/home/runner/dlstreamer-repo/tests",
         "dataset.video": "/tmp/video-examples",
-        "dataset.artifacts": "/tmp/results/metadata",
+        "dataset.artifacts": "/tmp/results",
         "benchmark_one_model_args_gap": ",,,,gvadetect,",
         "benchmark_two_model_args_gap": ",,,,,,",
         "benchmark_sink": "gvametaconvert add-tensor-data=true ! gvametapublish file-path=output.json file-format=json-lines ! fakesink",

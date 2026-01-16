@@ -4,7 +4,7 @@
         "docker.sample.dir": "/home/dlstreamer/dlstreamer/samples/gstreamer",
         "host.sample.dir": "/home/runner/dlstreamer-repo/samples/gstreamer",
         "dataset.video": "/tmp/video-examples",
-        "dataset.artifacts": "/tmp/results/metadata"
+        "dataset.artifacts": "/tmp/results"
     },
     "test_sets": {
         "yolo11s_CPU": {

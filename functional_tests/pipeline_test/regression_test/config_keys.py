@@ -36,4 +36,5 @@ ENVIRONMENT_SPECIFIC_KEYS = [
     GT_BASE_FOLDER_FIELD, # 'dataset.groundtruth.base'
     "pipeline.params.gvapython.callback_module.detection_ssd_postproc",
     "pipeline.params.gvapython.callback_module.classification_age_gender_postproc",
+    "cpp_samples_output.dir",
 ]

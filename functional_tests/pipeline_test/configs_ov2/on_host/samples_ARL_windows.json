@@ -1,0 +1,39 @@
+{
+    "test_set_properties": {
+        "test.type": "sample",
+        "sample.dir": "/c/dlstreamer_repo/samples/gstreamer",
+        "dataset.video": "/c/videos/videos",
+        "dataset.artifacts": "results",
+        "dataset.groundtruth.base": "groundtruth_ov2/on_host/samples_ARL",
+        "benchmark_one_model_args_gap": ",,,,gvadetect,",
+        "benchmark_two_model_args_gap": ",,,,,,",
+        "benchmark_sink": "gvametaconvert add-tensor-data=true ! gvametapublish file-path=output.json file-format=json-lines ! fakesink",
+        "identity_3000": " ! identity eos-after=3000 ",
+        "identity_1000": " ! identity eos-after=1000 ",
+        "identity_800": " ! identity eos-after=800 ",
+        "identity_600": " ! identity eos-after=600 ",
+        "identity_500": " ! identity eos-after=500 ",
+        "identity_400": " ! identity eos-after=400 ",
+        "identity_200": " ! identity eos-after=200 ",
+        "identity_150": " ! identity eos-after=150 ",
+        "identity_100": " ! identity eos-after=100 "
+    },
+    "test_sets": {
+        "audio_event_detection": {
+            "name": "audio_event_detection",
+            "dataset.groundtruth": "audio_event_detection.json",
+            "sample.command": "{sample.dir}/gst_launch/audio_detect/audio_event_detection.sh,{sample.dir}/gst_launch/audio_detect/how_are_you_doing.wav,output.json",
+            "dataset.comparator_type": "audio"
+        },
+        "benchmark_one_cpu_cpu": {
+            "name": "benchmark_one_cpu_cpu",
+            "dataset.groundtruth": "benchmark_one_cpu_cpu.json",
+            "sample.command": "{sample.dir}/benchmark/benchmark_one_model.sh,{dataset.video}/People_On_The_Street.mp4,,CPU,CPU{benchmark_one_model_args_gap}{benchmark_sink}"
+        },
+        "geti-classification-mobilenet-v3-small-openvino-fp32_CPU": {
+            "name": "geti-classification-mobilenet-v3-small-openvino-fp32_CPU",
+            "dataset.groundtruth": "mobilenet-v3-small-openvino-fp32_ie_CPU.json",
+            "sample.command": "{sample.dir}/gst_launch/geti_deployment/geti_sample.sh,classification,intel/geti-classification-v2-7/mobilenet-v3-small-openvino-fp32/FP32/mobilenet-v3-small-openvino-fp32.xml,CPU,ie,{dataset.video}/geti-card-king-spades.mp4,json"
+        }
+    }
+}

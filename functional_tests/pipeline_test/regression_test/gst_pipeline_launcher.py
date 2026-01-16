@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT
 # ==============================================================================
 import logging
+import platform
 import subprocess
 import os
 
@@ -49,8 +50,13 @@ class GstPipelineLauncher:
         self.case_result.duration = get_unix_time_millsec() - start_timestamp
 
     def _start_join(self, process_cmd: list, env: dict, timeout: int):
-        self._popen_proc = subprocess.Popen(process_cmd, env=env, stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE, preexec_fn=os.setsid, cwd=self.cwd)
+        if platform.system() == "Windows":
+            process_cmd.insert(0, "C:\\Program Files\\Git\\bin\\bash.exe")
+            self._popen_proc = subprocess.Popen(process_cmd, env=env, stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE, preexec_fn=None, cwd=self.cwd)
+        else:
+            self._popen_proc = subprocess.Popen(process_cmd, env=env, stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE, preexec_fn=os.setsid, cwd=self.cwd)
         self._logger.debug("Target subprocess PID: {}".format(self._popen_proc.pid))
         try:
             self.__communicate(timeout)
@@ -94,3 +100,4 @@ class GstPipelineLauncher:
 
     def __del__(self):
         self.close_file()
+

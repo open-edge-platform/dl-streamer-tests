@@ -108,7 +108,7 @@ fi
 # RESULTS_PATH - main results path (for XLSX report)
 # RESULTS_METADATA_PATH - path for tests output json files
 if [[ "$RUN_LOCAL_APTGET" = true ]]; then
-    HOME_DIR=$SCRIPTDIR/../../dlstreamer
+    HOME_DIR=$SCRIPTDIR/../../../dlstreamer
     TESTS_DIR=$SCRIPTDIR
 
     [[ -z "$RESULTS_PATH" ]] && RESULTS_PATH="$TESTS_DIR/functional_tests_results"

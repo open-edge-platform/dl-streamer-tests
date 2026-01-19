@@ -2,9 +2,9 @@
     "test_set_properties": {
         "test.type": "sample",
         "docker.sample.dir": "/home/dlstreamer/dlstreamer/samples/gstreamer",
-        "host.sample.dir": "/home/runner/dlstreamer-repo/samples/gstreamer",
+        "host.sample.dir": "/home/runner/dlstreamer/samples/gstreamer",
         "docker.cpp_samples_output.dir": "/opt/intel/dlstreamer",
-        "host.cpp_samples_output.dir": "/home/runner/dlstreamer-repo/tests",
+        "host.cpp_samples_output.dir": "/home/runner/dlstreamer/tests",
         "dataset.video": "/tmp/video-examples",
         "dataset.artifacts": "/tmp/results",
         "benchmark_one_model_args_gap": ",,,,gvadetect,",

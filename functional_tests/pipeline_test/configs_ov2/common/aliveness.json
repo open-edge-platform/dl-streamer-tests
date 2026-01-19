@@ -2,7 +2,7 @@
     "test_set_properties": {
         "test.type": "sample",
         "docker.sample.dir": "/home/dlstreamer/dlstreamer/samples/gstreamer",
-        "host.sample.dir": "/home/runner/dlstreamer-repo/samples/gstreamer",
+        "host.sample.dir": "/home/runner/dlstreamer/samples/gstreamer",
         "dataset.video": "/tmp/video-examples",
         "dataset.artifacts": "/tmp/results"
     },

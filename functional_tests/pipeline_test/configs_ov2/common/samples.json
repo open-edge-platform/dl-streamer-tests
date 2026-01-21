@@ -574,12 +574,12 @@
         },
         "motion_detect_CPU": {
             "name": "motion_detect_CPU",
-            "dataset.groundtruth": "gvamotiondetect_CPU_detection_CPU_ARL_yolov8n_FP16.json",
+            "dataset.groundtruth": "gvamotiondetect_CPU_detection_CPU_yolov8n_FP16.json",
             "sample.command": "{sample.dir}/gst_launch/motion_detect/gvamotiondetect_demo.sh,--device,CPU,--source,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--precision,FP16,--output,json"
         },
         "motion_detect_GPU": {
             "name": "motion_detect_GPU",
-            "dataset.groundtruth": "gvamotiondetect_GPU_detection_GPU_ARL_yolov8n_FP16.json",
+            "dataset.groundtruth": "gvamotiondetect_GPU_detection_GPU_yolov8n_FP16.json",
             "sample.command": "{sample.dir}/gst_launch/motion_detect/gvamotiondetect_demo.sh,--device,GPU,--source,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--precision,FP16,--output,json"
         }
     }

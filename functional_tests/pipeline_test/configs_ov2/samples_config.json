@@ -1,0 +1,21 @@
+{
+    "TGL": {
+        "test_config": "common/samples.json",
+        "test_set_properties_additions": {
+            "docker.dataset.groundtruth.base": "groundtruth_ov2/samples_TGL",
+            "host.dataset.groundtruth.base": "groundtruth_ov2/samples_TGL",
+            "test.exclude": ["npu"]
+        },
+        "test_set_properties_removals": {},
+        "excluded_tests": ["yolov5su_int8_GPU","yolov8s_int8_GPU","yolo11s_int8_GPU"]
+    },
+    "ARL": {
+        "test_config": "common/samples.json",
+        "test_set_properties_additions": {
+            "docker.dataset.groundtruth.base": "groundtruth_ov2/samples_ARL",
+            "host.dataset.groundtruth.base": "groundtruth_ov2/samples_ARL"
+        },
+        "test_set_properties_removals": {},
+        "excluded_tests": []
+    }
+}

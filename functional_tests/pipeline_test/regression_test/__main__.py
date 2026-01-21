@@ -1,5 +1,5 @@
 # ==============================================================================
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 #
 # SPDX-License-Identifier: MIT
 # ==============================================================================
@@ -73,6 +73,8 @@ def create_arg_parser():
                         help="Max meta object labels variance threshold")
     parser.add_argument('--output-type', type=str, choices=['json', 'file'], default='json', help='Type of output: json or file')
     parser.add_argument('--results-path', type=str, required=True, help='Path to folder for tests results')
+    parser.add_argument('--env-context', type=str, choices=['docker', 'host'], default='docker',
+                        help='Environment context for selecting appropriate sample paths')
     return parser.parse_args()
 
 
@@ -138,6 +140,8 @@ def main():
     args = create_arg_parser()
     logger = create_logger("regression test", args.log_level)
     parser_instance = case_parser.CaseParser(args.features, args.tags, logger=logger)
+
+    parser_instance = case_parser.CaseParser(args.features, args.tags, logger=logger, env_context=args.env_context)
 
     test_sets_list_to_report = []
     logger.info(f"Configs:\n{args.test_suite_configs}")

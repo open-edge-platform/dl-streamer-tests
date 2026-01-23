@@ -51,24 +51,18 @@ class GstPipelineLauncher:
 
     def _start_join(self, process_cmd: list, env: dict, timeout: int):
         if platform.system() == "Windows":
-<<<<<<< HEAD
             first_cmd = process_cmd[0].lower()
             if first_cmd.endswith('.bat') or first_cmd.endswith('.cmd'):
                 process_cmd.insert(0, "cmd")
                 process_cmd.insert(1, "/c")
             else:
-                process_cmd.insert(0, "C:\\Program Files\\Git\\bin\\bash.exe")
+                process_cmd.insert(0, "bash.exe")
             
-            self._popen_proc = subprocess.Popen(process_cmd, env=env, stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE, preexec_fn=None, cwd=self.cwd)
-=======
-            process_cmd.insert(0, "bash.exe")
             self._popen_proc = subprocess.Popen(process_cmd, env=env, stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE, preexec_fn=None, cwd=self.cwd)
         else:
             self._popen_proc = subprocess.Popen(process_cmd, env=env, stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE, preexec_fn=os.setsid, cwd=self.cwd)
->>>>>>> origin/main
         self._logger.debug("Target subprocess PID: {}".format(self._popen_proc.pid))
         try:
             self.__communicate(timeout)

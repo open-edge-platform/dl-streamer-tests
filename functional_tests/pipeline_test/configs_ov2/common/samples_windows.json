@@ -4,6 +4,7 @@
         "sample.dir": "C:\\dlstreamer_repo\\samples\\windows\\gstreamer",
         "dataset.video": "C:\\videos\\videos",
         "dataset.artifacts": "results",
+        "dataset.groundtruth.base": "groundtruth_ov2/samples_ARL/windows",
         "identity_1000": " ! identity eos-after=1000 "
     },
     "test_sets": {

@@ -17,14 +17,5 @@
         },
         "test_set_properties_removals": {},
         "excluded_tests": []
-    },
-    "ARL-win": {
-        "test_config": "common/samples_windows.json",
-        "test_set_properties_additions": {
-            "docker.dataset.groundtruth.base": "groundtruth_ov2/samples_ARL/windows",
-            "host.dataset.groundtruth.base": "groundtruth_ov2/samples_ARL/windows"
-        },
-        "test_set_properties_removals": {},
-        "excluded_tests": []
     }
 }

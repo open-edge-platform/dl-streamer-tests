@@ -1,0 +1,42 @@
+{
+    "test_set_properties": {
+        "test.type": "sample",
+        "sample.dir": "C:\\dlstreamer_repo\\samples\\windows\\gstreamer",
+        "dataset.video": "C:\\videos\\videos",
+        "dataset.artifacts": "results",
+        "identity_1000": " ! identity eos-after=1000 "
+    },
+    "test_sets": {
+        "audio_event_detection": {
+            "name": "audio_event_detection",
+            "dataset.groundtruth": "audio_event_detection.json",
+            "sample.command": "{sample.dir}\\gst_launch\\audio_detect\\audio_event_detection.bat,{sample.dir}\\gst_launch\\audio_detect\\how_are_you_doing.wav,output.json",
+            "dataset.comparator_type": "audio"
+        },
+        "benchmark_one_channel_cpu": {
+            "name": "benchmark_one_channel_cpu",
+            "dataset.groundtruth": "benchmark_one_channel_cpu.json",
+            "sample.command": "{sample.dir}\\benchmark\\benchmark.bat,{dataset.video}\\People_On_The_Street.mp4,CPU,1,output.json"
+        },
+        "face_detection_and_classification_cpu": {
+            "name": "face_detection_and_classification_cpu",
+            "dataset.groundtruth": "face_detection_and_classification_cpu.json",
+            "sample.command": "{sample.dir}\\gst_launch\\face_detection_and_classification\\face_detection_and_classification.bat,{dataset.video}\\Fun_at_a_Fair.mp4,CPU,json,output.json"
+        },
+        "yolov8s_fp32_CPU": {
+            "name": "yolov8s_fp32_CPU",
+            "dataset.groundtruth": "detection_yolo_base_yolo-v8s_cpu.json",
+            "sample.command": "{sample.dir}\\gst_launch\\detection_with_yolo\\yolo_detect.bat,yolov8s,CPU,{dataset.video}\\Pexels_Videos_4786.mp4,json,ie,FP32"
+        },
+        "yolov8s_fp32_GPU": {
+            "name": "yolov8s_fp32_GPU",
+            "dataset.groundtruth": "detection_yolov8s_GPU.json",
+            "sample.command": "{sample.dir}\\gst_launch\\detection_with_yolo\\yolo_detect.bat,yolov8s,GPU,{dataset.video}\\Pexels_Videos_4786.mp4,json,d3d11,FP32"
+        },
+        "yolo11s_fp32_NPU": {
+            "name": "yolo11s_fp32_NPU",
+            "dataset.groundtruth": "yolo11s_NPU_identity_1000.json",
+            "sample.command": "{sample.dir}\\gst_launch\\detection_with_yolo\\yolo_detect.bat,yolo11s,NPU,{dataset.video}\\Pexels_Videos_1192116-sd_640_360_30fps.mp4,json,d3d11,FP32"
+        }
+    }
+}

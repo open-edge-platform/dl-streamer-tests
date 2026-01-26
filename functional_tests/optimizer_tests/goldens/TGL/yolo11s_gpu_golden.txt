@@ -1,0 +1,2 @@
+urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! vapostproc ! video/x-raw ! gvadetect model=/home/runner/models/public/yolo11s/INT8/yolo11s.xml pre-process-backend=opencv device=CPU batch-size=1 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink
+FINAL_FPS=112

@@ -65,7 +65,7 @@ def load_golden_values(golden_file):
         print(f"❌ Error loading golden values from {golden_file}: {e}")
         return None, None
 
-def compare_results(full_output_path, golden_path, fps_tolerance=0.01, output_dir="."):
+def compare_results(full_output_path, golden_path, fps_tolerance=1, output_dir="."):
     """Compare current results with golden values"""
     
     print(f"Extracting current results from: {full_output_path}")

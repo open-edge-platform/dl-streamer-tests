@@ -121,7 +121,7 @@ test_pipeline() {
     
     print_info "Testing pipeline: $name"
     
-    local output_file="$RESULTS_DIR/${name}_output.txt"
+    local output_file="$RESULTS_DIR/${name}_reports/${name}_output.txt"
     local report_dir="$RESULTS_DIR/${name}_reports"
     
     mkdir -p "$report_dir"

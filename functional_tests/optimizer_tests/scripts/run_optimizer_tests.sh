@@ -29,10 +29,10 @@ else
     
     # Host paths (relative to dlstreamer-test-repo)
     SEARCH_DURATION=${SEARCH_DURATION:-30}
-    RESULTS_DIR=${RESULTS_DIR:-/home/labrat/dlstreamer/tests/functional_tests/optimizer_tests/optimizer_results}
-    MODELS_PATH=${MODELS_PATH:-/home/labrat/models}
-    GOLDEN_FILE=${GOLDEN_FILE:-/home/labrat/dlstreamer/tests/functional_tests/optimizer_tests/goldens/golden_values.json}
-    COMPARE_SCRIPT=${COMPARE_SCRIPT:-/home/labrat/dlstreamer/tests/functional_tests/optimizer_tests/scripts/compare_results.py}
+    RESULTS_DIR=${RESULTS_DIR:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/optimizer_results}
+    MODELS_PATH=${MODELS_PATH:-/home/runner/models}
+    GOLDEN_FILE=${GOLDEN_FILE:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/goldens/golden_values.json}
+    COMPARE_SCRIPT=${COMPARE_SCRIPT:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/opt/intel/dlstreamer/scripts/optimizer}
 fi
 

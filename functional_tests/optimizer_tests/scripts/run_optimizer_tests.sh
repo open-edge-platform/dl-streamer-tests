@@ -20,7 +20,7 @@ if [ -f /.dockerenv ]; then
     SEARCH_DURATION=${SEARCH_DURATION:-300}
     RESULTS_DIR=${RESULTS_DIR:-/workspace/test_results}
     MODELS_PATH=${MODELS_PATH:-/home/dlstreamer/models}
-    GOLDEN_DIR=${GOLDEN_DIR:-/workspace/goldens}
+    GOLDEN_FILE=${GOLDEN_FILE:-/workspace/goldens/golden_values.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/workspace/test_scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/home/dlstreamer/dlstreamer/scripts/optimizer}
 else
@@ -31,7 +31,7 @@ else
     SEARCH_DURATION=${SEARCH_DURATION:-30}
     RESULTS_DIR=${RESULTS_DIR:-./test_results}
     MODELS_PATH=${MODELS_PATH:-/home/labrat/models}
-    GOLDEN_DIR=${GOLDEN_DIR:-../goldens}
+    GOLDEN_FILE=${GOLDEN_FILE:-../goldens/golden_values.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-./compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/opt/intel/dlstreamer/scripts/optimizer}
 fi
@@ -49,19 +49,20 @@ print_error() { echo -e "${RED}${ENV_PREFIX} [ERROR]${NC} $1"; }
 print_warning() { echo -e "${YELLOW}${ENV_PREFIX} [WARNING]${NC} $1"; }
 
 # =============================================================================
-# Pipeline Definitions
+# Pipeline Definitions with JSON paths
 # =============================================================================
 
 declare -A PIPELINES
-declare -A GOLDEN_FILES
+declare -A TEST_PATHS
 
 # Pipeline 1: TGL YOLO11s CPU
 PIPELINES["yolo11s_cpu"]="urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink"
-GOLDEN_FILES["yolo11s_cpu"]="$GOLDEN_DIR/TGL/yolo11s_cpu_golden.txt"
+TEST_PATHS["yolo11s_cpu"]="TGL.yolo11s_cpu"
 
 # Pipeline 2: TGL YOLO11s GPU
 PIPELINES["yolo11s_gpu"]="urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink"
-GOLDEN_FILES["yolo11s_gpu"]="$GOLDEN_DIR/TGL/yolo11s_gpu_golden.txt"
+TEST_PATHS["yolo11s_gpu"]="TGL.yolo11s_gpu"
+
 
 # =============================================================================
 # Functions
@@ -73,7 +74,7 @@ show_environment() {
     print_info "=========================================="
     print_info "Optimizer directory: $OPTIMIZER_DIR"
     print_info "Models path: $MODELS_PATH"
-    print_info "Golden directory: $GOLDEN_DIR"
+    print_info "Golden file: $GOLDEN_FILE"
     print_info "Results directory: $RESULTS_DIR"
     print_info "Compare script: $COMPARE_SCRIPT"
     print_info "Search duration: ${SEARCH_DURATION}s"
@@ -105,9 +106,62 @@ check_prerequisites() {
         exit 1
     fi
     
-    # Check golden directory
-    if [ ! -d "$GOLDEN_DIR" ]; then
-        print_error "Golden directory not found: $GOLDEN_DIR"
+    # Check golden file
+    if [ ! -f "$GOLDEN_FILE" ]; then
+        print_error "Golden file not found: $GOLDEN_FILE"
+        print_info "Expected JSON structure:"
+        print_info "{"
+        print_info "  \"TGL\": {"
+        print_info "    \"yolo11s_cpu\": {"
+        print_info "      \"pipeline\": \"...\","
+        print_info "      \"fps\": 25.5,"
+        print_info "      \"tolerance\": 1.0"
+        print_info "    },"
+        print_info "    \"yolo11s_gpu\": { ... }"
+        print_info "  }"
+        print_info "}"
+        exit 1
+    fi
+    
+    # Validate JSON structure
+    print_info "Validating golden JSON structure..."
+    if ! python3 -c "
+import json
+import sys
+
+try:
+    with open('$GOLDEN_FILE', 'r') as f:
+        data = json.load(f)
+    
+    # Check if it's a valid structure
+    if not isinstance(data, dict):
+        print('ERROR: Root should be a dictionary')
+        sys.exit(1)
+    
+    print('Golden JSON structure:')
+    def print_structure(obj, indent=0):
+        spaces = '  ' * indent
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                if isinstance(value, dict):
+                    print(f'{spaces}{key}:')
+                    print_structure(value, indent + 1)
+                else:
+                    print(f'{spaces}{key}: {type(value).__name__}')
+        
+    print_structure(data)
+    print('JSON validation: OK')
+    
+except json.JSONDecodeError as e:
+    print(f'ERROR: Invalid JSON: {e}')
+    sys.exit(1)
+except Exception as e:
+    print(f'ERROR: {e}')
+    sys.exit(1)
+"; then
+        print_success "Golden JSON validation OK"
+    else
+        print_error "Golden JSON validation failed"
         exit 1
     fi
     
@@ -117,11 +171,12 @@ check_prerequisites() {
 test_pipeline() {
     local name=$1
     local pipeline=$2
-    local golden_file=$3
+    local test_path=$3
     
     print_info "Testing pipeline: $name"
+    print_info "JSON test path: $test_path"
     
-    local output_file="$RESULTS_DIR/${name}_reports/${name}_output.txt"
+    local output_file="$RESULTS_DIR/${name}_reports/full_output.txt"
     local report_dir="$RESULTS_DIR/${name}_reports"
     
     mkdir -p "$report_dir"
@@ -129,38 +184,129 @@ test_pipeline() {
     # Run optimizer
     print_info "Running optimizer (${SEARCH_DURATION}s search)..."
     print_info "Working directory: $OPTIMIZER_DIR"
+    print_info "Pipeline: ${pipeline:0:100}..."
     
     cd "$OPTIMIZER_DIR"
-    if timeout 600 python3 . --search-duration "$SEARCH_DURATION" -- $pipeline > "$output_file" 2>&1; then
+    
+    # Create a temporary script to run the optimizer with proper output capture
+    local temp_script="$report_dir/run_optimizer.sh"
+    cat > "$temp_script" << EOF
+#!/bin/bash
+set -e
+cd "$OPTIMIZER_DIR"
+exec python3 . --search-duration "$SEARCH_DURATION" -- $pipeline
+EOF
+    chmod +x "$temp_script"
+    
+    print_info "Starting optimizer..."
+    if timeout 600 bash "$temp_script" > "$output_file" 2>&1; then
         print_success "Optimizer completed for $name"
     else
-        print_error "Optimizer failed for $name"
+        local exit_code=$?
+        if [ $exit_code -eq 124 ]; then
+            print_warning "Optimizer timed out for $name (600s limit)"
+        else
+            print_error "Optimizer failed for $name (exit code: $exit_code)"
+        fi
+        
         if [ -f "$output_file" ]; then
-            print_info "Last 10 lines of output:"
-            tail -10 "$output_file"
+            print_info "Output file size: $(wc -l < "$output_file") lines"
+            print_info "Last 20 lines of output:"
+            tail -20 "$output_file"
+        else
+            print_error "No output file generated"
         fi
         return 1
     fi
     
-    # Check if golden file exists
-    if [ ! -f "$golden_file" ]; then
-        print_error "Golden file not found: $golden_file"
+    # Check if output file has content
+    if [ ! -s "$output_file" ]; then
+        print_error "Output file is empty: $output_file"
         return 1
     fi
     
-    # Compare results
+    print_info "Output file generated: $(wc -l < "$output_file") lines"
+    
+    # Compare results using the JSON golden file
     print_info "Comparing results with golden values..."
+    print_info "Using golden file: $GOLDEN_FILE"
+    print_info "Test path: $test_path"
+    
+    # Run comparison with detailed output
     if python3 "$COMPARE_SCRIPT" \
         --full-output "$output_file" \
-        --golden "$golden_file" \
-        --tolerance 1 \
-        --output-dir "$report_dir"; then
+        --golden "$GOLDEN_FILE" \
+        --test-name "$test_path" \
+        --tolerance 1.0 \
+        --output-dir "$report_dir" \
+        --debug; then
         print_success "Test PASSED for $name"
         return 0
     else
         print_error "Test FAILED for $name"
+        
+        # Show additional debug info
+        if [ -f "$report_dir/comparison_report_${name}.txt" ]; then
+            print_info "Comparison report:"
+            cat "$report_dir/comparison_report_${name}.txt"
+        fi
+        
         return 1
     fi
+}
+
+validate_test_paths() {
+    print_info "Validating test paths in golden JSON..."
+    
+    for pipeline_name in "${!TEST_PATHS[@]}"; do
+        local test_path="${TEST_PATHS[$pipeline_name]}"
+        print_info "Checking path: $test_path for pipeline: $pipeline_name"
+        
+        if ! python3 -c "
+import json
+import sys
+
+try:
+    with open('$GOLDEN_FILE', 'r') as f:
+        data = json.load(f)
+    
+    # Navigate the path
+    current = data
+    path_parts = '$test_path'.split('.')
+    
+    for part in path_parts:
+        if part not in current:
+            print(f'ERROR: Path part \"{part}\" not found')
+            print(f'Available keys: {list(current.keys())}')
+            sys.exit(1)
+        current = current[part]
+    
+    # Check required fields
+    if 'pipeline' not in current:
+        print('ERROR: Missing \"pipeline\" field')
+        sys.exit(1)
+    if 'fps' not in current:
+        print('ERROR: Missing \"fps\" field')
+        sys.exit(1)
+    
+    print(f'Path validation OK: $test_path')
+    print(f'  Pipeline: {current[\"pipeline\"][:50]}...')
+    print(f'  FPS: {current[\"fps\"]}')
+    if 'tolerance' in current:
+        print(f'  Tolerance: {current[\"tolerance\"]}')
+    
+except Exception as e:
+    print(f'ERROR: {e}')
+    sys.exit(1)
+"; then
+            continue
+        else
+            print_error "Path validation failed for: $test_path"
+            exit 1
+        fi
+    done
+    
+    print_success "All test paths validated"
 }
 
 # =============================================================================
@@ -169,6 +315,7 @@ test_pipeline() {
 
 show_environment
 check_prerequisites
+validate_test_paths
 
 # Create results directory
 mkdir -p "$RESULTS_DIR"
@@ -186,7 +333,7 @@ for pipeline_name in "${!PIPELINES[@]}"; do
     print_info "Test $TOTAL_TESTS: $pipeline_name"
     print_info "=========================================="
     
-    if test_pipeline "$pipeline_name" "${PIPELINES[$pipeline_name]}" "${GOLDEN_FILES[$pipeline_name]}"; then
+    if test_pipeline "$pipeline_name" "${PIPELINES[$pipeline_name]}" "${TEST_PATHS[$pipeline_name]}"; then
         PASSED_TESTS=$((PASSED_TESTS + 1))
     else
         FAILED_TESTS=$((FAILED_TESTS + 1))

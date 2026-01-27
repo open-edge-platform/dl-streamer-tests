@@ -31,7 +31,7 @@ else
     SEARCH_DURATION=${SEARCH_DURATION:-30}
     RESULTS_DIR=${RESULTS_DIR:-./test_results}
     MODELS_PATH=${MODELS_PATH:-/home/labrat/models}
-    GOLDEN_FILE=${GOLDEN_FILE:-../goldens/golden_values.json}
+    GOLDEN_FILE=${GOLDEN_FILE:-./goldens/golden_values.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-./compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/opt/intel/dlstreamer/scripts/optimizer}
 fi
@@ -63,6 +63,9 @@ TEST_PATHS["yolo11s_cpu"]="TGL.yolo11s_cpu"
 PIPELINES["yolo11s_gpu"]="urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink"
 TEST_PATHS["yolo11s_gpu"]="TGL.yolo11s_gpu"
 
+# Pipeline 3: TGL YOLO11s NPU (example)
+PIPELINES["yolo11s_npu"]="urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=NPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink"
+TEST_PATHS["yolo11s_npu"]="TGL.yolo11s_npu"
 
 # =============================================================================
 # Functions
@@ -117,20 +120,25 @@ check_prerequisites() {
         print_info "      \"fps\": 25.5,"
         print_info "      \"tolerance\": 1.0"
         print_info "    },"
-        print_info "    \"yolo11s_gpu\": { ... }"
-        print_info "  }"
+        print_info "    \"yolo11s_gpu\": { ... },"
+        print_info "    \"yolo11s_npu\": { ... }"
+        print_info "  },"
+        print_info "  \"OTHER_PLATFORM\": { ... }"
         print_info "}"
         exit 1
     fi
     
     # Validate JSON structure
     print_info "Validating golden JSON structure..."
-    if ! python3 -c "
+    
+    # Create temporary validation script
+    local validation_script="/tmp/validate_json_$$"
+    cat > "$validation_script" << 'EOF'
 import json
 import sys
 
 try:
-    with open('$GOLDEN_FILE', 'r') as f:
+    with open(sys.argv[1], 'r') as f:
         data = json.load(f)
     
     # Check if it's a valid structure
@@ -158,10 +166,14 @@ except json.JSONDecodeError as e:
 except Exception as e:
     print(f'ERROR: {e}')
     sys.exit(1)
-"; then
+EOF
+    
+    if python3 "$validation_script" "$GOLDEN_FILE"; then
         print_success "Golden JSON validation OK"
+        rm -f "$validation_script"
     else
         print_error "Golden JSON validation failed"
+        rm -f "$validation_script"
         exit 1
     fi
     
@@ -246,9 +258,9 @@ EOF
         print_error "Test FAILED for $name"
         
         # Show additional debug info
-        if [ -f "$report_dir/comparison_report_${name}.txt" ]; then
+        if [ -f "$report_dir/comparison_report_${test_path}.txt" ]; then
             print_info "Comparison report:"
-            cat "$report_dir/comparison_report_${name}.txt"
+            cat "$report_dir/comparison_report_${test_path}.txt"
         fi
         
         return 1
@@ -258,55 +270,69 @@ EOF
 validate_test_paths() {
     print_info "Validating test paths in golden JSON..."
     
-    for pipeline_name in "${!TEST_PATHS[@]}"; do
-        local test_path="${TEST_PATHS[$pipeline_name]}"
-        print_info "Checking path: $test_path for pipeline: $pipeline_name"
-        
-        if ! python3 -c "
+    # Create temporary validation script
+    local validation_script="/tmp/validate_paths_$$"
+    cat > "$validation_script" << 'EOF'
 import json
 import sys
 
 try:
-    with open('$GOLDEN_FILE', 'r') as f:
+    with open(sys.argv[1], 'r') as f:
         data = json.load(f)
     
-    # Navigate the path
-    current = data
-    path_parts = '$test_path'.split('.')
+    # Get test paths from command line arguments (starting from argv[2])
+    test_paths = sys.argv[2:]
     
-    for part in path_parts:
-        if part not in current:
-            print(f'ERROR: Path part \"{part}\" not found')
-            print(f'Available keys: {list(current.keys())}')
+    for test_path in test_paths:
+        print(f'Checking path: {test_path}')
+        
+        # Navigate through nested structure using dot notation
+        current_data = data
+        path_parts = test_path.split('.')
+        
+        for i, part in enumerate(path_parts):
+            if part not in current_data:
+                print(f'ERROR: Path part "{part}" not found at level {i}')
+                print(f'Available keys at this level: {list(current_data.keys())}')
+                sys.exit(1)
+            current_data = current_data[part]
+        
+        # Check required fields
+        if 'pipeline' not in current_data:
+            print(f'ERROR: Missing "pipeline" field in {test_path}')
             sys.exit(1)
-        current = current[part]
+        if 'fps' not in current_data:
+            print(f'ERROR: Missing "fps" field in {test_path}')
+            sys.exit(1)
+        
+        print(f'Path validation OK: {test_path}')
+        print(f'  Pipeline: {current_data["pipeline"][:50]}...')
+        print(f'  FPS: {current_data["fps"]}')
+        if 'tolerance' in current_data:
+            print(f'  Tolerance: {current_data["tolerance"]}')
+        print()
     
-    # Check required fields
-    if 'pipeline' not in current:
-        print('ERROR: Missing \"pipeline\" field')
-        sys.exit(1)
-    if 'fps' not in current:
-        print('ERROR: Missing \"fps\" field')
-        sys.exit(1)
-    
-    print(f'Path validation OK: $test_path')
-    print(f'  Pipeline: {current[\"pipeline\"][:50]}...')
-    print(f'  FPS: {current[\"fps\"]}')
-    if 'tolerance' in current:
-        print(f'  Tolerance: {current[\"tolerance\"]}')
+    print('All test paths validated successfully')
     
 except Exception as e:
     print(f'ERROR: {e}')
     sys.exit(1)
-"; then
-            continue
-        else
-            print_error "Path validation failed for: $test_path"
-            exit 1
-        fi
+EOF
+    
+    # Collect all test paths
+    local all_paths=()
+    for pipeline_name in "${!TEST_PATHS[@]}"; do
+        all_paths+=("${TEST_PATHS[$pipeline_name]}")
     done
     
-    print_success "All test paths validated"
+    if python3 "$validation_script" "$GOLDEN_FILE" "${all_paths[@]}"; then
+        print_success "All test paths validated"
+        rm -f "$validation_script"
+    else
+        print_error "Test path validation failed"
+        rm -f "$validation_script"
+        exit 1
+    fi
 }
 
 # =============================================================================

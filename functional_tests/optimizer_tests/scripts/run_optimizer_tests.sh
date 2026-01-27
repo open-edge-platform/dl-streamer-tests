@@ -63,10 +63,6 @@ TEST_PATHS["yolo11s_cpu"]="TGL.yolo11s_cpu"
 PIPELINES["yolo11s_gpu"]="urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink"
 TEST_PATHS["yolo11s_gpu"]="TGL.yolo11s_gpu"
 
-# Pipeline 3: TGL YOLO11s NPU (example)
-PIPELINES["yolo11s_npu"]="urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=NPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink"
-TEST_PATHS["yolo11s_npu"]="TGL.yolo11s_npu"
-
 # =============================================================================
 # Functions
 # =============================================================================

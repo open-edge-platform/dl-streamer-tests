@@ -1,14 +1,14 @@
 {
   "TGL": {
     "yolo11s_cpu": {
-      "pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=MODEL_PATH/yolo11s.xml device=CPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
-      "fps": 25.5,
+      "pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=MODEL_PATH/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 nireq=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+      "fps": 75,
       "tolerance": 1.0
     },
     "yolo11s_gpu": {
-      "pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=MODEL_PATH/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
-      "fps": 45.2,
-      "tolerance": 2.0
+      "pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=MODEL_PATH/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 nireq=3 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+      "fps": 75,
+      "tolerance": 1.0
     }
   },
   "OTHER_PLATFORM": {

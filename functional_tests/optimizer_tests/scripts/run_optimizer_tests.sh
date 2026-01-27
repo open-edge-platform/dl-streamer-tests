@@ -17,7 +17,7 @@ if [ -f /.dockerenv ]; then
     ENV_PREFIX="[DOCKER]"
     
     # Docker paths
-    SEARCH_DURATION=${SEARCH_DURATION:-30}
+    SEARCH_DURATION=${SEARCH_DURATION:-300}
     RESULTS_DIR=${RESULTS_DIR:-/workspace/test_results}
     MODELS_PATH=${MODELS_PATH:-/home/dlstreamer/models}
     GOLDEN_DIR=${GOLDEN_DIR:-/workspace/goldens}

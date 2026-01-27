@@ -2,6 +2,26 @@ import re
 import sys
 import os
 import argparse
+import json
+
+def normalize_pipeline_for_comparison(pipeline):
+    """Normalize pipeline by removing model paths for comparison"""
+    if not pipeline:
+        return pipeline
+    
+    print(f"DEBUG: Original pipeline: {pipeline}")
+    
+    # Replace model paths with normalized placeholder
+    # Pattern matches: model=/any/path/to/model.xml
+    normalized = re.sub(r'model=[^\s!]+/([^/\s!]+\.xml)', r'model=MODEL_PATH/\1', pipeline)
+    
+    # Also handle cases where model path might be quoted
+    normalized = re.sub(r'model="[^"]+/([^"/]+\.xml)"', r'model="MODEL_PATH/\1"', normalized)
+    normalized = re.sub(r"model='[^']+/([^'/]+\.xml)'", r"model='MODEL_PATH/\1'", normalized)
+    
+    print(f"DEBUG: Normalized pipeline: {normalized}")
+    
+    return normalized
 
 def extract_pipeline_and_fps(filename):
     """Extract pipeline, FPS, and initial FPS from logs"""
@@ -134,9 +154,68 @@ def extract_pipeline_and_fps(filename):
         traceback.print_exc()
         return None, None, None
 
-def load_golden_values(golden_file):
-    """Load golden values from file (line 1: pipeline, line 2: FPS)"""
-    print(f"DEBUG: Loading golden values from: {golden_file}")
+def load_golden_values_json(golden_file, test_path):
+    """Load golden values from JSON file using dot notation path"""
+    print(f"DEBUG: Loading golden values from JSON: {golden_file}")
+    print(f"DEBUG: Looking for test path: {test_path}")
+    
+    try:
+        with open(golden_file, 'r') as f:
+            golden_data = json.load(f)
+        
+        print(f"DEBUG: JSON loaded successfully")
+        
+        # Navigate through nested structure using dot notation
+        current_data = golden_data
+        path_parts = test_path.split('.')
+        
+        print(f"DEBUG: Navigating path: {path_parts}")
+        
+        for i, part in enumerate(path_parts):
+            if part not in current_data:
+                print(f"❌ Path part '{part}' not found at level {i}")
+                print(f"Available keys at this level: {list(current_data.keys())}")
+                return None, None, None
+            current_data = current_data[part]
+            print(f"DEBUG: Found '{part}', continuing...")
+        
+        test_data = current_data
+        print(f"DEBUG: Final test data: {test_data}")
+        
+        # Validate test data structure
+        if 'pipeline' not in test_data or 'fps' not in test_data:
+            print(f"❌ Test data missing required fields (pipeline, fps)")
+            print(f"Available fields: {list(test_data.keys())}")
+            return None, None, None
+        
+        golden_pipeline = test_data['pipeline']
+        golden_fps = float(test_data['fps'])
+        
+        # Get tolerance if specified
+        tolerance = test_data.get('tolerance', None)
+        
+        print(f"DEBUG: Golden pipeline: {golden_pipeline[:100]}{'...' if len(golden_pipeline) > 100 else ''}")
+        print(f"DEBUG: Golden FPS: {golden_fps}")
+        if tolerance:
+            print(f"DEBUG: Custom tolerance: {tolerance}")
+        
+        return golden_pipeline, golden_fps, tolerance
+        
+    except FileNotFoundError:
+        print(f"❌ Golden JSON file {golden_file} not found")
+        return None, None, None
+    except json.JSONDecodeError as e:
+        print(f"❌ Error parsing JSON file {golden_file}: {e}")
+        return None, None, None
+    except Exception as e:
+        print(f"❌ Error loading golden values from {golden_file}: {e}")
+        import traceback
+        traceback.print_exc()
+        return None, None, None
+
+def load_golden_values_txt(golden_file):
+    """Load golden values from text file (line 1: pipeline, line 2: FPS)"""
+    print(f"DEBUG: Loading golden values from text file: {golden_file}")
     
     try:
         with open(golden_file, 'r') as f:
@@ -148,7 +227,7 @@ def load_golden_values(golden_file):
         
         if len(lines) < 2:
             print(f"❌ Error: {golden_file} should have 2 lines (pipeline and FPS)")
-            return None, None
+            return None, None, None
         
         golden_pipeline = lines[0].strip()
         golden_fps = float(lines[1].strip())
@@ -156,24 +235,26 @@ def load_golden_values(golden_file):
         print(f"DEBUG: Golden pipeline: {golden_pipeline[:100]}{'...' if len(golden_pipeline) > 100 else ''}")
         print(f"DEBUG: Golden FPS: {golden_fps}")
         
-        return golden_pipeline, golden_fps
+        return golden_pipeline, golden_fps, None
     except FileNotFoundError:
         print(f"❌ Golden file {golden_file} not found")
-        return None, None
+        return None, None, None
     except Exception as e:
         print(f"❌ Error loading golden values from {golden_file}: {e}")
         import traceback
         traceback.print_exc()
-        return None, None
+        return None, None, None
 
-def compare_results(full_output_path, golden_path, fps_tolerance=1, output_dir="."):
+def compare_results(full_output_path, golden_path, test_name=None, fps_tolerance=1, output_dir=".", ignore_model_paths=True):
     """Compare current results with golden values"""
     
     print(f"DEBUG: Starting comparison")
     print(f"DEBUG: Full output path: {full_output_path}")
     print(f"DEBUG: Golden path: {golden_path}")
+    print(f"DEBUG: Test name: {test_name}")
     print(f"DEBUG: FPS tolerance: {fps_tolerance}")
     print(f"DEBUG: Output directory: {output_dir}")
+    print(f"DEBUG: Ignore model paths: {ignore_model_paths}")
     
     print(f"Extracting current results from: {full_output_path}")
     current_pipeline, current_fps, initial_fps = extract_pipeline_and_fps(full_output_path)
@@ -199,14 +280,44 @@ def compare_results(full_output_path, golden_path, fps_tolerance=1, output_dir="
         return False
     
     print(f"Loading golden values from: {golden_path}")
-    golden_pipeline, golden_fps = load_golden_values(golden_path)
+    
+    # Determine if golden file is JSON or text based on extension
+    if golden_path.lower().endswith('.json'):
+        if test_name is None:
+            print("❌ Test name is required when using JSON golden file")
+            return False
+        golden_pipeline, golden_fps, custom_tolerance = load_golden_values_json(golden_path, test_name)
+        
+        # Use custom tolerance if specified in JSON
+        if custom_tolerance is not None:
+            fps_tolerance = custom_tolerance
+            print(f"DEBUG: Using custom tolerance from JSON: {fps_tolerance}")
+    else:
+        golden_pipeline, golden_fps, _ = load_golden_values_txt(golden_path)
     
     if not golden_pipeline or golden_fps is None:
         print("❌ Failed to load golden values")
         return False
     
-    # Compare pipeline and FPS
-    pipeline_match = current_pipeline.strip() == golden_pipeline.strip()
+    # Normalize pipelines for comparison if ignore_model_paths is True
+    if ignore_model_paths:
+        print("DEBUG: Normalizing pipelines (ignoring model paths)")
+        current_pipeline_normalized = normalize_pipeline_for_comparison(current_pipeline)
+        golden_pipeline_normalized = normalize_pipeline_for_comparison(golden_pipeline)
+        
+        pipeline_match = current_pipeline_normalized.strip() == golden_pipeline_normalized.strip()
+        
+        print(f"DEBUG: Pipeline comparison (normalized):")
+        print(f"  Golden normalized:  {golden_pipeline_normalized}")
+        print(f"  Current normalized: {current_pipeline_normalized}")
+    else:
+        print("DEBUG: Comparing pipelines exactly (including model paths)")
+        pipeline_match = current_pipeline.strip() == golden_pipeline.strip()
+        
+        print(f"DEBUG: Pipeline comparison (exact):")
+        print(f"  Golden:  {golden_pipeline}")
+        print(f"  Current: {current_pipeline}")
+    
     fps_diff = abs(current_fps - golden_fps)
     fps_match = fps_diff < fps_tolerance
     
@@ -215,7 +326,6 @@ def compare_results(full_output_path, golden_path, fps_tolerance=1, output_dir="
     print(f"  FPS diff: {fps_diff}")
     print(f"  FPS match: {fps_match}")
     
-    # Check if current FPS >= initial FPS (optimization improvement)
     initial_fps_check = True  # Default to True if no initial FPS found
     show_optimization_check = False
     
@@ -223,14 +333,20 @@ def compare_results(full_output_path, golden_path, fps_tolerance=1, output_dir="
         show_optimization_check = True
         initial_fps_check = current_fps >= initial_fps
         print(f"DEBUG: Optimization check: current({current_fps}) >= initial({initial_fps}) = {initial_fps_check}")
+    else:
+        print(f"DEBUG: No initial FPS found - optimization check will be skipped")
     
     print("="*80)
     print("COMPARISON RESULTS")
+    if test_name:
+        print(f"Test: {test_name}")
     print("="*80)
     
     print(f"PIPELINE:")
     print(f"  Golden:  {golden_pipeline}")
     print(f"  Current: {current_pipeline}")
+    if ignore_model_paths:
+        print(f"  Note: Model paths ignored in comparison")
     print(f"  Match:   {'✅ PASS' if pipeline_match else '❌ FAIL'}")
     print()
     
@@ -260,13 +376,18 @@ def compare_results(full_output_path, golden_path, fps_tolerance=1, output_dir="
         print(f"  Check:   ⚠️  SKIP (Initial FPS not found in logs)")
         print()
     
-    # Overall result includes all checks
-    overall_match = pipeline_match and fps_match and initial_fps_check
+    if show_optimization_check:
+        overall_match = pipeline_match and fps_match and initial_fps_check
+    else:
+        overall_match = pipeline_match and fps_match
+        print("DEBUG: No initial FPS found - optimization check excluded from overall result")
+    
     print(f"OVERALL RESULT: {'✅ PASS' if overall_match else '❌ FAIL'}")
     print("="*80)
     
     # Save current results for debugging
-    current_values_path = os.path.join(output_dir, 'current_values.txt')
+    test_suffix = f"_{test_name}" if test_name else ""
+    current_values_path = os.path.join(output_dir, f'current_values{test_suffix}.txt')
     try:
         with open(current_values_path, 'w') as f:
             f.write(f"{current_pipeline}\n")
@@ -278,17 +399,23 @@ def compare_results(full_output_path, golden_path, fps_tolerance=1, output_dir="
         print(f"Warning: Could not save current values: {e}")
     
     # Save comparison report
-    report_path = os.path.join(output_dir, 'comparison_report.txt')
+    report_path = os.path.join(output_dir, f'comparison_report{test_suffix}.txt')
     try:
         with open(report_path, 'w') as f:
             f.write("COMPARISON REPORT\n")
             f.write("="*50 + "\n\n")
+            if test_name:
+                f.write(f"Test name: {test_name}\n")
             f.write(f"Golden file: {golden_path}\n")
             f.write(f"Full output file: {full_output_path}\n")
-            f.write(f"FPS tolerance: {fps_tolerance}\n\n")
+            f.write(f"FPS tolerance: {fps_tolerance}\n")
+            f.write(f"Ignore model paths: {ignore_model_paths}\n\n")
             f.write(f"Pipeline Match: {'PASS' if pipeline_match else 'FAIL'}\n")
             f.write(f"FPS Match: {'PASS' if fps_match else 'FAIL'}\n")
-            f.write(f"Optimization Check: {'PASS' if initial_fps_check else 'FAIL'}\n")
+            if show_optimization_check:
+                f.write(f"Optimization Check: {'PASS' if initial_fps_check else 'FAIL'}\n")
+            else:
+                f.write(f"Optimization Check: SKIP (no initial FPS)\n")
             f.write(f"Overall: {'PASS' if overall_match else 'FAIL'}\n\n")
             f.write("GOLDEN VALUES:\n")
             f.write(f"Pipeline: {golden_pipeline}\n")
@@ -316,11 +443,17 @@ def main():
     parser.add_argument('--full-output', '-f', required=True, 
                        help='Path to full_output.txt file')
     parser.add_argument('--golden', '-g', required=True,
-                       help='Path to golden_values.txt file')
+                       help='Path to golden values file (.txt or .json)')
+    parser.add_argument('--test-name', '-n', 
+                       help='Test name (required for JSON golden files)')
     parser.add_argument('--tolerance', '-t', type=float, default=0.01,
                        help='FPS tolerance for comparison (default: 0.01)')
     parser.add_argument('--output-dir', '-o', default='.',
                        help='Directory to save output files (default: current directory)')
+    parser.add_argument('--ignore-model-paths', action='store_true', default=True,
+                       help='Ignore model paths when comparing pipelines (default: True)')
+    parser.add_argument('--exact-match', action='store_true',
+                       help='Require exact pipeline match including model paths')
     parser.add_argument('--debug', '-d', action='store_true',
                        help='Enable extra debug output')
     
@@ -328,6 +461,9 @@ def main():
     
     if args.debug:
         print("DEBUG: Debug mode enabled")
+    
+    # Handle exact match flag
+    ignore_model_paths = not args.exact_match
     
     # Check if files exist
     if not os.path.exists(args.full_output):
@@ -338,6 +474,11 @@ def main():
         print(f"❌ Golden file not found: {args.golden}")
         sys.exit(1)
     
+    # Check if test name is provided for JSON files
+    if args.golden.lower().endswith('.json') and not args.test_name:
+        print("❌ Test name (--test-name) is required when using JSON golden file")
+        sys.exit(1)
+    
     # Create output directory if it doesn't exist
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
@@ -345,12 +486,15 @@ def main():
     print(f"Comparing results...")
     print(f"Full output: {args.full_output}")
     print(f"Golden file: {args.golden}")
+    if args.test_name:
+        print(f"Test name: {args.test_name}")
     print(f"FPS tolerance: {args.tolerance}")
     print(f"Output directory: {args.output_dir}")
+    print(f"Ignore model paths: {ignore_model_paths}")
     print()
     
     # Run comparison
-    success = compare_results(args.full_output, args.golden, args.tolerance, args.output_dir)
+    success = compare_results(args.full_output, args.golden, args.test_name, args.tolerance, args.output_dir, ignore_model_paths)
     
     # Exit with appropriate code for CI
     if success:

@@ -34,6 +34,23 @@ else
     GOLDEN_FILE=${GOLDEN_FILE:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/goldens/golden_values.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/opt/intel/dlstreamer/scripts/optimizer}
+#set envs
+    export LIBVA_DRIVER_NAME=iHD
+    export GST_VA_ALL_DRIVERS=1
+    export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+    export TERM=xterm
+    export GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/
+    export LD_LIBRARY_PATH=/opt/intel/dlstreamer/gstreamer/lib:/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/lib/gstreamer-1.0:/usr/lib:/opt/intel/dlstreamer/lib:/opt/opencv:/opt/openh264:/opt/rdkafka:/opt/ffmpeg:/usr/local/lib/gstreamer-1.0:/usr/local/lib
+    export PYTHONPATH=/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:/opt/intel/dlstreamer/python:/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:
+    export PATH=/home/runner/.virtualenvs/dlstreamer/bin:/opt/intel/dlstreamer/gstreamer/bin:/opt/intel/dlstreamer/bin:$PATH
+    export GI_TYPELIB_PATH=/opt/intel/dlstreamer/gstreamer/lib/girepository-1.0:/usr/lib/x86_64-linux-gnu/girepository-1.0
+    export LABELS_PATH=/opt/intel/dlstreamer/samples/labels
+    export MODEL_PROC_PATH=/opt/intel/dlstreamer/samples/gstreamer/model_proc
+    export MODEL_PROCS_PATH=/opt/intel/dlstreamer/samples/gstreamer/model_proc
+    export MODELS_PATH=$MODELS_PATH
+    export ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
+    export EnableDirectSubmission=0
+    export NEOReadDebugKeys=1
 fi
 
 # Colors

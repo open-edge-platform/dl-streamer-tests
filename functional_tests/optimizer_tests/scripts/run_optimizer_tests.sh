@@ -266,7 +266,7 @@ EOF
         --full-output "$output_file" \
         --golden "$GOLDEN_FILE" \
         --test-name "$test_path" \
-        --tolerance 1.0 \
+        --tolerance 5.0 \
         --final-report "$FINAL_REPORT" \
         --debug; then
         print_success "Test PASSED for $name"

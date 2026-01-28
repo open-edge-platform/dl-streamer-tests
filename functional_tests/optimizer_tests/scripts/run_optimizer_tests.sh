@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Universal Pipeline Test Script
+# Universal Pipeline Test Script with Final Report
 # Host: dlstreamer-test-repo/functional_tests/optimizer/tests/scripts/
 # Docker: runs with mounted volumes
 # =============================================================================
@@ -53,6 +53,9 @@ else
     export NEOReadDebugKeys=1
 fi
 
+# Final report file
+FINAL_REPORT="$RESULTS_DIR/FINAL_TEST_REPORT.txt"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -94,6 +97,22 @@ show_environment() {
     print_info "Results directory: $RESULTS_DIR"
     print_info "Compare script: $COMPARE_SCRIPT"
     print_info "Search duration: ${SEARCH_DURATION}s"
+    print_info "Final report: $FINAL_REPORT"
+}
+
+initialize_final_report() {
+    print_info "Initializing final report..."
+    
+    # Remove old final report if exists
+    if [ -f "$FINAL_REPORT" ]; then
+        rm -f "$FINAL_REPORT"
+        print_info "Removed old final report"
+    fi
+    
+    # Create directory if needed
+    mkdir -p "$(dirname "$FINAL_REPORT")"
+    
+    print_success "Final report will be created at: $FINAL_REPORT"
 }
 
 check_prerequisites() {
@@ -125,19 +144,6 @@ check_prerequisites() {
     # Check golden file
     if [ ! -f "$GOLDEN_FILE" ]; then
         print_error "Golden file not found: $GOLDEN_FILE"
-        print_info "Expected JSON structure:"
-        print_info "{"
-        print_info "  \"TGL\": {"
-        print_info "    \"yolo11s_cpu\": {"
-        print_info "      \"pipeline\": \"...\","
-        print_info "      \"fps\": 25.5,"
-        print_info "      \"tolerance\": 1.0"
-        print_info "    },"
-        print_info "    \"yolo11s_gpu\": { ... },"
-        print_info "    \"yolo11s_npu\": { ... }"
-        print_info "  },"
-        print_info "  \"OTHER_PLATFORM\": { ... }"
-        print_info "}"
         exit 1
     fi
     
@@ -201,10 +207,7 @@ test_pipeline() {
     print_info "Testing pipeline: $name"
     print_info "JSON test path: $test_path"
     
-    local output_file="$RESULTS_DIR/${name}_reports/full_output.txt"
-    local report_dir="$RESULTS_DIR/${name}_reports"
-    
-    mkdir -p "$report_dir"
+    local output_file="$RESULTS_DIR/${name}_full_output.txt"
     
     # Run optimizer
     print_info "Running optimizer (${SEARCH_DURATION}s search)..."
@@ -214,7 +217,7 @@ test_pipeline() {
     cd "$OPTIMIZER_DIR"
     
     # Create a temporary script to run the optimizer with proper output capture
-    local temp_script="$report_dir/run_optimizer.sh"
+    local temp_script="$RESULTS_DIR/run_optimizer_${name}.sh"
     cat > "$temp_script" << EOF
 #!/bin/bash
 set -e
@@ -252,30 +255,24 @@ EOF
     
     print_info "Output file generated: $(wc -l < "$output_file") lines"
     
-    # Compare results using the JSON golden file
+    # Compare results using the JSON golden file and append to final report
     print_info "Comparing results with golden values..."
     print_info "Using golden file: $GOLDEN_FILE"
     print_info "Test path: $test_path"
+    print_info "Results will be appended to final report: $FINAL_REPORT"
     
-    # Run comparison with detailed output
+    # Run comparison with final report
     if python3 "$COMPARE_SCRIPT" \
         --full-output "$output_file" \
         --golden "$GOLDEN_FILE" \
         --test-name "$test_path" \
         --tolerance 1.0 \
-        --output-dir "$report_dir" \
+        --final-report "$FINAL_REPORT" \
         --debug; then
         print_success "Test PASSED for $name"
         return 0
     else
         print_error "Test FAILED for $name"
-        
-        # Show additional debug info
-        if [ -f "$report_dir/comparison_report_${test_path}.txt" ]; then
-            print_info "Comparison report:"
-            cat "$report_dir/comparison_report_${test_path}.txt"
-        fi
-        
         return 1
     fi
 }
@@ -311,15 +308,11 @@ try:
             current_data = current_data[part]
         
         # Check required fields
-        if 'pipeline' not in current_data:
-            print(f'ERROR: Missing "pipeline" field in {test_path}')
-            sys.exit(1)
         if 'fps' not in current_data:
             print(f'ERROR: Missing "fps" field in {test_path}')
             sys.exit(1)
         
         print(f'Path validation OK: {test_path}')
-        print(f'  Pipeline: {current_data["pipeline"][:50]}...')
         print(f'  FPS: {current_data["fps"]}')
         if 'tolerance' in current_data:
             print(f'  Tolerance: {current_data["tolerance"]}')
@@ -348,6 +341,34 @@ EOF
     fi
 }
 
+finalize_final_report() {
+    print_info "Finalizing final report..."
+    
+    # Create finalization script
+    local finalize_script="/tmp/finalize_report_$$"
+    cat > "$finalize_script" << EOF
+import sys
+sys.path.append('$(dirname "$COMPARE_SCRIPT")')
+from compare_results import finalize_final_report
+
+finalize_final_report('$FINAL_REPORT', $TOTAL_TESTS, $PASSED_TESTS, $FAILED_TESTS)
+EOF
+    
+    python3 "$finalize_script"
+    rm -f "$finalize_script"
+    
+    print_success "Final report finalized: $FINAL_REPORT"
+    
+    # Show final report summary
+    if [ -f "$FINAL_REPORT" ]; then
+        print_info "Final report summary:"
+        echo "----------------------------------------"
+        tail -20 "$FINAL_REPORT"
+        echo "----------------------------------------"
+        print_info "Full report available at: $FINAL_REPORT"
+    fi
+}
+
 # =============================================================================
 # Main Execution
 # =============================================================================
@@ -356,8 +377,9 @@ show_environment
 check_prerequisites
 validate_test_paths
 
-# Create results directory
+# Create results directory and initialize final report
 mkdir -p "$RESULTS_DIR"
+initialize_final_report
 
 # Test all pipelines
 TOTAL_TESTS=0
@@ -379,6 +401,9 @@ for pipeline_name in "${!PIPELINES[@]}"; do
     fi
 done
 
+# Finalize final report
+finalize_final_report
+
 # Summary
 echo ""
 print_info "=========================================="
@@ -390,8 +415,10 @@ print_success "Passed: $PASSED_TESTS"
 
 if [ $FAILED_TESTS -eq 0 ]; then
     print_success "ALL TESTS PASSED! 🎉"
+    print_success "Final report: $FINAL_REPORT"
     exit 0
 else
     print_error "SOME TESTS FAILED! 💥"
+    print_error "Check final report: $FINAL_REPORT"
     exit 1
 fi

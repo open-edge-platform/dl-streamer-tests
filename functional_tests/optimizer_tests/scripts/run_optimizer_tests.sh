@@ -7,6 +7,51 @@
 # =============================================================================
 
 set -e
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --results-dir)
+            CUSTOM_RESULTS_DIR="$2"
+            shift 2
+            ;;
+        --search-duration)
+            SEARCH_DURATION="$2"
+            shift 2
+            ;;
+        --tolerance)
+            CUSTOM_TOLERANCE="$2"
+            shift 2
+            ;;
+        --models-path)
+            MODELS_PATH="$2"
+            shift 2
+            ;;
+        --golden-file)
+            GOLDEN_FILE="$2"
+            shift 2
+            ;;
+        -h|--help)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --results-dir PATH        Directory for test results"
+            echo "  --search-duration SECONDS Duration for optimizer search (default: 300 for Docker, 30 for Host)"
+            echo "  --tolerance PERCENT       Tolerance percentage for comparisons (default: 5.0)"
+            echo "  --models-path PATH        Path to models directory"
+            echo "  --golden-file PATH        Path to golden values JSON file"
+            echo "  -h, --help               Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0 --results-dir /tmp/my_results --tolerance 10.0"
+            echo "  $0 --search-duration 120 --tolerance 3.5"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
 
 # =============================================================================
 # Auto-detect environment and set paths
@@ -18,23 +63,26 @@ if [ -f /.dockerenv ]; then
     
     # Docker paths
     SEARCH_DURATION=${SEARCH_DURATION:-300}
-    RESULTS_DIR=${RESULTS_DIR:-/workspace/optimizer_results}
+    RESULTS_DIR=${CUSTOM_RESULTS_DIR:-${RESULTS_DIR:-/workspace/optimizer_results}}
     MODELS_PATH=${MODELS_PATH:-/home/dlstreamer/models}
     GOLDEN_FILE=${GOLDEN_FILE:-/workspace/goldens/golden_values.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/workspace/test_scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/home/dlstreamer/dlstreamer/scripts/optimizer}
+    TOLERANCE=${CUSTOM_TOLERANCE:-5.0}
 else
     RUNNING_IN_DOCKER=false
     ENV_PREFIX="[HOST]"
     
     # Host paths (relative to dlstreamer-test-repo)
     SEARCH_DURATION=${SEARCH_DURATION:-30}
-    RESULTS_DIR=${RESULTS_DIR:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/optimizer_results}
+    RESULTS_DIR=${CUSTOM_RESULTS_DIR:-${RESULTS_DIR:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/optimizer_results}}
     MODELS_PATH=${MODELS_PATH:-/home/runner/models}
     GOLDEN_FILE=${GOLDEN_FILE:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/goldens/golden_values.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/opt/intel/dlstreamer/scripts/optimizer}
-#set envs
+    TOLERANCE=${CUSTOM_TOLERANCE:-5.0}
+    
+    #set envs
     export LIBVA_DRIVER_NAME=iHD
     export GST_VA_ALL_DRIVERS=1
     export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
@@ -97,6 +145,7 @@ show_environment() {
     print_info "Results directory: $RESULTS_DIR"
     print_info "Compare script: $COMPARE_SCRIPT"
     print_info "Search duration: ${SEARCH_DURATION}s"
+    print_info "Tolerance: ${TOLERANCE}%"
     print_info "Final report: $FINAL_REPORT"
 }
 
@@ -266,7 +315,7 @@ EOF
         --full-output "$output_file" \
         --golden "$GOLDEN_FILE" \
         --test-name "$test_path" \
-        --tolerance 5.0 \
+        --tolerance "$TOLERANCE" \
         --final-report "$FINAL_REPORT" \
         --debug; then
         print_success "Test PASSED for $name"

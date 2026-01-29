@@ -28,15 +28,15 @@ if [ -f /.dockerenv ]; then
     SEARCH_DURATION=${SEARCH_DURATION:-300}
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-${RESULTS_DIR:-/workspace/optimizer_results}}
     MODELS_PATH=${MODELS_PATH:-/home/dlstreamer/models}
-    CONFIG_FILE=${CONFIG_FILE:-/workspace/config/test_config.json}
-    COMPARE_SCRIPT=${COMPARE_SCRIPT:-/workspace/test_scripts/compare_results.py}
+    CONFIG_FILE=${CONFIG_FILE:-/workspace/optimizer_tests/test_config.json}
+    COMPARE_SCRIPT=${COMPARE_SCRIPT:-/workspace/optimizer_tests/scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/home/dlstreamer/dlstreamer/scripts/optimizer}
 else
     ENV_PREFIX="[HOST]"
     SEARCH_DURATION=${SEARCH_DURATION:-30}
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-${RESULTS_DIR:-/home/runner/optimizer_results}}
     MODELS_PATH=${MODELS_PATH:-/home/runner/models}
-    CONFIG_FILE=${CONFIG_FILE:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/config/test_config.json}
+    CONFIG_FILE=${CONFIG_FILE:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/test_config.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/opt/intel/dlstreamer/scripts/optimizer}
     

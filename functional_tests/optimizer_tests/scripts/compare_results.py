@@ -61,28 +61,24 @@ def extract_pipeline_and_fps(filename):
         print(f"Error extracting from {filename}: {e}")
         return None, None, None
 
-def load_golden_values(golden_file, test_path=None):
-    """Load golden values from JSON or text file"""
+def load_golden_values(config_file, test_name):
+    """Load golden values from JSON config file"""
     try:
-        if golden_file.lower().endswith('.json'):
-            with open(golden_file, 'r') as f:
-                data = json.load(f)
-            
-            # Navigate JSON path
-            current = data
-            for part in test_path.split('.'):
-                current = current[part]
-            
-            return current.get('pipeline', 'N/A'), float(current['fps']), current.get('tolerance')
-        else:
-            # Text file format
-            with open(golden_file, 'r') as f:
-                lines = f.readlines()
-            
-            if len(lines) >= 2 and ('!' in lines[0] or 'gst' in lines[0].lower()):
-                return lines[0].strip(), float(lines[1].strip()), None
-            else:
-                return 'N/A', float(lines[0].strip()), None
+        with open(config_file, 'r') as f:
+            data = json.load(f)
+        
+        if test_name not in data:
+            print(f"Test '{test_name}' not found in config file")
+            return None, None, None
+        
+        test_config = data[test_name]
+        
+        # Get golden pipeline and FPS
+        golden_pipeline = test_config.get('golden_pipeline', 'N/A')
+        golden_fps = float(test_config['golden_fps'])
+        tolerance = test_config.get('tolerance')
+        
+        return golden_pipeline, golden_fps, tolerance
                 
     except Exception as e:
         print(f"Error loading golden values: {e}")
@@ -111,7 +107,7 @@ def append_to_final_report(final_report_path, test_name, result):
     except Exception as e:
         print(f"Warning: Could not write to final report: {e}")
 
-def compare_results(full_output_path, golden_path, test_name=None, fps_tolerance=1, final_report_path=None):
+def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, final_report_path=None):
     """Compare current results with golden values"""
     
     # Extract current results
@@ -122,7 +118,7 @@ def compare_results(full_output_path, golden_path, test_name=None, fps_tolerance
         return False
     
     # Load golden values
-    golden_pipeline, golden_fps, custom_tolerance = load_golden_values(golden_path, test_name)
+    golden_pipeline, golden_fps, custom_tolerance = load_golden_values(config_file, test_name)
     
     if golden_fps is None:
         print("❌ Failed to load golden FPS")
@@ -145,7 +141,7 @@ def compare_results(full_output_path, golden_path, test_name=None, fps_tolerance
     
     # Print results
     print("="*50)
-    print(f"TEST: {test_name or 'UNKNOWN'}")
+    print(f"TEST: {test_name}")
     print("="*50)
     print(f"Golden FPS:  {golden_fps}")
     print(f"Current FPS: {current_fps}")
@@ -172,30 +168,17 @@ def compare_results(full_output_path, golden_path, test_name=None, fps_tolerance
             'tolerance': fps_tolerance,
             'fps_match': fps_match
         }
-        append_to_final_report(final_report_path, test_name or 'UNKNOWN', result)
+        append_to_final_report(final_report_path, test_name, result)
     
     return overall_pass
-
-def finalize_final_report(final_report_path, total_tests, passed_tests, failed_tests):
-    """Add final summary to report"""
-    try:
-        with open(final_report_path, 'a') as f:
-            f.write(f"\n{'='*50}\n")
-            f.write("FINAL SUMMARY\n")
-            f.write(f"Total: {total_tests}, Passed: {passed_tests}, Failed: {failed_tests}\n")
-            f.write(f"Success Rate: {(passed_tests * 100 // total_tests) if total_tests > 0 else 0}%\n")
-            f.write(f"{'='*50}\n")
-    except Exception as e:
-        print(f"Warning: Could not finalize report: {e}")
 
 def main():
     parser = argparse.ArgumentParser(description='Compare optimizer FPS results')
     parser.add_argument('--full-output', '-f', required=True, help='Full output file')
-    parser.add_argument('--golden', '-g', required=True, help='Golden values file')
-    parser.add_argument('--test-name', '-n', help='Test name (required for JSON)')
-    parser.add_argument('--tolerance', '-t', type=float, default=0.01, help='FPS tolerance')
+    parser.add_argument('--config-file', '-c', required=True, help='Test configuration file (JSON)')
+    parser.add_argument('--test-name', '-n', required=True, help='Test name')
+    parser.add_argument('--tolerance', '-t', type=float, default=0.01, help='FPS tolerance (overridden by config)')
     parser.add_argument('--final-report', '-r', help='Final report file')
-    parser.add_argument('--debug', '-d', action='store_true', help='Debug mode')
     
     args = parser.parse_args()
     
@@ -204,17 +187,12 @@ def main():
         print(f"❌ File not found: {args.full_output}")
         sys.exit(1)
     
-    if not os.path.exists(args.golden):
-        print(f"❌ File not found: {args.golden}")
-        sys.exit(1)
-    
-    # Check test name for JSON
-    if args.golden.lower().endswith('.json') and not args.test_name:
-        print("❌ Test name required for JSON golden file")
+    if not os.path.exists(args.config_file):
+        print(f"❌ Config file not found: {args.config_file}")
         sys.exit(1)
     
     # Run comparison
-    success = compare_results(args.full_output, args.golden, args.test_name, args.tolerance, args.final_report)
+    success = compare_results(args.full_output, args.config_file, args.test_name, args.tolerance, args.final_report)
     
     sys.exit(0 if success else 1)
 

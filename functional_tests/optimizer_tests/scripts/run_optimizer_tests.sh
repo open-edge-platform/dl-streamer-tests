@@ -14,9 +14,9 @@ while [[ $# -gt 0 ]]; do
         --search-duration) SEARCH_DURATION="$2"; shift 2 ;;
         --tolerance) CUSTOM_TOLERANCE="$2"; shift 2 ;;
         --models-path) MODELS_PATH="$2"; shift 2 ;;
-        --golden-file) GOLDEN_FILE="$2"; shift 2 ;;
+        --config-file) CONFIG_FILE="$2"; shift 2 ;;
         -h|--help)
-            echo "Usage: $0 [--results-dir PATH] [--search-duration SECONDS] [--tolerance PERCENT] [--models-path PATH] [--golden-file PATH]"
+            echo "Usage: $0 [--results-dir PATH] [--search-duration SECONDS] [--tolerance PERCENT] [--models-path PATH] [--config-file PATH]"
             exit 0 ;;
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
@@ -28,7 +28,7 @@ if [ -f /.dockerenv ]; then
     SEARCH_DURATION=${SEARCH_DURATION:-300}
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-${RESULTS_DIR:-/workspace/optimizer_results}}
     MODELS_PATH=${MODELS_PATH:-/home/dlstreamer/models}
-    GOLDEN_FILE=${GOLDEN_FILE:-/workspace/goldens/golden_values.json}
+    CONFIG_FILE=${CONFIG_FILE:-/workspace/config/test_config.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/workspace/test_scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/home/dlstreamer/dlstreamer/scripts/optimizer}
 else
@@ -36,7 +36,7 @@ else
     SEARCH_DURATION=${SEARCH_DURATION:-30}
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-${RESULTS_DIR:-/home/runner/optimizer_results}}
     MODELS_PATH=${MODELS_PATH:-/home/runner/models}
-    GOLDEN_FILE=${GOLDEN_FILE:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/goldens/golden_values.json}
+    CONFIG_FILE=${CONFIG_FILE:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/config/test_config.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/home/runner/dlstreamer/tests/functional_tests/optimizer_tests/scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/opt/intel/dlstreamer/scripts/optimizer}
     
@@ -62,12 +62,36 @@ print_info() { echo -e "${BLUE}${ENV_PREFIX} [INFO]${NC} $1"; }
 print_success() { echo -e "${GREEN}${ENV_PREFIX} [SUCCESS]${NC} $1"; }
 print_error() { echo -e "${RED}${ENV_PREFIX} [ERROR]${NC} $1"; }
 
-# Pipeline definitions
-declare -A PIPELINES TEST_PATHS
-PIPELINES["yolo11s_cpu"]="urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink"
-TEST_PATHS["yolo11s_cpu"]="TGL.yolo11s_cpu"
-PIPELINES["yolo11s_gpu"]="urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink"
-TEST_PATHS["yolo11s_gpu"]="TGL.yolo11s_gpu"
+# Function to load test configuration from JSON
+load_test_config() {
+    if [ ! -f "$CONFIG_FILE" ]; then
+        print_error "Config file not found: $CONFIG_FILE"
+        exit 1
+    fi
+    
+    # Check if jq is available
+    if ! command -v jq >/dev/null 2>&1; then
+        print_error "jq is required to parse JSON config file"
+        exit 1
+    fi
+    
+    print_info "Loading test configuration from: $CONFIG_FILE"
+}
+
+# Function to get test names from config
+get_test_names() {
+    jq -r 'keys[]' "$CONFIG_FILE"
+}
+
+# Function to get pipeline for test
+get_pipeline_to_test() {
+    local test_name=$1
+    local pipeline=$(jq -r ".[\"$test_name\"].pipeline_to_test" "$CONFIG_FILE")
+    
+    # Replace $MODELS_PATH placeholder
+    pipeline=${pipeline//\$MODELS_PATH/$MODELS_PATH}
+    echo "$pipeline"
+}
 
 # Basic checks
 check_prerequisites() {
@@ -75,35 +99,39 @@ check_prerequisites() {
     [ -d "$OPTIMIZER_DIR" ] || { print_error "Optimizer directory not found: $OPTIMIZER_DIR"; exit 1; }
     [ -f "$OPTIMIZER_DIR/__main__.py" ] || { print_error "Optimizer __main__.py not found"; exit 1; }
     [ -f "$COMPARE_SCRIPT" ] || { print_error "Compare script not found: $COMPARE_SCRIPT"; exit 1; }
-    [ -f "$GOLDEN_FILE" ] || { print_error "Golden file not found: $GOLDEN_FILE"; exit 1; }
+    [ -f "$CONFIG_FILE" ] || { print_error "Config file not found: $CONFIG_FILE"; exit 1; }
     command -v python3 >/dev/null || { print_error "Python3 not found"; exit 1; }
+    command -v jq >/dev/null || { print_error "jq not found (required for JSON parsing)"; exit 1; }
     print_success "Prerequisites OK"
 }
 
 test_pipeline() {
-    local name=$1 pipeline=$2 test_path=$3
-    local output_file="$RESULTS_DIR/${name}_full_output.txt"
+    local test_name=$1
+    local pipeline=$2
+    local output_file="$RESULTS_DIR/${test_name}_full_output.txt"
     
-    print_info "Testing pipeline: $name"
+    print_info "Testing pipeline: $test_name"
     print_info "Search duration: ${SEARCH_DURATION}s"
+    print_info "Pipeline: $pipeline"
     
     cd "$OPTIMIZER_DIR"
     if python3 . --search-duration "$SEARCH_DURATION" -- $pipeline > "$output_file" 2>&1; then
-        print_success "Optimizer completed for $name"
+        print_success "Optimizer completed for $test_name"
     else
         local exit_code=$?
-        print_error "Optimizer failed for $name (exit code: $exit_code)"
+        print_error "Optimizer failed for $test_name (exit code: $exit_code)"
         [ -f "$output_file" ] && tail -10 "$output_file"
         return 1
     fi
     
     [ -s "$output_file" ] || { print_error "Output file is empty"; return 1; }
     
-    if python3 "$COMPARE_SCRIPT" --full-output "$output_file" --golden "$GOLDEN_FILE" --test-name "$test_path" --tolerance "$TOLERANCE" --final-report "$FINAL_REPORT"; then
-        print_success "Test PASSED for $name"
+    # Poprawka: zmiana --golden na --config-file
+    if python3 "$COMPARE_SCRIPT" --full-output "$output_file" --config-file "$CONFIG_FILE" --test-name "$test_name" --tolerance "$TOLERANCE" --final-report "$FINAL_REPORT"; then
+        print_success "Test PASSED for $test_name"
         return 0
     else
-        print_error "Test FAILED for $name"
+        print_error "Test FAILED for $test_name"
         return 1
     fi
 }
@@ -111,23 +139,33 @@ test_pipeline() {
 # Main execution
 print_info "Environment: $([ -f /.dockerenv ] && echo "Docker" || echo "Host")"
 print_info "Results: $RESULTS_DIR | Duration: ${SEARCH_DURATION}s | Tolerance: ${TOLERANCE}%"
+print_info "Config file: $CONFIG_FILE"
 
 check_prerequisites
+load_test_config
 mkdir -p "$RESULTS_DIR"
 rm -f "$FINAL_REPORT"
 
 TOTAL_TESTS=0 PASSED_TESTS=0 FAILED_TESTS=0
 
-for pipeline_name in "${!PIPELINES[@]}"; do
+# Get all test names from config and run tests
+while IFS= read -r test_name; do
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
-    print_info "========== Test $TOTAL_TESTS: $pipeline_name =========="
+    print_info "========== Test $TOTAL_TESTS: $test_name =========="
     
-    if test_pipeline "$pipeline_name" "${PIPELINES[$pipeline_name]}" "${TEST_PATHS[$pipeline_name]}"; then
+    pipeline=$(get_pipeline_to_test "$test_name")
+    if [ -z "$pipeline" ] || [ "$pipeline" = "null" ]; then
+        print_error "No pipeline found for test: $test_name"
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        continue
+    fi
+    
+    if test_pipeline "$test_name" "$pipeline"; then
         PASSED_TESTS=$((PASSED_TESTS + 1))
     else
         FAILED_TESTS=$((FAILED_TESTS + 1))
     fi
-done
+done < <(get_test_names)
 
 # Summary
 print_info "========== SUMMARY =========="

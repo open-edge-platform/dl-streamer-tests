@@ -31,6 +31,11 @@ if [ -f /.dockerenv ]; then
     CONFIG_FILE=${CONFIG_FILE:-/workspace/optimizer_tests/test_config.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/workspace/optimizer_tests/scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/home/dlstreamer/dlstreamer/scripts/optimizer}
+    # Install jq in Docker environment
+    echo "Installing jq in Docker environment..."
+    apt update && apt install -y jq
+    echo "jq installed successfully"
+
 else
     ENV_PREFIX="[HOST]"
     SEARCH_DURATION=${SEARCH_DURATION:-30}
@@ -126,6 +131,20 @@ test_pipeline() {
     
     [ -s "$output_file" ] || { print_error "Output file is empty"; return 1; }
     
+    # Debugging przed wywołaniem compare_results.py
+    print_info "=== DEBUGGING BEFORE COMPARE ==="
+    print_info "CONFIG_FILE: '$CONFIG_FILE'"
+    print_info "CONFIG_FILE exists: $([ -f "$CONFIG_FILE" ] && echo "YES" || echo "NO")"
+    print_info "CONFIG_FILE realpath: '$(realpath "$CONFIG_FILE" 2>/dev/null || echo "FAILED TO RESOLVE")'"
+    print_info "COMPARE_SCRIPT: '$COMPARE_SCRIPT'"
+    print_info "COMPARE_SCRIPT exists: $([ -f "$COMPARE_SCRIPT" ] && echo "YES" || echo "NO")"
+    print_info "OUTPUT_FILE: '$output_file'"
+    print_info "OUTPUT_FILE exists: $([ -f "$output_file" ] && echo "YES" || echo "NO")"
+    print_info "FINAL_REPORT: '$FINAL_REPORT'"
+    print_info "TOLERANCE: '$TOLERANCE'"
+    print_info "Current dir: $(pwd)"
+    print_info "================================"
+    
     # Poprawka: zmiana --golden na --config-file
     if python3 "$COMPARE_SCRIPT" --full-output "$output_file" --config-file "$CONFIG_FILE" --test-name "$test_name" --tolerance "$TOLERANCE" --final-report "$FINAL_REPORT"; then
         print_success "Test PASSED for $test_name"
@@ -140,6 +159,21 @@ test_pipeline() {
 print_info "Environment: $([ -f /.dockerenv ] && echo "Docker" || echo "Host")"
 print_info "Results: $RESULTS_DIR | Duration: ${SEARCH_DURATION}s | Tolerance: ${TOLERANCE}%"
 print_info "Config file: $CONFIG_FILE"
+
+# Dodaj debugging głównych zmiennych
+print_info "=== DEBUGGING MAIN VARIABLES ==="
+print_info "Raw CONFIG_FILE variable: '$CONFIG_FILE'"
+print_info "Resolved CONFIG_FILE path: '$(realpath "$CONFIG_FILE" 2>/dev/null || echo "FAILED TO RESOLVE")'"
+print_info "CONFIG_FILE exists: $([ -f "$CONFIG_FILE" ] && echo "YES" || echo "NO")"
+print_info "COMPARE_SCRIPT: '$COMPARE_SCRIPT'"
+print_info "COMPARE_SCRIPT exists: $([ -f "$COMPARE_SCRIPT" ] && echo "YES" || echo "NO")"
+print_info "OPTIMIZER_DIR: '$OPTIMIZER_DIR'"
+print_info "OPTIMIZER_DIR exists: $([ -d "$OPTIMIZER_DIR" ] && echo "YES" || echo "NO")"
+print_info "MODELS_PATH: '$MODELS_PATH'"
+print_info "RESULTS_DIR: '$RESULTS_DIR'"
+print_info "Current working directory: $(pwd)"
+print_info "Script location: $(realpath "$0")"
+print_info "================================"
 
 check_prerequisites
 load_test_config

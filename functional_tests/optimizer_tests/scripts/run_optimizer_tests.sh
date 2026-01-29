@@ -39,8 +39,7 @@ else
     CONFIG_FILE=${CONFIG_FILE:-/home/runner/optimizer/functional_tests/optimizer_tests/test_config.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/home/runner/optimizer/functional_tests/optimizer_tests/scripts/compare_results.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/opt/intel/dlstreamer/scripts/optimizer}
-fi
-    
+
     # Set environment variables for host
     export LIBVA_DRIVER_NAME=iHD
     export GST_VA_ALL_DRIVERS=1

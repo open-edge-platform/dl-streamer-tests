@@ -13,52 +13,93 @@ from datetime import datetime
 
 def extract_pipeline_and_fps(filename):
     """Extract pipeline, FPS and initial FPS from logs"""
+    print(f"🔍 DEBUG: Starting extraction from file: {filename}")
+    
     try:
         with open(filename, 'r') as f:
             content = f.read()
         
+        print(f"🔍 DEBUG: File size: {len(content)} characters")
+        
         lines = content.split('\n')
+        print(f"🔍 DEBUG: Total lines: {len(lines)}")
+        
         pipeline = None
         fps = None
         initial_fps = None
         
         # Extract initial FPS
+        print("🔍 DEBUG: Searching for initial FPS...")
         initial_patterns = ['Initial pipeline FPS:', 'Original pipeline FPS:', 'Baseline FPS:']
-        for line in lines:
+        for line_num, line in enumerate(lines):
             for pattern in initial_patterns:
                 if pattern in line:
+                    print(f"🔍 DEBUG: Found initial FPS pattern '{pattern}' at line {line_num}: {line.strip()}")
                     match = re.search(r'FPS:\s*([\d.]+)', line)
                     if match:
                         initial_fps = float(match.group(1))
+                        print(f"🔍 DEBUG: Extracted initial FPS: {initial_fps}")
                         break
             if initial_fps:
                 break
         
+        if initial_fps is None:
+            print("🔍 DEBUG: No initial FPS found")
+        
         # Extract best pipeline and FPS
+        print("🔍 DEBUG: Searching for best pipeline and FPS...")
         best_patterns = ['Best found pipeline:', 'Optimized pipeline:', 'Best pipeline:']
         for i, line in enumerate(lines):
             for pattern in best_patterns:
                 if pattern in line:
+                    print(f"🔍 DEBUG: Found best pipeline pattern '{pattern}' at line {i}: {line.strip()}")
                     pipeline = line.split(pattern, 1)[1].strip()
+                    print(f"🔍 DEBUG: Extracted pipeline: {pipeline[:100]}...")
                     
                     # Look for FPS in next few lines
+                    print(f"🔍 DEBUG: Searching for FPS in next 5 lines after line {i}...")
                     for j in range(i+1, min(i+5, len(lines))):
+                        print(f"🔍 DEBUG: Checking line {j}: {lines[j].strip()}")
                         fps_patterns = [r'with fps:\s*([\d.]+)', r'FPS:\s*([\d.]+)', r'(\d+\.?\d*)\s*fps']
                         for fps_pattern in fps_patterns:
                             match = re.search(fps_pattern, lines[j], re.IGNORECASE)
                             if match:
                                 fps = float(match.group(1))
+                                print(f"🔍 DEBUG: Found FPS with pattern '{fps_pattern}': {fps}")
                                 break
                         if fps:
                             break
+                    
+                    if fps is None:
+                        print(f"🔍 DEBUG: No FPS found in lines {i+1} to {min(i+5, len(lines))}")
                     break
             if pipeline and fps:
                 break
         
+        if pipeline is None:
+            print("🔍 DEBUG: No best pipeline found")
+        if fps is None:
+            print("🔍 DEBUG: No current FPS found")
+            
+        # Show some sample lines for debugging
+        print("🔍 DEBUG: Sample lines from file:")
+        for i, line in enumerate(lines[:10]):
+            if line.strip():
+                print(f"🔍 DEBUG: Line {i}: {line.strip()}")
+        
+        print("🔍 DEBUG: Last 10 lines from file:")
+        for i, line in enumerate(lines[-10:], len(lines)-10):
+            if line.strip():
+                print(f"🔍 DEBUG: Line {i}: {line.strip()}")
+        
+        print(f"🔍 DEBUG: Final results - Pipeline: {'Found' if pipeline else 'None'}, FPS: {fps}, Initial FPS: {initial_fps}")
+        
         return pipeline, fps, initial_fps
         
     except Exception as e:
-        print(f"Error extracting from {filename}: {e}")
+        print(f"❌ DEBUG: Error extracting from {filename}: {e}")
+        import traceback
+        traceback.print_exc()
         return None, None, None
 
 def load_golden_values(config_file, test_name):
@@ -114,6 +155,10 @@ def append_to_final_report(final_report_path, test_name, result):
 
 def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, final_report_path=None):
     """Compare current results with golden values"""
+    
+    print(f"🔍 DEBUG: Starting comparison for test: {test_name}")
+    print(f"🔍 DEBUG: Full output path: {full_output_path}")
+    print(f"🔍 DEBUG: Config file: {config_file}")
     
     # Extract current results
     current_pipeline, current_fps, initial_fps = extract_pipeline_and_fps(full_output_path)

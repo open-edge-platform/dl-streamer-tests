@@ -34,7 +34,7 @@ if [ -f /.dockerenv ]; then
 else
     ENV_PREFIX="[HOST]"
     SEARCH_DURATION=${SEARCH_DURATION:-30}
-    RESULTS_DIR=${CUSTOM_RESULTS_DIR:-${RESULTS_DIR:-/home/runner/optimizer/optimizer_results}}
+    RESULTS_DIR=${CUSTOM_RESULTS_DIR:-${RESULTS_DIR:-/home/runner/optimizer/optimizer_results/host}}
     MODELS_PATH=${MODELS_PATH:-/home/runner/models}
     CONFIG_FILE=${CONFIG_FILE:-/home/runner/optimizer/functional_tests/optimizer_tests/test_config.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/home/runner/optimizer/functional_tests/optimizer_tests/scripts/compare_results.py}

@@ -102,6 +102,11 @@ def append_to_final_report(final_report_path, test_name, result):
             if result['initial_fps']:
                 improvement = ((result['current_fps'] - result['initial_fps']) / result['initial_fps']) * 100
                 f.write(f"Optimization: {improvement:.2f}%\n")
+            
+            # Add pipeline information to report
+            f.write(f"\nPIPELINE INFORMATION:\n")
+            f.write(f"Golden Pipeline: {result.get('golden_pipeline', 'N/A')}\n")
+            f.write(f"Current Pipeline: {result.get('current_pipeline', 'N/A')}\n")
             f.write("-" * 30 + "\n")
             
     except Exception as e:
@@ -155,7 +160,12 @@ def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, f
         print(f"Improvement: {improvement:.2f}%")
         print(f"Optimization: {'✅ PASS' if optimization_ok else '❌ FAIL'}")
     
-    print(f"OVERALL: {'✅ PASS' if overall_pass else '❌ FAIL'}")
+    # Display pipeline information
+    print(f"\nPIPELINE INFORMATION:")
+    print(f"Golden Pipeline:  {golden_pipeline}")
+    print(f"Current Pipeline: {current_pipeline if current_pipeline else 'N/A'}")
+    
+    print(f"\nOVERALL: {'✅ PASS' if overall_pass else '❌ FAIL'}")
     print("="*50)
     
     # Save to final report
@@ -166,7 +176,9 @@ def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, f
             'current_fps': current_fps,
             'initial_fps': initial_fps,
             'tolerance': fps_tolerance,
-            'fps_match': fps_match
+            'fps_match': fps_match,
+            'golden_pipeline': golden_pipeline,
+            'current_pipeline': current_pipeline if current_pipeline else 'N/A'
         }
         append_to_final_report(final_report_path, test_name, result)
     
@@ -177,7 +189,7 @@ def main():
     parser.add_argument('--full-output', '-f', required=True, help='Full output file')
     parser.add_argument('--config-file', '-c', required=True, help='Test configuration file (JSON)')
     parser.add_argument('--test-name', '-n', required=True, help='Test name')
-    parser.add_argument('--tolerance', '-t', type=float, default=0.01, help='FPS tolerance (overridden by config)')
+    parser.add_argument('--tolerance', '-t', type=float, default=0.01, help='FPS tolerance')
     parser.add_argument('--final-report', '-r', help='Final report file')
     
     args = parser.parse_args()

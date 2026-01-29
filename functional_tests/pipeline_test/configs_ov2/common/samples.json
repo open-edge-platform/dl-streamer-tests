@@ -240,6 +240,11 @@
             "dataset.groundtruth": "detection_yolo11s_int8_CPU.json",
             "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo11s,CPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_1000},json,,INT8"
         },
+        "REMOVE_ME_yolo11s_CPU": {
+            "name": "yolo11s_CPU",
+            "dataset.groundtruth": "detection_yolo11s_CPU.json",
+            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo11s,CPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,json,,INT8"
+        },
         "yolo11s-obb_CPU": {
             "name": "yolo11s-obb_CPU",
             "dataset.groundtruth": "yolo11s-obb_CPU.json",

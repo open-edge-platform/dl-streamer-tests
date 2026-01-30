@@ -127,12 +127,17 @@ def load_golden_values(config_file, test_name):
 
 def append_to_final_report(final_report_path, test_name, result):
     """Append test result to final report"""
+    print(f"🔍 DEBUG: append_to_final_report called with path: {final_report_path}")
+    print(f"🔍 DEBUG: File exists before: {os.path.exists(final_report_path)}")
     try:
         if not os.path.exists(final_report_path):
+            print(f"🔍 DEBUG: Creating new final report file")
             with open(final_report_path, 'w') as f:
                 f.write("OPTIMIZER TESTS - FINAL REPORT\n")
                 f.write("="*50 + "\n")
+            print(f"🔍 DEBUG: Header written successfully")
         
+        print(f"🔍 DEBUG: Appending test results for: {test_name}")
         with open(final_report_path, 'a') as f:
             f.write(f"\nTEST: {test_name}\n")
             f.write(f"Status: {result['status']}\n")
@@ -149,7 +154,10 @@ def append_to_final_report(final_report_path, test_name, result):
             f.write(f"Golden Pipeline: {result.get('golden_pipeline', 'N/A')}\n")
             f.write(f"Current Pipeline: {result.get('current_pipeline', 'N/A')}\n")
             f.write("-" * 30 + "\n")
-            
+
+        print(f"🔍 DEBUG: Final report updated successfully")
+        print(f"🔍 DEBUG: File exists after: {os.path.exists(final_report_path)}")
+
     except Exception as e:
         print(f"Warning: Could not write to final report: {e}")
 
@@ -249,8 +257,13 @@ def main():
         sys.exit(1)
     
     # Run comparison
+    print(f"🔍 DEBUG: final_report argument received: {args.final_report}")
     success = compare_results(args.full_output, args.config_file, args.test_name, args.tolerance, args.final_report)
-    
+
+    if args.final_report:
+        print(f"🔍 DEBUG: Checking if final report was created: {args.final_report}")
+        print(f"🔍 DEBUG: File exists: {os.path.exists(args.final_report)}")
+
     sys.exit(0 if success else 1)
 
 if __name__ == "__main__":

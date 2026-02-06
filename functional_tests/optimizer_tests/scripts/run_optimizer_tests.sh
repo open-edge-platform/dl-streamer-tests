@@ -115,7 +115,7 @@ test_pipeline() {
     print_info "Pipeline: $pipeline"
     
     cd "$OPTIMIZER_DIR"
-    if python3 . --search-duration "$SEARCH_DURATION" -- $pipeline > "$output_file" 2>&1; then
+    if python3 . fps --search-duration "$SEARCH_DURATION" -- $pipeline > "$output_file" 2>&1; then
         print_success "Optimizer completed for $test_name"
     else
         local exit_code=$?

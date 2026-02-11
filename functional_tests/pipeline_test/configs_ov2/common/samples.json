@@ -547,11 +547,6 @@
             "dataset.groundtruth": "multi_stream_twomodels_NPU_NPU.json",
             "sample.command": "{sample.dir}/gst_launch/multi_stream/multi_stream_sample.sh,{dataset.video}/Pexels_Videos_4786_960x540.mp4,NPU,NPU,yolov8s,yolov9c,json"
         },
-        "multistream_twomodels_npu_yolo26s_npu_yolo11s": {
-            "name": "multistream_twomodels_npu_yolo26s_npu_yolo11s",
-            "dataset.groundtruth": "multi_stream_twomodels_npu_yolo26s_npu_yolo11s_identity_600.json",
-            "sample.command": "{sample.dir}/gst_launch/multi_stream/multi_stream_sample.sh,{dataset.video}/Pexels_Videos_4786_960x540.mp4 {identity_600},NPU,NPU,yolo26s,yolo11s,json"
-        },
         "custom_postproc_detect_CPU": {
             "name": "custom_postproc_detect_CPU",
             "dataset.groundtruth": "custom_postproc_detect_CPU.json",

@@ -360,6 +360,11 @@
             "dataset.groundtruth": "multi_stream_twomodels_cpu_gpu_identity_600.json",
             "sample.command": "{sample.dir}/gst_launch/multi_stream/multi_stream_sample.sh,{dataset.video}/Pexels_Videos_4786_960x540.mp4 {identity_600},CPU,GPU,yolov8s,yolov9c,json"
         },
+        "multistream_twomodels_cpu_yolo26s_gpu_yolo11s": {
+            "name": "multistream_twomodels_cpu_yolo26s_gpu_yolo11s",
+            "dataset.groundtruth": "multi_stream_twomodels_cpu_yolo26s_gpu_yolo11s_identity_600.json",
+            "sample.command": "{sample.dir}/gst_launch/multi_stream/multi_stream_sample.sh,{dataset.video}/Pexels_Videos_4786_960x540.mp4 {identity_600},CPU,GPU,yolo26s,yolo11s,json"
+        },
         "cpp_draw_attributes_CPU": {
             "name": "cpp_draw_attributes_CPU",
             "dataset.groundtruth": "cpp_draw_face_attributes_CPU_identity_3000.json",

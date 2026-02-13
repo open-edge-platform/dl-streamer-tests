@@ -1,3 +1,8 @@
+# ==============================================================================
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: MIT
+# ==============================================================================
 import logging
 
 import os
@@ -78,8 +83,7 @@ class VideoGTComparator(BaseGTComparator):
         self._oc_comparator = ObjectClassificationComparator(config.check_mode, logger=_logger)
         self._rim_comparator = RawInferenceMetaComparator(edistance_th, config.check_mode, logger=_logger)
         self._lbl_max_err_thr = lbl_max_err_thr
-        self.test_name = test_case.name 
-        self.issue_key = test_case.issue_key
+        self.test_name = test_case.name
 
     def _equal_classes(self, target, result):
         for target_obj, result_obj in zip(target, result):
@@ -130,7 +134,7 @@ class VideoGTComparator(BaseGTComparator):
             raw_frames = []
             for line in file:
                 line = line.strip()  # Remove leading/trailing spaces & newlines
-                if not line:  
+                if not line:
                     continue  # Skip empty lines
                 if line.startswith("[") and line.endswith("]"):
                     line = line[1:-1]  # Remove brackets

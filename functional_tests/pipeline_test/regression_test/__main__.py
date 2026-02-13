@@ -55,8 +55,8 @@ def create_arg_parser():
                         help="Euclidean distance threshold for raw tensor comparsion. 0 = disable")
     parser.add_argument('-cl', '--check_level', type=CheckLevel, choices=list(CheckLevel),
                         default=CheckLevel.full, help="Check level")
-    parser.add_argument('-et', '--error_thr', type=float, default=0.1,
-                        help="Error threshold")
+    parser.add_argument('-et', '--error_thr', type=float, default=0.03,
+                        help="Error threshold for Bbox detection and Additional metas have different size failed frames")
     parser.add_argument('-lct', '--low_conf_thr', type=float, default=0.55,
                         help="Max allowed confidence for bbox in first json to not have a pair bbox in second json")
     parser.add_argument('--disable_tqdm', default=False, action='store_true', help="Disable progress bar")

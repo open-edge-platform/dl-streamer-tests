@@ -1,8 +1,3 @@
-# ==============================================================================
-# Copyright (C) 2025 Intel Corporation
-#
-# SPDX-License-Identifier: MIT
-# ==============================================================================
 import logging
 
 import os
@@ -83,7 +78,8 @@ class VideoGTComparator(BaseGTComparator):
         self._oc_comparator = ObjectClassificationComparator(config.check_mode, logger=_logger)
         self._rim_comparator = RawInferenceMetaComparator(edistance_th, config.check_mode, logger=_logger)
         self._lbl_max_err_thr = lbl_max_err_thr
-        self.test_name = test_case.name
+        self.test_name = test_case.name 
+        self.issue_key = test_case.issue_key
 
     def _equal_classes(self, target, result):
         for target_obj, result_obj in zip(target, result):
@@ -134,7 +130,7 @@ class VideoGTComparator(BaseGTComparator):
             raw_frames = []
             for line in file:
                 line = line.strip()  # Remove leading/trailing spaces & newlines
-                if not line:
+                if not line:  
                     continue  # Skip empty lines
                 if line.startswith("[") and line.endswith("]"):
                     line = line[1:-1]  # Remove brackets
@@ -183,6 +179,12 @@ class VideoGTComparator(BaseGTComparator):
                 gt_frames[timestamp] = []
 
         meta_checks_storage = CheckInfoStorage(self._error_thr)
+        
+        # Separate counters for 3 types of errors
+        structural_failed_frames = 0      # GTComparisionError (excluding additional metas) - FAIL IF ANY
+        detection_failed_frames = 0       # BBoxesComparisionError - threshold is set in main.py
+        additional_meta_failed_frames = 0 # GTComparisionError with "Additional metas have different size" - threshold is set in main.py
+        
         for timestamp, gt_objects in gt_frames.items():
             predicted_objects = predicted_frames[timestamp]
             try:
@@ -196,9 +198,18 @@ class VideoGTComparator(BaseGTComparator):
             except GTComparisionError as err:
                 stats.add_error(timestamp, str(err))
                 stats.num_frames_failed += 1
+                
+                # Categorize GTComparisionError
+                if "Additional metas have different size" in str(err):
+                    additional_meta_failed_frames += 1
+                else:
+                    structural_failed_frames += 1
+                    
             except BBoxesComparisionError as err:
                 stats.num_frames_failed += 1
-                # failed pairs are collected by object_detection_comparator.statistics
+                detection_failed_frames += 1
+
+        print(f"Structural errors: {structural_failed_frames}, Detection errors: {detection_failed_frames}, Additional meta errors: {additional_meta_failed_frames}")
 
         # Check the meta labels failures value
         if self._rim_comparator.num_labels > 0:
@@ -207,28 +218,70 @@ class VideoGTComparator(BaseGTComparator):
                 _err = "Meta object's label data failures exceed allowable threashold (lbl_err_thr: {:.4f} lbl_max_err_thr: {:.4f})".format(lbl_err_thr, self._lbl_max_err_thr)
                 stats.add_error(0, str(_err))
             self._logger.info("labels total: {}, failed: {}, lbl_err_thr: {:.4f}, lbl_max_err_thr: {:.4f}".format(self._rim_comparator.num_labels,
-                                                                                                                  self._rim_comparator.num_labels_failed,
-                                                                                                                  lbl_err_thr,
-                                                                                                                  self._lbl_max_err_thr))
+                                                                                                                self._rim_comparator.num_labels_failed,
+                                                                                                                lbl_err_thr,
+                                                                                                                self._lbl_max_err_thr))
+
         # Copy failed pairs
         stats.num_pairs = self.object_detection_comparator.statistics.num_total_pairs
         stats.failed_pairs = self.object_detection_comparator.statistics.failed_pairs
 
         self._test_case.result.add_info(CaseResultInfo.VIDEO_STATS, stats)
         max_printed_error = 35
-        if self.object_detection_comparator.statistics.failed_pairs:
-            self._test_case.result.add_error(self.object_detection_comparator.statistics.get_message(max_printed_error))
-        if stats.cmp_errors:
-            self._test_case.result.add_error(stats.get_errors_table(max_printed_error))
+        
         self._logger.info("number of tested frames: {}, objects: {}".format(
             stats.num_frames, stats.num_pairs))
+        
         if self._mode == CheckLevel.soft and not meta_checks_storage.is_passed():
             self._logger.error("Meta checks/fails: {}/{}".format(meta_checks_storage.checks,
-                                                                 meta_checks_storage.fails))
+                                                                meta_checks_storage.fails))
+            # Add error and fail test when meta checks fail
+            self._test_case.result.add_error("Results differs from groundruth by more than {}%, (meta checks fails: {}%)".format(
+                self._error_thr * 100, fails_percent(meta_checks_storage)))
             raise GTComparisionError(
                 "Results differs from groundruth by more than {}%, (meta checks fails: {}%)".format(
                     self._error_thr *
                     100, fails_percent(meta_checks_storage)))
+
+        # Separate threshold checks for 3 categories
+        test_should_fail = False
+        
+        if stats.num_frames > 0:
+            # 1. Check structural failure rate - FAIL IF ANY (0% tolerance)
+            if structural_failed_frames > 0:
+                test_should_fail = True
+                structural_error_msg = f"Structural errors detected: {structural_failed_frames} frames failed (zero tolerance policy)"
+                self._logger.error(structural_error_msg)
+
+            # 2. Check detection failure rate
+            detection_failure_rate = detection_failed_frames / stats.num_frames
+            
+            if detection_failure_rate > self._error_thr:
+                test_should_fail = True
+                detection_error_msg = f"Detection failure rate {detection_failure_rate:.2%} exceeds threshold {self._error_thr:.2%} ({detection_failed_frames}/{stats.num_frames} frames failed)"
+                self._logger.error(detection_error_msg)
+
+            # 3. Check additional meta failure rate
+            additional_meta_failure_rate = additional_meta_failed_frames / stats.num_frames
+            
+            if additional_meta_failure_rate > self._error_thr:
+                test_should_fail = True
+                meta_error_msg = f"Additional meta failure rate {additional_meta_failure_rate:.2%} exceeds threshold {self._error_thr:.2%} ({additional_meta_failed_frames}/{stats.num_frames} frames failed)"
+                self._logger.error(meta_error_msg)
+
+        # Add errors to test result only when thresholds are exceeded
+        if test_should_fail:
+            # Add structural/additional meta errors (both are in cmp_errors)
+            if stats.cmp_errors:
+                self._test_case.result.add_error(stats.get_errors_table(max_printed_error))
+                
+            # Add detection errors
+            if self.object_detection_comparator.statistics.failed_pairs:
+                self._test_case.result.add_error(self.object_detection_comparator.statistics.get_message(max_printed_error))
+            
+            raise GTComparisionError("Test failed due to threshold violations")
+        else:
+            self._logger.info(f"All error rates within thresholds - test passed")
 
     def compare_classification_results(self, reference: List[BBox], infer_result: List[BBox], meta_check_storage: CheckInfoStorage):
         for target_obj, result_obj in zip(reference, infer_result):

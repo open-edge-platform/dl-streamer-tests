@@ -257,7 +257,7 @@ class VideoGTComparator(BaseGTComparator):
                 structural_error_msg = f"Structural errors detected: {structural_failed_frames} frames failed (zero tolerance policy)"
                 self._logger.error(structural_error_msg)
 
-            # 2. Check detection failure rate
+            # 2. Check detection failure rate (error_thr is set in main.py currently to 3%)
             detection_failure_rate = detection_failed_frames / stats.num_frames
             
             if detection_failure_rate > self._error_thr:
@@ -265,7 +265,7 @@ class VideoGTComparator(BaseGTComparator):
                 detection_error_msg = f"Detection failure rate {detection_failure_rate:.2%} exceeds threshold {self._error_thr:.2%} ({detection_failed_frames}/{stats.num_frames} frames failed)"
                 self._logger.error(detection_error_msg)
 
-            # 3. Check additional meta failure rate
+            # 3. Check additional meta failure rate (error_thr is set in main.py currently to 3%)
             additional_meta_failure_rate = additional_meta_failed_frames / stats.num_frames
             
             if additional_meta_failure_rate > self._error_thr:

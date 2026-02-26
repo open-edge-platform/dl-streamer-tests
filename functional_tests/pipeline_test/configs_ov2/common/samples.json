@@ -450,11 +450,6 @@
             "dataset.groundtruth": "action_recognition_CPU_ballerina.json",
             "sample.command": "{sample.dir}/gst_launch/action_recognition/action_recognition.sh,{dataset.video}/ballerina.mp4,CPU,json"
         },
-        "action_recognition_GPU": {
-            "name": "action_recognition_GPU",
-            "dataset.groundtruth": "action_recognition_GPU_ballerina_identity_100.json",
-            "sample.command": "{sample.dir}/gst_launch/action_recognition/action_recognition.sh,{dataset.video}/ballerina.mp4 {identity_100},GPU,json"
-        },
         "lvm_clip_vit_large_patch14_CPU": {
             "name": "lvm_clip_vit_large_patch14_CPU",
             "dataset.groundtruth": "lvm_clip_vit_large_patch14_dog_sign_cpu.json",

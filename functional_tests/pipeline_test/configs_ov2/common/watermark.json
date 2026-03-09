@@ -1,0 +1,379 @@
+{
+    "test_set_properties": {
+        "dataset.comparator_type": "watermark",
+        "dataset.attachroi_json.dir": "attachroi_json",
+        "dataset.artifacts": "/tmp/results/metadata/",
+        "dataset.video": "/tmp/video-examples",
+        "dataset.pixel_threshold": 2,
+        "dataset.bad_pixel_fraction": 0.001
+    },
+    "test_sets": {
+        "watermark_keypoints_ff_BGRA_sysmem_gvawatermark": {
+            "name": "watermark_keypoints_ff_BGRA_sysmem_gvawatermark",
+            "issue_key": "NEX-T14591",
+            "pipeline.scenario_name": "keypoints_ff",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=BGRA ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_ff_BGRA_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_ff_BGRA_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_keypoints_ff_BGRA_sysmem_gvawatermark"
+        },
+        "watermark_keypoints_ff_NV12_sysmem_gvawatermark": {
+            "name": "watermark_keypoints_ff_NV12_sysmem_gvawatermark",
+            "issue_key": "NEX-T14592",
+            "pipeline.scenario_name": "keypoints_ff",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_ff_NV12_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_ff_NV12_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_keypoints_ff_NV12_sysmem_gvawatermark"
+        },
+        "watermark_keypoints_ff_I420_sysmem_gvawatermark": {
+            "name": "watermark_keypoints_ff_I420_sysmem_gvawatermark",
+            "issue_key": "NEX-T14593",
+            "pipeline.scenario_name": "keypoints_ff",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=I420 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_ff_I420_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_ff_I420_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_keypoints_ff_I420_sysmem_gvawatermark"
+        },
+        "watermark_keypoints_ff_NV12_vamem_gvawatermark": {
+            "name": "watermark_keypoints_ff_NV12_vamem_gvawatermark",
+            "issue_key": "NEX-T14594",
+            "pipeline.scenario_name": "keypoints_ff",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_ff_NV12_vamem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_ff_NV12_vamem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_keypoints_ff_NV12_vamem_gvawatermark"
+        },
+        "watermark_keypoints_ff_DMA_DRM_dmabuf_gvawatermark": {
+            "name": "watermark_keypoints_ff_DMA_DRM_dmabuf_gvawatermark",
+            "issue_key": "NEX-T15554",
+            "pipeline.scenario_name": "keypoints_ff",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:DMABuf),format=DMA_DRM ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_ff_DMA_DRM_dmabuf_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_ff_DMA_DRM_dmabuf_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_keypoints_ff_DMA_DRM_dmabuf_gvawatermark"
+        },
+        "watermark_keypoints_roi_list_BGRA_sysmem_gvawatermark": {
+            "name": "watermark_keypoints_roi_list_BGRA_sysmem_gvawatermark",
+            "issue_key": "NEX-T14595",
+            "pipeline.scenario_name": "keypoints_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=BGRA ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_roi_list_BGRA_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_roi_list_BGRA_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_keypoints_roi_list_BGRA_sysmem_gvawatermark"
+        },
+        "watermark_keypoints_roi_list_NV12_sysmem_gvawatermark": {
+            "name": "watermark_keypoints_roi_list_NV12_sysmem_gvawatermark",
+            "issue_key": "NEX-T14596",
+            "pipeline.scenario_name": "keypoints_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_roi_list_NV12_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_roi_list_NV12_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_keypoints_roi_list_NV12_sysmem_gvawatermark"
+        },
+        "watermark_keypoints_roi_list_I420_sysmem_gvawatermark": {
+            "name": "watermark_keypoints_roi_list_I420_sysmem_gvawatermark",
+            "issue_key": "NEX-T14597",
+            "pipeline.scenario_name": "keypoints_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=I420 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_roi_list_I420_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_roi_list_I420_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_keypoints_roi_list_I420_sysmem_gvawatermark"
+        },
+        "watermark_keypoints_roi_list_NV12_vamem_gvawatermark": {
+            "name": "watermark_keypoints_roi_list_NV12_vamem_gvawatermark",
+            "issue_key": "NEX-T14598",
+            "pipeline.scenario_name": "keypoints_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_roi_list_NV12_vamem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_roi_list_NV12_vamem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_keypoints_roi_list_NV12_vamem_gvawatermark"
+        },
+        "watermark_keypoints_roi_list_DMA_DRM_dmabuf_gvawatermark": {
+            "name": "watermark_keypoints_roi_list_DMA_DRM_dmabuf_gvawatermark",
+            "issue_key": "NEX-T15555",
+            "pipeline.scenario_name": "keypoints_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:DMABuf),format=DMA_DRM ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_roi_list_DMA_DRM_dmabuf_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_roi_list_DMA_DRM_dmabuf_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_keypoints_roi_list_DMA_DRM_dmabuf_gvawatermark"
+        },
+        "watermark_landmarks_roi_list_BGRA_sysmem_gvawatermark": {
+            "name": "watermark_landmarks_roi_list_BGRA_sysmem_gvawatermark",
+            "issue_key": "NEX-T14599",
+            "pipeline.scenario_name": "landmarks_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=BGRA ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_landmarks_roi_list_BGRA_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_landmarks_roi_list_BGRA_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_landmarks_roi_list_BGRA_sysmem_gvawatermark"
+        },
+        "watermark_landmarks_roi_list_NV12_sysmem_gvawatermark": {
+            "name": "watermark_landmarks_roi_list_NV12_sysmem_gvawatermark",
+            "issue_key": "NEX-T14600",
+            "pipeline.scenario_name": "landmarks_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_landmarks_roi_list_NV12_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_landmarks_roi_list_NV12_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_landmarks_roi_list_NV12_sysmem_gvawatermark"
+        },
+        "watermark_landmarks_roi_list_I420_sysmem_gvawatermark": {
+            "name": "watermark_landmarks_roi_list_I420_sysmem_gvawatermark",
+            "issue_key": "NEX-T14601",
+            "pipeline.scenario_name": "landmarks_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=I420 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_landmarks_roi_list_I420_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_landmarks_roi_list_I420_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_landmarks_roi_list_I420_sysmem_gvawatermark"
+        },
+        "watermark_landmarks_roi_list_NV12_vamem_gvawatermark": {
+            "name": "watermark_landmarks_roi_list_NV12_vamem_gvawatermark",
+            "issue_key": "NEX-T14602",
+            "pipeline.scenario_name": "landmarks_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_landmarks_roi_list_NV12_vamem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_landmarks_roi_list_NV12_vamem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_landmarks_roi_list_NV12_vamem_gvawatermark"
+        },
+        "watermark_landmarks_roi_list_DMA_DRM_dmabuf_gvawatermark": {
+            "name": "watermark_landmarks_roi_list_DMA_DRM_dmabuf_gvawatermark",
+            "issue_key": "NEX-T15556",
+            "pipeline.scenario_name": "landmarks_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:DMABuf),format=DMA_DRM ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_landmarks_roi_list_DMA_DRM_dmabuf_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_landmarks_roi_list_DMA_DRM_dmabuf_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_landmarks_roi_list_DMA_DRM_dmabuf_gvawatermark"
+        },
+        "watermark_full_frame_BGRA_sysmem_gvawatermark": {
+            "name": "watermark_full_frame_BGRA_sysmem_gvawatermark",
+            "issue_key": "NEX-T14603",
+            "pipeline.scenario_name": "full_frame",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=BGRA ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_full_frame_BGRA_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_full_frame_BGRA_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_full_frame_BGRA_sysmem_gvawatermark"
+        },
+        "watermark_full_frame_NV12_sysmem_gvawatermark": {
+            "name": "watermark_full_frame_NV12_sysmem_gvawatermark",
+            "issue_key": "NEX-T14604",
+            "pipeline.scenario_name": "full_frame",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_full_frame_NV12_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_full_frame_NV12_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_full_frame_NV12_sysmem_gvawatermark"
+        },
+        "watermark_full_frame_I420_sysmem_gvawatermark": {
+            "name": "watermark_full_frame_I420_sysmem_gvawatermark",
+            "issue_key": "NEX-T14605",
+            "pipeline.scenario_name": "full_frame",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=I420 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_full_frame_I420_sysmem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_full_frame_I420_sysmem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_full_frame_I420_sysmem_gvawatermark"
+        },
+        "watermark_full_frame_NV12_vamem_gvawatermark": {
+            "name": "watermark_full_frame_NV12_vamem_gvawatermark",
+            "issue_key": "NEX-T14606",
+            "pipeline.scenario_name": "full_frame",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_full_frame_NV12_vamem_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_full_frame_NV12_vamem_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_full_frame_NV12_vamem_gvawatermark"
+        },
+        "watermark_full_frame_DMA_DRM_dmabuf_gvawatermark": {
+            "name": "watermark_full_frame_DMA_DRM_dmabuf_gvawatermark",
+            "issue_key": "NEX-T15557",
+            "pipeline.scenario_name": "full_frame",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:DMABuf),format=DMA_DRM ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_full_frame_DMA_DRM_dmabuf_gvawatermark/frame_%05d.png",
+            "dataset.groundtruth": "watermark_full_frame_DMA_DRM_dmabuf_gvawatermark",
+            "pipeline.out_frames_dir": "watermark_full_frame_DMA_DRM_dmabuf_gvawatermark"
+        },
+        "watermark_keypoints_ff_NV12_vamem_gvawatermark_gpu": {
+            "name": "watermark_keypoints_ff_NV12_vamem_gvawatermark_gpu",
+            "issue_key": "NEX-T20000",
+            "pipeline.scenario_name": "keypoints_ff",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvawatermark device=GPU ! vapostproc ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_ff_NV12_vamem_gvawatermark_gpu/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_ff_NV12_vamem_gvawatermark_gpu",
+            "pipeline.out_frames_dir": "watermark_keypoints_ff_NV12_vamem_gvawatermark_gpu"
+        },
+        "watermark_keypoints_roi_list_NV12_vamem_gvawatermark_gpu": {
+            "name": "watermark_keypoints_roi_list_NV12_vamem_gvawatermark_gpu",
+            "issue_key": "NEX-T20001",
+            "pipeline.scenario_name": "keypoints_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvawatermark device=GPU ! vapostproc ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_roi_list_NV12_vamem_gvawatermark_gpu/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_roi_list_NV12_vamem_gvawatermark_gpu",
+            "pipeline.out_frames_dir": "watermark_keypoints_roi_list_NV12_vamem_gvawatermark_gpu"
+        },
+        "watermark_landmarks_roi_list_NV12_vamem_gvawatermark_gpu": {
+            "name": "watermark_landmarks_roi_list_NV12_vamem_gvawatermark_gpu",
+            "issue_key": "NEX-T20002",
+            "pipeline.scenario_name": "landmarks_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvawatermark device=GPU ! vapostproc ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_landmarks_roi_list_NV12_vamem_gvawatermark_gpu/frame_%05d.png",
+            "dataset.groundtruth": "watermark_landmarks_roi_list_NV12_vamem_gvawatermark_gpu",
+            "pipeline.out_frames_dir": "watermark_landmarks_roi_list_NV12_vamem_gvawatermark_gpu"
+        },
+        "watermark_full_frame_NV12_vamem_gvawatermark_gpu": {
+            "name": "watermark_full_frame_NV12_vamem_gvawatermark_gpu",
+            "issue_key": "NEX-T20003",
+            "pipeline.scenario_name": "full_frame",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvawatermark device=GPU ! vapostproc ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_full_frame_NV12_vamem_gvawatermark_gpu/frame_%05d.png",
+            "dataset.groundtruth": "watermark_full_frame_NV12_vamem_gvawatermark_gpu",
+            "pipeline.out_frames_dir": "watermark_full_frame_NV12_vamem_gvawatermark_gpu"
+        },
+        "watermark_full_frame_NV12_sysmem_displ_no_labels": {
+            "name": "watermark_full_frame_NV12_sysmem_displ_no_labels",
+            "issue_key": "NEX-T20004",
+            "pipeline.scenario_name": "full_frame",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU displ-cfg=show-labels=false ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_full_frame_NV12_sysmem_displ_no_labels/frame_%05d.png",
+            "dataset.groundtruth": "watermark_full_frame_NV12_sysmem_displ_no_labels",
+            "pipeline.out_frames_dir": "watermark_full_frame_NV12_sysmem_displ_no_labels"
+        },
+        "watermark_full_frame_NV12_sysmem_displ_font_scale": {
+            "name": "watermark_full_frame_NV12_sysmem_displ_font_scale",
+            "issue_key": "NEX-T20005",
+            "pipeline.scenario_name": "full_frame",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU displ-cfg=font-scale=1.5 ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_full_frame_NV12_sysmem_displ_font_scale/frame_%05d.png",
+            "dataset.groundtruth": "watermark_full_frame_NV12_sysmem_displ_font_scale",
+            "pipeline.out_frames_dir": "watermark_full_frame_NV12_sysmem_displ_font_scale"
+        },
+        "watermark_full_frame_NV12_sysmem_displ_no_txt_bg": {
+            "name": "watermark_full_frame_NV12_sysmem_displ_no_txt_bg",
+            "issue_key": "NEX-T20006",
+            "pipeline.scenario_name": "full_frame",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU displ-cfg=draw-txt-bg=false ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_full_frame_NV12_sysmem_displ_no_txt_bg/frame_%05d.png",
+            "dataset.groundtruth": "watermark_full_frame_NV12_sysmem_displ_no_txt_bg",
+            "pipeline.out_frames_dir": "watermark_full_frame_NV12_sysmem_displ_no_txt_bg"
+        },
+        "watermark_keypoints_roi_list_NV12_sysmem_displ_thickness": {
+            "name": "watermark_keypoints_roi_list_NV12_sysmem_displ_thickness",
+            "issue_key": "NEX-T20007",
+            "pipeline.scenario_name": "keypoints_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU displ-cfg=thickness=5 ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_roi_list_NV12_sysmem_displ_thickness/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_roi_list_NV12_sysmem_displ_thickness",
+            "pipeline.out_frames_dir": "watermark_keypoints_roi_list_NV12_sysmem_displ_thickness"
+        },
+        "watermark_keypoints_roi_list_NV12_sysmem_displ_color": {
+            "name": "watermark_keypoints_roi_list_NV12_sysmem_displ_color",
+            "issue_key": "NEX-T20008",
+            "pipeline.scenario_name": "keypoints_roi_list",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "videotestsrc num-buffers=15 pattern=white ! video/x-raw,format=NV12 ! gvaattachroi mode=1 file-path={dataset.attachroi_json.dir}/{pipeline.scenario_name}.json ! gvawatermark device=CPU displ-cfg=color-idx=2 ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_keypoints_roi_list_NV12_sysmem_displ_color/frame_%05d.png",
+            "dataset.groundtruth": "watermark_keypoints_roi_list_NV12_sysmem_displ_color",
+            "pipeline.out_frames_dir": "watermark_keypoints_roi_list_NV12_sysmem_displ_color"
+        },
+        "watermark_yolo11s_detect_GPU_wm_CPU": {
+            "name": "watermark_yolo11s_detect_GPU_wm_CPU",
+            "issue_key": "NEX-T20009",
+            "pipeline.params.inference.model.name": "yolo11s",
+            "pipeline.params.inference.model.precision": "FP32",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "filesrc location={dataset.video}/Pexels_Videos_4786.mp4 ! decodebin3 ! identity eos-after=15 ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! queue ! gvadetect inference-region=full-frame device=GPU pre-process-backend=va-surface-sharing model={pipeline.params.inference.model.path} ! queue ! vapostproc ! video/x-raw,format=NV12 ! gvawatermark device=CPU ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_yolo11s_detect_GPU_wm_CPU/frame_%05d.png",
+            "dataset.groundtruth": "watermark_yolo11s_detect_GPU_wm_CPU",
+            "pipeline.out_frames_dir": "watermark_yolo11s_detect_GPU_wm_CPU"
+        },
+        "watermark_yolo11s_detect_GPU_wm_GPU": {
+            "name": "watermark_yolo11s_detect_GPU_wm_GPU",
+            "issue_key": "NEX-T20010",
+            "pipeline.params.inference.model.name": "yolo11s",
+            "pipeline.params.inference.model.precision": "FP32",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "filesrc location={dataset.video}/Pexels_Videos_4786.mp4 ! decodebin3 ! identity eos-after=15 ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! queue ! gvadetect inference-region=full-frame device=GPU pre-process-backend=va-surface-sharing model={pipeline.params.inference.model.path} ! queue ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvawatermark device=GPU ! vapostproc ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_yolo11s_detect_GPU_wm_GPU/frame_%05d.png",
+            "dataset.groundtruth": "watermark_yolo11s_detect_GPU_wm_GPU",
+            "pipeline.out_frames_dir": "watermark_yolo11s_detect_GPU_wm_GPU"
+        },
+        "watermark_yolo11s_detect_GPU_wm_CPU_displ_cfg": {
+            "name": "watermark_yolo11s_detect_GPU_wm_CPU_displ_cfg",
+            "issue_key": "NEX-T20011",
+            "pipeline.params.inference.model.name": "yolo11s",
+            "pipeline.params.inference.model.precision": "FP32",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "filesrc location={dataset.video}/Pexels_Videos_4786.mp4 ! decodebin3 ! identity eos-after=15 ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! queue ! gvadetect inference-region=full-frame device=GPU pre-process-backend=va-surface-sharing model={pipeline.params.inference.model.path} ! queue ! vapostproc ! video/x-raw,format=NV12 ! gvawatermark device=CPU displ-cfg=show-labels=false ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_yolo11s_detect_GPU_wm_CPU_displ_cfg/frame_%05d.png",
+            "dataset.groundtruth": "watermark_yolo11s_detect_GPU_wm_CPU_displ_cfg",
+            "pipeline.out_frames_dir": "watermark_yolo11s_detect_GPU_wm_CPU_displ_cfg"
+        },
+        "watermark_yolo11s_detect_GPU_wm_GPU_displ_cfg": {
+            "name": "watermark_yolo11s_detect_GPU_wm_GPU_displ_cfg",
+            "issue_key": "NEX-T20012",
+            "pipeline.params.inference.model.name": "yolo11s",
+            "pipeline.params.inference.model.precision": "FP32",
+            "tags": [
+                "gt"
+            ],
+            "pipeline.template": "filesrc location={dataset.video}/Pexels_Videos_4786.mp4 ! decodebin3 ! identity eos-after=15 ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! queue ! gvadetect inference-region=full-frame device=GPU pre-process-backend=va-surface-sharing model={pipeline.params.inference.model.path} ! queue ! vapostproc ! video/x-raw(memory:VAMemory),format=NV12 ! gvawatermark device=GPU displ-cfg=thickness=3 ! vapostproc ! videoconvert ! video/x-raw,format=RGB ! pngenc ! multifilesink location=/tmp/results/metadata/watermark_yolo11s_detect_GPU_wm_GPU_displ_cfg/frame_%05d.png",
+            "dataset.groundtruth": "watermark_yolo11s_detect_GPU_wm_GPU_displ_cfg",
+            "pipeline.out_frames_dir": "watermark_yolo11s_detect_GPU_wm_GPU_displ_cfg"
+        }
+    }
+}

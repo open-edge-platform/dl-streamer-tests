@@ -16,7 +16,7 @@ from gt_comparators.base_gt_comparator import GTComparator, RuntimeTestCase, Tes
 from gt_comparators.video_gt_comparator import create_video_gt_comparator
 from gt_comparators.audio_gt_comparator import AudioGTComparator
 from gt_comparators.benchmark_gt_comparator import BenchmarkComparator
-from gt_comparators.watermark_test import HistogramComparator
+from gt_comparators.watermark_test import PngFrameComparator
 from gt_comparators.video_comparators.object_classification_comparator import CheckLevel
 from junit_xml_reporter import JunitXmlReporter
 from utils import create_logger
@@ -85,7 +85,7 @@ def create_gt_comparator(args, test_case: RuntimeTestCase, logger):
     elif comp_type == GTComparator.audio:
         return AudioGTComparator(test_case, logger=logger)
     elif comp_type == GTComparator.watermark:
-        return HistogramComparator(test_case, logger=logger)
+        return PngFrameComparator(test_case, logger=logger)
     elif comp_type == GTComparator.performance:
         return BenchmarkComparator(test_case, logger=logger)
     raise RuntimeError("Unknown type of ground truth comparison")

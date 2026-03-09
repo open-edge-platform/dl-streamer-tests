@@ -57,7 +57,7 @@ class ModelExplorer:
                     test_set_key[0: -len(MODEL_NAME_SUFFIX)])
 
         if not key_prefix_list:
-            raise ValueError("Model name is not defined")
+            return  # no model defined in this test case — nothing to resolve
 
         for key_prefix in key_prefix_list:
             if key_prefix + MODEL_PATH_SUFFIX in test_set:

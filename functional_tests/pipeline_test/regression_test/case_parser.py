@@ -142,7 +142,7 @@ class CaseParser:
                 if not self._is_features_available(test_case.input.get('features', [])):
                     continue
 
-                if test_case.input[COMPARATOR_FIELD] != GTComparator.watermark and (test_case.input[TEST_TYPE] == TestType.pipeline or test_case.input[TEST_TYPE] == TestType.benchmark_performance):
+                if test_case.input[TEST_TYPE] == TestType.pipeline or test_case.input[TEST_TYPE] == TestType.benchmark_performance:
                     try:
                         self._model_explorer.generate_paths_ip(test_case.input)
                         self._model_proc_explorer.generate_paths_ip(test_case.input)

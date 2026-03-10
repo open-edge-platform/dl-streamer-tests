@@ -7,7 +7,7 @@
             "test.exclude": ["npu"]
         },
         "test_set_properties_removals": {},
-        "excluded_tests": ["yolo26x_int8_GPU","yolo26l_int8_GPU","yolo26m_int8_GPU","yolo26s_int8_GPU","yolo26n_int8_GPU","yolov5su_int8_GPU","yolov8s_int8_GPU","yolo11s_int8_GPU","yolo26s-obb_fp16_CPU","yolo26s-obb_fp16_GPU","yolo26s_fp16_GPU","yolo26s-seg_fp16_GPU","yolo26s-pose_fp16_GPU"]
+        "excluded_tests": ["yolo26x_int8_GPU","yolo26l_int8_GPU","yolo26m_int8_GPU","yolo26s_int8_GPU","yolo26n_int8_GPU","yolov5su_int8_GPU","yolov8s_int8_GPU","yolo11s_int8_GPU","yolo26s_fp16_GPU","yolo26s-seg_fp16_GPU","yolo26s-pose_fp16_GPU"]
     },
     "ARL": {
         "test_config": "common/samples.json",
@@ -16,6 +16,6 @@
             "host.dataset.groundtruth.base": "groundtruth_ov2/samples_ARL"
         },
         "test_set_properties_removals": {},
-        "excluded_tests": ["yolo26n_int8_NPU","yolo26s_int8_NPU","yolo26m_int8_NPU","yolo26l_int8_NPU","yolo26x_int8_NPU","yolo26s-obb_fp16_CPU","yolo26s-obb_fp16_GPU"]
+        "excluded_tests": ["yolo26s-obb_int8_NPU","yolo26n_int8_NPU","yolo26s_int8_NPU","yolo26m_int8_NPU","yolo26l_int8_NPU","yolo26x_int8_NPU"]
     }
 }

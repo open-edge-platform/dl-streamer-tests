@@ -1,0 +1,11 @@
+{
+    "ARL": {
+        "test_config": "common/watermark.json",
+        "test_set_properties_additions": {
+            "host.dataset.groundtruth.base": "groundtruth_ov2/watermark_ARL",
+            "docker.dataset.groundtruth.base": "groundtruth_ov2/watermark_ARL"
+        },
+        "test_set_properties_removals": {},
+        "excluded_tests": ["watermark_full_frame_NV12_sysmem_displ_no_labels"]
+    }
+}

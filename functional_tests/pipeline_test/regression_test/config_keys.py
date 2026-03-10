@@ -22,6 +22,7 @@ EXE_DIR = "exe.dir"
 EXE_DIR_TEMPLATE = EXE_DIR + TEMPLATE_SUFFIX
 OUT_VIDEO = "pipeline.out_video_name"
 OUT_VIDEO_TEMPLATE = OUT_VIDEO + TEMPLATE_SUFFIX
+OUT_FRAMES_DIR = "pipeline.out_frames_dir"
 TEST_TYPE = "test.type"
 TEST_EXCLUDE = "test.exclude"
 SAMPLE_DIR = "sample.dir"

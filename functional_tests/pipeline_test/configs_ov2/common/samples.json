@@ -300,10 +300,10 @@
             "dataset.groundtruth": "yolo26n_fp16_CPU.json",
             "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26n,CPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_1000},json,,FP16"
         },
-        "yolo26s-obb_fp16_CPU": {
-            "name": "yolo26s-obb_fp16_CPU",
-            "dataset.groundtruth": "yolo26s-obb_fp16_CPU.json",
-            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-obb,CPU,{dataset.video}/images/P1053_1024_90.mp4,json,,FP16"
+        "yolo26s-obb_int8_CPU": {
+            "name": "yolo26s-obb_int8_CPU",
+            "dataset.groundtruth": "yolo26s-obb_int8_CPU.json",
+            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-obb,CPU,{dataset.video}/images/P1053_1024_90.mp4,json,,INT8"
         },
         "yolo26s-seg_fp16_CPU": {
             "name": "yolo26s-seg_fp16_CPU",
@@ -530,10 +530,10 @@
             "dataset.groundtruth": "yolo26n_fp16_GPU.json",
             "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26n,GPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_1000},json,,FP16"
         },
-        "yolo26s-obb_fp16_GPU": {
-            "name": "yolo26s-obb_fp16_GPU",
-            "dataset.groundtruth": "yolo26s-obb_fp16_GPU.json",
-            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-obb,GPU,{dataset.video}/images/P1053_1024_90.mp4,json,,FP16"
+        "yolo26s-obb_int8_GPU": {
+            "name": "yolo26s-obb_int8_GPU",
+            "dataset.groundtruth": "yolo26s-obb_int8_GPU.json",
+            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-obb,GPU,{dataset.video}/images/P1053_1024_90.mp4,json,,INT8"
         },
         "yolo26s-seg_fp16_GPU": {
             "name": "yolo26s-seg_fp16_GPU",
@@ -655,6 +655,11 @@
             "name": "yolo26x_int8_NPU",
             "dataset.groundtruth": "yolo26x_int8_NPU.json",
             "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26x,NPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_1000},json,,INT8"
+        },
+        "yolo26s-obb_int8_NPU": {
+            "name": "yolo26s-obb_int8_NPU",
+            "dataset.groundtruth": "yolo26s-obb_int8_NPU.json",
+            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-obb,NPU,{dataset.video}/images/P1053_1024_90.mp4,json,,INT8"
         },
         "multistream_onemodel_npu_npu": {
             "name": "multistream_onemodel_npu_npu",

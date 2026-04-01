@@ -110,10 +110,10 @@ test_pipeline() {
     local pipeline=$2
     local output_file="$RESULTS_DIR/${test_name}_full_output.txt"
 
-    if [[ "$pipeline" == *"longer"* ]]; then
+    if [[ "$test_name" == *"longer"* ]]; then
         SEARCH_DURATION=$((SEARCH_DURATION * 2))  # double the duration for "longer"
         print_info "Pipeline contains 'longer' - extending search duration to ${SEARCH_DURATION}s"
-    elif [[ "$pipeline" == *"shorter"* ]]; then
+    elif [[ "$test_name" == *"shorter"* ]]; then
         SEARCH_DURATION=$SEARCH_DURATION # by default it's 30s
         print_info "Pipeline contains 'shorther' - search duration will be ${SEARCH_DURATION}s"
     fi

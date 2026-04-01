@@ -109,11 +109,19 @@ test_pipeline() {
     local test_name=$1
     local pipeline=$2
     local output_file="$RESULTS_DIR/${test_name}_full_output.txt"
-    
+
+    if [[ "$pipeline" == *"longer"* ]]; then
+        SEARCH_DURATION=$((SEARCH_DURATION * 2))  # double the duration for "longer"
+        print_info "Pipeline contains 'longer' - extending search duration to ${SEARCH_DURATION}s"
+    elif [[ "$pipeline" == *"shorter"* ]]; then
+        SEARCH_DURATION=$SEARCH_DURATION # by default it's 30s
+        print_info "Pipeline contains 'shorther' - search duration will be ${SEARCH_DURATION}s"
+    fi
+
     print_info "Testing pipeline: $test_name"
     print_info "Search duration: ${SEARCH_DURATION}s"
     print_info "Pipeline: $pipeline"
-    
+
     cd "$OPTIMIZER_DIR"
     if python3 . fps --search-duration "$SEARCH_DURATION" -- $pipeline > "$output_file" 2>&1; then
         print_success "Optimizer completed for $test_name"
@@ -123,7 +131,7 @@ test_pipeline() {
         [ -f "$output_file" ] && tail -10 "$output_file"
         return 1
     fi
-    
+
     [ -s "$output_file" ] || { print_error "Output file is empty"; return 1; }
     
     if python3 "$COMPARE_SCRIPT" --full-output "$output_file" --config-file "$CONFIG_FILE" --test-name "$test_name" --tolerance "$TOLERANCE" --final-report "$FINAL_REPORT"; then

@@ -25,6 +25,16 @@ def extract_pipeline_and_fps(filename):
         pipeline = None
         fps = None
         initial_fps = None
+        no_optimization_found = False
+        
+        # Check for the exact phrase
+        exact_phrase = "No optimized pipeline found that outperforms the original pipeline"
+        
+        for line in lines:
+            if exact_phrase in line:
+                no_optimization_found = True
+                print(f"🔍 DEBUG: Found exact no optimization message: {exact_phrase}")
+                break
         
         # Extract initial FPS
         initial_patterns = ['Initial pipeline FPS:', 'Original pipeline FPS:', 'Baseline FPS:']
@@ -39,35 +49,41 @@ def extract_pipeline_and_fps(filename):
             if initial_fps:
                 break
         
-        # Extract best pipeline and FPS
-        best_patterns = ['Best found pipeline:', 'Optimized pipeline:', 'Best pipeline:']
-        for i, line in enumerate(lines):
-            for pattern in best_patterns:
-                if pattern in line:
-                    pipeline = line.split(pattern, 1)[1].strip()
-                    
-                    # Look for FPS in next few lines
-                    for j in range(i+1, min(i+5, len(lines))):
-                        fps_patterns = [r'with fps:\s*([\d.]+)', r'FPS:\s*([\d.]+)', r'(\d+\.?\d*)\s*fps']
-                        for fps_pattern in fps_patterns:
-                            match = re.search(fps_pattern, lines[j], re.IGNORECASE)
-                            if match:
-                                fps = float(match.group(1))
-                                print(f"🔍 DEBUG: Found FPS: {fps}")
+        # If no optimization found, use initial FPS as final FPS
+        if no_optimization_found and initial_fps is not None:
+            fps = initial_fps
+            pipeline = "Original pipeline (no optimization found)"
+            print(f"🔍 DEBUG: No optimization found, using initial FPS: {fps}")
+        else:
+            # Extract best pipeline and FPS
+            best_patterns = ['Best found pipeline:', 'Optimized pipeline:', 'Best pipeline:']
+            for i, line in enumerate(lines):
+                for pattern in best_patterns:
+                    if pattern in line:
+                        pipeline = line.split(pattern, 1)[1].strip()
+                        
+                        # Look for FPS in next few lines
+                        for j in range(i+1, min(i+5, len(lines))):
+                            fps_patterns = [r'with fps:\s*([\d.]+)', r'FPS:\s*([\d.]+)', r'(\d+\.?\d*)\s*fps']
+                            for fps_pattern in fps_patterns:
+                                match = re.search(fps_pattern, lines[j], re.IGNORECASE)
+                                if match:
+                                    fps = float(match.group(1))
+                                    print(f"🔍 DEBUG: Found FPS: {fps}")
+                                    break
+                            if fps:
                                 break
-                        if fps:
-                            break
+                        break
+                if pipeline and fps:
                     break
-            if pipeline and fps:
-                break
         
-        print(f"🔍 DEBUG: Final results - Pipeline: {'Found' if pipeline else 'None'}, FPS: {fps}, Initial FPS: {initial_fps}")
+        print(f"🔍 DEBUG: Final results - Pipeline: {'Found' if pipeline else 'None'}, FPS: {fps}, Initial FPS: {initial_fps}, No optimization: {no_optimization_found}")
         
-        return pipeline, fps, initial_fps
+        return pipeline, fps, initial_fps, no_optimization_found
         
     except Exception as e:
         print(f"❌ DEBUG: Error extracting from {filename}: {e}")
-        return None, None, None
+        return None, None, None, False
 
 def load_golden_values(config_file, test_name):
     """Load golden values from JSON config file"""
@@ -111,7 +127,10 @@ def append_to_final_report(final_report_path, test_name, result):
             f.write(f"Tolerance: {result['tolerance']}\n")
             f.write(f"FPS Match: {'PASS' if result['fps_match'] else 'FAIL'}\n")
             
-            if result['initial_fps']:
+            # Add no optimization info
+            if result.get('no_optimization_found'):
+                f.write(f"Optimization Result: No optimized pipeline found that outperforms the original pipeline (ACCEPTABLE)\n")
+            elif result['initial_fps']:
                 improvement = ((result['current_fps'] - result['initial_fps']) / result['initial_fps']) * 100
                 f.write(f"Optimization: {improvement:.2f}%\n")
             
@@ -134,7 +153,7 @@ def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, f
     print(f"🔍 DEBUG: Starting comparison for test: {test_name}")
     
     # Extract current results
-    current_pipeline, current_fps, initial_fps = extract_pipeline_and_fps(full_output_path)
+    current_pipeline, current_fps, initial_fps, no_optimization_found = extract_pipeline_and_fps(full_output_path)
     
     if current_fps is None:
         print("❌ Failed to extract current FPS")
@@ -157,8 +176,12 @@ def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, f
     
     # Check optimization (if initial FPS available)
     optimization_ok = True
-    if initial_fps is not None:
+    if initial_fps is not None and not no_optimization_found:
         optimization_ok = current_fps >= initial_fps
+    elif no_optimization_found:
+        # If the exact phrase was found, it's acceptable as long as FPS matches golden
+        optimization_ok = True
+        print("🔍 DEBUG: Found exact phrase 'No optimized pipeline found that outperforms the original pipeline' - treating as acceptable scenario")
     
     overall_pass = fps_match and optimization_ok
     
@@ -172,7 +195,9 @@ def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, f
     print(f"Tolerance:   {fps_tolerance}")
     print(f"FPS Match:   {'✅ PASS' if fps_match else '❌ FAIL'}")
     
-    if initial_fps is not None:
+    if no_optimization_found:
+        print(f"Optimization: ✅ ACCEPTABLE (No optimized pipeline found that outperforms the original pipeline)")
+    elif initial_fps is not None:
         improvement = ((current_fps - initial_fps) / initial_fps) * 100
         print(f"Initial FPS: {initial_fps}")
         print(f"Improvement: {improvement:.2f}%")
@@ -196,7 +221,8 @@ def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, f
             'tolerance': fps_tolerance,
             'fps_match': fps_match,
             'golden_pipeline': golden_pipeline,
-            'current_pipeline': current_pipeline if current_pipeline else 'N/A'
+            'current_pipeline': current_pipeline if current_pipeline else 'N/A',
+            'no_optimization_found': no_optimization_found
         }
         append_to_final_report(final_report_path, test_name, result)
     

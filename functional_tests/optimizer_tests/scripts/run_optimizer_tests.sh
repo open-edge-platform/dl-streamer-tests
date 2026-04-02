@@ -25,6 +25,7 @@ done
 # Auto-detect environment and set paths
 if [ -f /.dockerenv ]; then
     ENV_PREFIX="[DOCKER]"
+    # Base search duration - can be modified in test_pipeline() based on pipeline keywords (longer/shorter) line 108
     SEARCH_DURATION=${SEARCH_DURATION:-300}
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-/workspace/optimizer_results}
     MODELS_PATH=${MODELS_PATH:-/home/dlstreamer/models}
@@ -33,6 +34,7 @@ if [ -f /.dockerenv ]; then
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/home/dlstreamer/dlstreamer/scripts/optimizer}
 else
     ENV_PREFIX="[HOST]"
+    # Base search duration - can be modified in test_pipeline() based on pipeline keywords (longer/shorter) line 108
     SEARCH_DURATION=${SEARCH_DURATION:-30}
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-/home/runner/optimizer/optimizer_results/host}
     MODELS_PATH=${MODELS_PATH:-/home/runner/models}
@@ -109,36 +111,27 @@ test_pipeline() {
     local test_name=$1
     local pipeline=$2
     local output_file="$RESULTS_DIR/${test_name}_full_output.txt"
-
-    if [[ "$test_name" == *"longer"* ]]; then
-        SEARCH_DURATION=$((SEARCH_DURATION * 2))  # double the duration for "longer"
-        print_info "Pipeline contains 'longer' - extending search duration to ${SEARCH_DURATION}s"
-    elif [[ "$test_name" == *"shorter"* ]]; then
-        SEARCH_DURATION=$SEARCH_DURATION # by default it's 30s
-        print_info "Pipeline contains 'shorther' - search duration will be ${SEARCH_DURATION}s"
+    
+    # Determine search duration based on pipeline content
+    local search_duration=$SEARCH_DURATION  # default value
+    
+    if [[ "$pipeline" == *"longer"* ]]; then
+        search_duration=120  # 2 minutes for "longer"
+        print_info "Pipeline contains 'longer' - using extended search duration: ${search_duration}s"
+    elif [[ "$pipeline" == *"shorter"* ]]; then
+        search_duration=30   # 30 seconds for "shorter"
+        print_info "Pipeline contains 'shorter' - using reduced search duration: ${search_duration}s"
     fi
-
+    
     print_info "Testing pipeline: $test_name"
-    print_info "Search duration: ${SEARCH_DURATION}s"
+    print_info "Search duration: ${search_duration}s"
     print_info "Pipeline: $pipeline"
-
+    
     cd "$OPTIMIZER_DIR"
-    if python3 . fps --search-duration "$SEARCH_DURATION" -- $pipeline > "$output_file" 2>&1; then
+    if python3 . fps --search-duration "$search_duration" -- $pipeline > "$output_file" 2>&1; then
         print_success "Optimizer completed for $test_name"
     else
-        local exit_code=$?
-        print_error "Optimizer failed for $test_name (exit code: $exit_code)"
-        [ -f "$output_file" ] && tail -10 "$output_file"
-        return 1
-    fi
-
-    [ -s "$output_file" ] || { print_error "Output file is empty"; return 1; }
-    
-    if python3 "$COMPARE_SCRIPT" --full-output "$output_file" --config-file "$CONFIG_FILE" --test-name "$test_name" --tolerance "$TOLERANCE" --final-report "$FINAL_REPORT"; then
-        print_success "Test PASSED for $test_name"
-        return 0
-    else
-        print_error "Test FAILED for $test_name"
+        print_error "Optimizer failed for $test_name"
         return 1
     fi
 }

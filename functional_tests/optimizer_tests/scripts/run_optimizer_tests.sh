@@ -25,7 +25,7 @@ done
 # Auto-detect environment and set paths
 if [ -f /.dockerenv ]; then
     ENV_PREFIX="[DOCKER]"
-    # Base search duration - can be modified in test_pipeline() based on pipeline keywords (longer/shorter) line 108
+    # Default search duration - will be overridden by test-specific values from JSON
     SEARCH_DURATION=${SEARCH_DURATION:-300}
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-/workspace/optimizer_results}
     MODELS_PATH=${MODELS_PATH:-/home/dlstreamer/models}
@@ -34,7 +34,7 @@ if [ -f /.dockerenv ]; then
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/home/dlstreamer/dlstreamer/scripts/optimizer}
 else
     ENV_PREFIX="[HOST]"
-    # Base search duration - can be modified in test_pipeline() based on pipeline keywords (longer/shorter) line 108
+    # Default search duration - will be overridden by test-specific values from JSON
     SEARCH_DURATION=${SEARCH_DURATION:-30}
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-/home/runner/optimizer/optimizer_results/host}
     MODELS_PATH=${MODELS_PATH:-/home/runner/models}
@@ -95,6 +95,30 @@ get_pipeline_to_test() {
     echo "$pipeline"
 }
 
+# Function to get search duration for test
+get_search_duration() {
+    local test_name=$1
+    local search_duration=$(jq -r ".[\"$test_name\"].search_duration // null" "$CONFIG_FILE")
+    
+    if [ "$search_duration" = "null" ] || [ -z "$search_duration" ]; then
+        echo "$SEARCH_DURATION"  # Use default if not specified
+    else
+        echo "$search_duration"
+    fi
+}
+
+# Function to get sample duration for test
+get_sample_duration() {
+    local test_name=$1
+    local sample_duration=$(jq -r ".[\"$test_name\"].sample_duration // null" "$CONFIG_FILE")
+    
+    if [ "$sample_duration" = "null" ] || [ -z "$sample_duration" ]; then
+        echo ""  # Return empty if not specified
+    else
+        echo "$sample_duration"
+    fi
+}
+
 # Basic checks
 check_prerequisites() {
     print_info "Checking prerequisites..."
@@ -112,23 +136,35 @@ test_pipeline() {
     local pipeline=$2
     local output_file="$RESULTS_DIR/${test_name}_full_output.txt"
     
-    # Determine search duration based on pipeline content
-    local search_duration=$SEARCH_DURATION  # default value
-    
-    if [[ "$pipeline" == *"longer"* ]]; then
-        search_duration=120  # 2 minutes for "longer"
-        print_info "Pipeline contains 'longer' - using extended search duration: ${search_duration}s"
-    elif [[ "$pipeline" == *"shorter"* ]]; then
-        search_duration=30   # 30 seconds for "shorter"
-        print_info "Pipeline contains 'shorter' - using reduced search duration: ${search_duration}s"
-    fi
+    # Get test-specific durations from JSON
+    local search_duration=$(get_search_duration "$test_name")
+    local sample_duration=$(get_sample_duration "$test_name")
     
     print_info "Testing pipeline: $test_name"
-    print_info "Search duration: ${search_duration}s"
+    print_info "Search duration: ${search_duration}s (from config)"
+    
+    if [ -n "$sample_duration" ]; then
+        print_info "Sample duration: ${sample_duration}s (from config)"
+    fi
+    
     print_info "Pipeline: $pipeline"
     
     cd "$OPTIMIZER_DIR"
-    if python3 . fps --search-duration "$search_duration" -- $pipeline > "$output_file" 2>&1; then
+    
+    # Build optimizer command with parameters
+    local optimizer_cmd="python3 . fps --search-duration $search_duration"
+    
+    # Add sample duration if specified
+    if [ -n "$sample_duration" ]; then
+        optimizer_cmd="$optimizer_cmd --sample-duration $sample_duration"
+    fi
+    
+    # Add pipeline
+    optimizer_cmd="$optimizer_cmd -- $pipeline"
+    
+    print_info "Running: $optimizer_cmd"
+    
+    if eval "$optimizer_cmd" > "$output_file" 2>&1; then
         print_success "Optimizer completed for $test_name"
     else
         print_error "Optimizer failed for $test_name"
@@ -136,9 +172,30 @@ test_pipeline() {
     fi
 }
 
+# Function to run comparison for a test
+run_comparison() {
+    local test_name=$1
+    local output_file="$RESULTS_DIR/${test_name}_full_output.txt"
+    
+    print_info "Running comparison for $test_name"
+    
+    if python3 "$COMPARE_SCRIPT" \
+        --full-output "$output_file" \
+        --config-file "$CONFIG_FILE" \
+        --test-name "$test_name" \
+        --tolerance "$TOLERANCE" \
+        --final-report "$FINAL_REPORT"; then
+        print_success "Comparison passed for $test_name"
+        return 0
+    else
+        print_error "Comparison failed for $test_name"
+        return 1
+    fi
+}
+
 # Main execution
 print_info "Environment: $([ -f /.dockerenv ] && echo "Docker" || echo "Host")"
-print_info "Results: $RESULTS_DIR | Duration: ${SEARCH_DURATION}s | Tolerance: ${TOLERANCE}%"
+print_info "Results: $RESULTS_DIR | Default Duration: ${SEARCH_DURATION}s | Tolerance: ${TOLERANCE}%"
 print_info "Config file: $CONFIG_FILE"
 
 check_prerequisites
@@ -160,8 +217,14 @@ while IFS= read -r test_name; do
         continue
     fi
     
+    # Run optimizer test
     if test_pipeline "$test_name" "$pipeline"; then
-        PASSED_TESTS=$((PASSED_TESTS + 1))
+        # Run comparison if optimizer succeeded
+        if run_comparison "$test_name"; then
+            PASSED_TESTS=$((PASSED_TESTS + 1))
+        else
+            FAILED_TESTS=$((FAILED_TESTS + 1))
+        fi
     else
         FAILED_TESTS=$((FAILED_TESTS + 1))
     fi

@@ -1,0 +1,100 @@
+githubConfigUrl: https://github.com/open-edge-platform/dlstreamer
+
+minRunners: 0
+maxRunners: 3
+
+template:
+  spec:
+    nodeSelector:
+      platform: ARL
+      os: ubuntu24
+
+    tolerations:
+      - key: "dedicated"
+        operator: "Equal"
+        value: "runner"
+        effect: "NoSchedule"
+
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                actions.github.com/role: runner
+            topologyKey: kubernetes.io/hostname
+
+    securityContext:
+      supplementalGroups:
+        - 992  # render (renderD128, accel0)
+        - 44   # video  (card1)
+
+    imagePullSecrets:
+      - name: ghcr-secret
+
+    containers:
+      - name: runner
+        image: ghcr.io/open-edge-platform/dl-streamer-tests/dlstreamer-runner-ubuntu24:latest
+        securityContext:
+          privileged: true
+        env:
+          - name: DOCKER_HOST
+            value: unix:///run/docker-sock/docker.sock
+        volumeMounts:
+          - name: docker-sock
+            mountPath: /run/docker-sock
+          - name: workspace
+            mountPath: /home/runner/_work
+          - name: accel
+            mountPath: /dev/accel
+          - name: dri
+            mountPath: /dev/dri
+          - name: models
+            mountPath: /home/runner/models
+            readOnly: true
+          - name: videos
+            mountPath: /home/runner/videos
+            readOnly: true
+
+      - name: dind
+        image: docker:dind
+        securityContext:
+          privileged: true
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "while [ ! -S /var/run/docker.sock ]; do sleep 1; done; chmod 666 /var/run/docker.sock"]
+        env:
+          - name: DOCKER_TLS_CERTDIR
+            value: ""
+        volumeMounts:
+          - name: docker-sock
+            mountPath: /var/run
+          - name: workspace
+            mountPath: /home/runner/_work
+          - name: models
+            mountPath: /home/runner/models
+            readOnly: true
+          - name: videos
+            mountPath: /home/runner/videos
+            readOnly: true
+
+
+    volumes:
+      - name: docker-sock # Shared Docker socket for DinD and runner containers
+        emptyDir: {}
+      - name: workspace   # Shared workspace so DinD can resolve volume mounts from runner
+        emptyDir: {}
+      - name: accel
+        hostPath:
+          path: /dev/accel
+      - name: dri
+        hostPath:
+          path: /dev/dri
+      - name: models
+        hostPath:
+          path: /home/runner/models
+          type: DirectoryOrCreate
+      - name: videos
+        hostPath:
+          path: /home/runner/videos
+          type: DirectoryOrCreate

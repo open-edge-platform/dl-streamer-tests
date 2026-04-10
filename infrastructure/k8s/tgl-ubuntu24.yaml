@@ -19,9 +19,9 @@ template:
       podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
-              matchExpressions:
-                - key: actions.github.com/scale-set-name
-                  operator: Exists
+              matchLabels:
+                actions.github.com/scale-set-name: tgl-ubuntu24
+                actions-ephemeral-runner: "True"
             topologyKey: kubernetes.io/hostname
 
     securityContext:

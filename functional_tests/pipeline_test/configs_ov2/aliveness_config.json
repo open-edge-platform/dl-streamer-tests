@@ -16,6 +16,6 @@
             "host.dataset.groundtruth.base": "groundtruth_ov2/aliveness_ARL"
         },
         "test_set_properties_removals": {},
-        "excluded_tests": ["face_detection_and_classification_GPU"]
+        "excluded_tests": []
     }
 }

@@ -19,8 +19,9 @@ template:
       podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
-              matchLabels:
-                actions.github.com/role: runner
+              matchExpressions:
+                - key: actions.github.com/scale-set-name
+                  operator: Exists
             topologyKey: kubernetes.io/hostname
 
     securityContext:

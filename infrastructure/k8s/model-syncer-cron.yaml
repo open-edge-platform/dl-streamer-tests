@@ -5,8 +5,8 @@ metadata:
   name: model-syncer-master
   namespace: arc-systems
 spec:
-  # Run every day at 18:00 (6:00 PM) (temporary schedule for testing)
-  schedule: "0 18 * * *"
+  # Run every Sunday at noon (12:00 PM)
+  schedule: "0 12 * * 0"
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:
@@ -54,9 +54,16 @@ spec:
                   python3-venv \
                   > /dev/null 2>&1
                 
-                # Prepare log file
-                LOGFILE="/home/runner/models/sync.log"
+                # Prepare log file (will be written to models_new and then synced to models)
+                LOGFILE="/home/runner/models_new/sync.log"
                 START_TIME=$(date '+%Y-%m-%d %H:%M:%S')
+                
+                # Create models_new directory early so we can write log there
+                if [ -d /home/runner/models_new ]; then
+                  rm -rf /home/runner/models_new
+                fi
+                mkdir -p /home/runner/models_new
+                
                 echo "=== Model Sync Started: $START_TIME ===" | tee $LOGFILE
                 
                 # Clone or update dlstreamer repository
@@ -68,12 +75,6 @@ spec:
                   cd $HOME/dlstreamer
                   git pull 2>&1 | tee -a $LOGFILE
                 fi
-                
-                # Create a temporary directory for the download process
-                if [ -d /home/runner/models_new ]; then
-                  rm -rf /home/runner/models_new
-                fi
-                mkdir /home/runner/models_new
 
                 # Download public models
                 echo "Downloading public models..." | tee -a $LOGFILE
@@ -123,13 +124,16 @@ spec:
                   # Clean up virtual environment
                   rm -rf $HOME/.virtualenvs
                   
+                  # Copy log to models directory so workers can see what failed
+                  cp /home/runner/models_new/sync.log /home/runner/models/ 2>/dev/null || true
+                  
                   # Create FAILED marker so workers don't wait forever
                   echo "FAILED" > /home/runner/models/FAILED.txt
                   echo "Started: $START_TIME" >> /home/runner/models/FAILED.txt
                   echo "Failed: $END_TIME" >> /home/runner/models/FAILED.txt
                   echo "Status: Download failed - check sync.log for details" >> /home/runner/models/FAILED.txt
                   echo "Log: sync.log" >> /home/runner/models/FAILED.txt
-                  echo "FAILED marker created" | tee -a $LOGFILE
+                  echo "FAILED marker created" | tee -a /home/runner/models/sync.log
                   exit 1
                 fi
             volumeMounts:
@@ -148,8 +152,8 @@ metadata:
   name: model-syncer-workers
   namespace: arc-systems
 spec:
-  # Run every day at 23:59 (11:59 PM) (temporary schedule for testing)
-  schedule: "59 23 * * *"
+  # Run every Sunday at 23:59 (11:59 PM)
+  schedule: "59 23 * * 0"
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:

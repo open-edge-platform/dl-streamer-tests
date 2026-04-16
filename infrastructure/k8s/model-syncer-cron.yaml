@@ -39,8 +39,11 @@ spec:
                 export HOME=/home/runner
                 
                 echo "--- MASTER: Starting download script ---"
-                rm -f /home/runner/models/SUCCESS.txt
-                rm -f /home/runner/models/FAILED.txt
+                
+                # Only remove old markers (older than 1 day) to avoid race condition
+                # Workers rely on these files, so we keep them until we're ready to replace
+                find /home/runner/models -name "SUCCESS.txt" -mtime +1 -delete 2>/dev/null || true
+                find /home/runner/models -name "FAILED.txt" -mtime +1 -delete 2>/dev/null || true
                 
                 # Install required packages
                 echo "Installing required packages..."
@@ -160,9 +163,9 @@ spec:
     spec:
       # IMPORTANT: Set parallelism and completions to the number of worker nodes
       # kubectl get nodes -l dedicated=runner --field-selector metadata.name!=dls-arl-01 --no-headers | wc -l
-      # Current setup: 1 worker node (dls-tgl-05)
-      parallelism: 1
-      completions: 1
+      # Current setup: 7 worker nodes
+      parallelism: 7
+      completions: 7
       completionMode: Indexed
       template:
         metadata:
@@ -254,6 +257,7 @@ spec:
                 done
                 
                 echo "--- WORKER: Master is ready. Syncing via LAN ---"
+                
                 rsync -avz --delete --progress -e "ssh $SSH_OPTS" runner@${MASTER_IP}:/home/runner/models/ /home/runner/models/
                 
                 if [ $? -eq 0 ]; then

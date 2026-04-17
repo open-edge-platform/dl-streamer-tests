@@ -331,7 +331,7 @@
             "name": "watermark_yolo11s_detect_GPU_wm_CPU",
             "issue_key": "NEX-T20009",
             "pipeline.params.inference.model.name": "yolo11s",
-            "pipeline.params.inference.model.precision": "FP32",
+            "pipeline.params.inference.model.precision": "FP16",
             "tags": [
                 "gt"
             ],
@@ -343,7 +343,7 @@
             "name": "watermark_yolo11s_detect_GPU_wm_GPU",
             "issue_key": "NEX-T20010",
             "pipeline.params.inference.model.name": "yolo11s",
-            "pipeline.params.inference.model.precision": "FP32",
+            "pipeline.params.inference.model.precision": "FP16",
             "tags": [
                 "gt"
             ],
@@ -355,7 +355,7 @@
             "name": "watermark_yolo11s_detect_GPU_wm_CPU_displ_cfg",
             "issue_key": "NEX-T20011",
             "pipeline.params.inference.model.name": "yolo11s",
-            "pipeline.params.inference.model.precision": "FP32",
+            "pipeline.params.inference.model.precision": "FP16",
             "tags": [
                 "gt"
             ],
@@ -367,7 +367,7 @@
             "name": "watermark_yolo11s_detect_GPU_wm_GPU_displ_cfg",
             "issue_key": "NEX-T20012",
             "pipeline.params.inference.model.name": "yolo11s",
-            "pipeline.params.inference.model.precision": "FP32",
+            "pipeline.params.inference.model.precision": "FP16",
             "tags": [
                 "gt"
             ],

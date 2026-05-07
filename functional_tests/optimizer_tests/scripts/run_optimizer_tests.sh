@@ -96,14 +96,15 @@ get_pipeline_to_test() {
 }
 
 # Function to get search duration for test
+# Returns: "<value> config" if set in JSON, "<value> default" if using environment default
 get_search_duration() {
     local test_name=$1
     local search_duration=$(jq -r ".[\"$test_name\"].search_duration // null" "$CONFIG_FILE")
     
     if [ "$search_duration" = "null" ] || [ -z "$search_duration" ]; then
-        echo "$SEARCH_DURATION"  # Use default if not specified
+        echo "$SEARCH_DURATION default"
     else
-        echo "$search_duration"
+        echo "$search_duration config"
     fi
 }
 
@@ -137,11 +138,13 @@ test_pipeline() {
     local output_file="$RESULTS_DIR/${test_name}_full_output.txt"
     
     # Get test-specific durations from JSON
-    local search_duration=$(get_search_duration "$test_name")
+    local search_duration_raw=$(get_search_duration "$test_name")
+    local search_duration=$(echo "$search_duration_raw" | awk '{print $1}')
+    local search_duration_src=$(echo "$search_duration_raw" | awk '{print $2}')
     local sample_duration=$(get_sample_duration "$test_name")
     
     print_info "Testing pipeline: $test_name"
-    print_info "Search duration: ${search_duration}s (from config)"
+    print_info "Search duration: ${search_duration}s (from ${search_duration_src})"
     
     if [ -n "$sample_duration" ]; then
         print_info "Sample duration: ${sample_duration}s (from config)"

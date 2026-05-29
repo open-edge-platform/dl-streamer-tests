@@ -28,12 +28,12 @@
         "gvaanalytics_GPU": {
             "name": "gvaanalytics_GPU",
             "dataset.groundtruth": "gvaanalytics_tripwire_vehicle_counter_GPU_ARL.json",
-            "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,GPU,output.json"
+            "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh,file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,GPU,output.json"
         },
         "gvaanalytics_NPU": {
             "name": "gvaanalytics_NPU",
             "dataset.groundtruth": "gvaanalytics_tripwire_vehicle_counter_CPU_ARL.json",
-            "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,NPU,output.json"
+            "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh,file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,NPU,output.json"
         }
     }
 }

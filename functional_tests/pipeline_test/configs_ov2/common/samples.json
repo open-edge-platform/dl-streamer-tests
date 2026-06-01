@@ -710,6 +710,21 @@
             "name": "motion_detect_GPU",
             "dataset.groundtruth": "gvamotiondetect_GPU_detection_GPU_yolov8n_FP16.json",
             "sample.command": "{sample.dir}/gst_launch/motion_detect/gvamotiondetect_demo.sh,--device,GPU,--source,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--precision,FP16,--output,json"
+        },
+        "gvaanalytics_CPU": {
+            "name": "gvaanalytics_CPU",
+            "dataset.groundtruth": "gvaanalytics_tripwire_vehicle_counter_CPU.json",
+            "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh,file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,CPU,output.json"
+        },
+        "gvaanalytics_GPU": {
+            "name": "gvaanalytics_GPU",
+            "dataset.groundtruth": "gvaanalytics_tripwire_vehicle_counter_GPU.json",
+            "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh,file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,GPU,output.json"
+        },
+        "gvaanalytics_NPU": {
+            "name": "gvaanalytics_NPU",
+            "dataset.groundtruth": "gvaanalytics_tripwire_vehicle_counter_NPU.json",
+            "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh,file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,NPU,output.json"
         }
     }
 }

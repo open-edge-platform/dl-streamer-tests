@@ -21,5 +21,105 @@
     "golden_fps": 280,
     "tolerance": 35,
     "search_duration": 100
+  },
+  "output_flag_basic": {
+    "pipeline_to_test": "videotestsrc num-buffers=50 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "test_type": "output_flag",
+    "expected_output_file": true,
+    "search_duration": 30,
+    "sample_duration": 10,
+    "validation": {
+      "check_baseline_pipeline": true,
+      "check_optimal_pipeline": true,
+      "check_candidate_pipelines": true
+    }
+  },
+  "fps_mode_modifications": {
+    "pipeline_to_test": "videotestsrc num-buffers=30 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "test_type": "fps_modifications",
+    "search_duration": 60,
+    "sample_duration": 10,
+    "validation": {
+      "check_device_modifications": true,
+      "check_batch_size_modifications": true,
+      "check_nireq_modifications": true
+    }
+  },
+  "streams_mode_modifications": {
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "test_type": "streams_modifications",
+    "mode": "streams",
+    "search_duration": 60,
+    "sample_duration": 10,
+    "validation": {
+      "check_device_modifications": true,
+      "check_batch_size_modifications": true,
+      "check_nireq_modifications": true,
+      "check_stream_count_modifications": true
+    }
+  },
+  "verbose_flag_test": {
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "test_type": "verbose_flag",
+    "search_duration": 30,
+    "sample_duration": 5,
+    "validation": {
+      "check_candidate_logs": true,
+      "expected_log_pattern": "CANDIDATE"
+    }
+  },
+  "search_duration_short": {
+    "pipeline_to_test": "videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "test_type": "search_duration_timing",
+    "search_duration": 30,
+    "sample_duration": 5,
+    "timing_test": true
+  },
+  "search_duration_long": {
+    "pipeline_to_test": "videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "test_type": "search_duration_timing",
+    "search_duration": 60,
+    "sample_duration": 5,
+    "timing_test": true
+  },
+  "sample_duration_short": {
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "test_type": "sample_duration_candidates",
+    "search_duration": 30,
+    "sample_duration": 5,
+    "validation": {
+      "check_candidate_count": true
+    }
+  },
+  "sample_duration_long": {
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "test_type": "sample_duration_candidates",
+    "search_duration": 30,
+    "sample_duration": 10,
+    "validation": {
+      "check_candidate_count": true
+    }
+  },
+  "cross_stream_batching": {
+    "pipeline_to_test": "videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "test_type": "cross_stream_batching",
+    "mode": "streams",
+    "search_duration": 60,
+    "sample_duration": 10,
+    "additional_flags": ["--enable-cross-stream-batching"],
+    "validation": {
+      "check_shared_inference_ids": true
+    }
+  },
+  "allowed_devices_cpu_only": {
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "test_type": "allowed_devices",
+    "search_duration": 60,
+    "sample_duration": 10,
+    "additional_flags": ["--allowed-devices", "CPU"],
+    "validation": {
+      "check_device_restriction": true,
+      "allowed_devices": ["CPU"]
+    }
   }
 }

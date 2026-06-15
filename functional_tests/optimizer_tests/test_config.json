@@ -1,29 +1,29 @@
 {
-  "ARL_yolo26m_cpu_shorter": {
-    "pipeline_to_test": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
-    "golden_pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo26m/INT8/yolo26m.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 nireq=7 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+  "ARL_yolo11s_cpu_shorter": {
+    "pipeline_to_test": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+    "golden_pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 nireq=7 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_fps": 280,
     "tolerance": 35,
     "sample_duration": 20,
     "search_duration": 300
   },
-  "ARL_yolo26m_gpu_shorter": {
-    "pipeline_to_test": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
-    "golden_pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo26m/INT8/yolo26m.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+  "ARL_yolo11s_gpu_shorter": {
+    "pipeline_to_test": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+    "golden_pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_fps": 280,
     "tolerance": 35,
     "sample_duration": 15,
     "search_duration": 300
   },
-  "ARL_yolo26m_gpu_longer": {
-    "pipeline_to_test": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
-    "golden_pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo26m/INT8/yolo26m.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+  "ARL_yolo11s_gpu_longer": {
+    "pipeline_to_test": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+    "golden_pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_fps": 280,
     "tolerance": 35,
     "search_duration": 100
   },
   "output_flag_basic": {
-    "pipeline_to_test": "videotestsrc num-buffers=50 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=50 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "output_flag",
     "expected_output_file": true,
     "search_duration": 30,
@@ -35,7 +35,7 @@
     }
   },
   "fps_mode_modifications": {
-    "pipeline_to_test": "videotestsrc num-buffers=30 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=30 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "fps_modifications",
     "search_duration": 60,
     "sample_duration": 10,
@@ -46,7 +46,7 @@
     }
   },
   "streams_mode_modifications": {
-    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "streams_modifications",
     "mode": "streams",
     "search_duration": 60,
@@ -59,7 +59,7 @@
     }
   },
   "verbose_flag_test": {
-    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "verbose_flag",
     "search_duration": 30,
     "sample_duration": 5,
@@ -69,21 +69,21 @@
     }
   },
   "search_duration_short": {
-    "pipeline_to_test": "videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "search_duration_timing",
     "search_duration": 30,
     "sample_duration": 5,
     "timing_test": true
   },
   "search_duration_long": {
-    "pipeline_to_test": "videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "search_duration_timing",
     "search_duration": 60,
     "sample_duration": 5,
     "timing_test": true
   },
   "sample_duration_short": {
-    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "sample_duration_candidates",
     "search_duration": 30,
     "sample_duration": 5,
@@ -92,7 +92,7 @@
     }
   },
   "sample_duration_long": {
-    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "sample_duration_candidates",
     "search_duration": 30,
     "sample_duration": 10,
@@ -101,7 +101,7 @@
     }
   },
   "cross_stream_batching": {
-    "pipeline_to_test": "videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "cross_stream_batching",
     "mode": "streams",
     "search_duration": 60,
@@ -112,7 +112,7 @@
     }
   },
   "allowed_devices_cpu_only": {
-    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo26m/INT8/yolo26m.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "allowed_devices",
     "search_duration": 60,
     "sample_duration": 10,

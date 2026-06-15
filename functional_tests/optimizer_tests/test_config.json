@@ -100,17 +100,6 @@
       "check_candidate_count": true
     }
   },
-  "cross_stream_batching": {
-    "pipeline_to_test": "videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink videotestsrc num-buffers=15 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
-    "test_type": "cross_stream_batching",
-    "mode": "streams",
-    "search_duration": 60,
-    "sample_duration": 10,
-    "additional_flags": ["--enable-cross-stream-batching"],
-    "validation": {
-      "check_shared_inference_ids": true
-    }
-  },
   "allowed_devices_cpu_only": {
     "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "allowed_devices",

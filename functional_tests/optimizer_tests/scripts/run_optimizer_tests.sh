@@ -35,6 +35,7 @@ if [ -f /.dockerenv ]; then
     STREAMS_TIMEOUT=${STREAMS_TIMEOUT:-600}  # Default 10 minutes for streams tests
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-/workspace/optimizer_results}
     MODELS_PATH=${MODELS_PATH:-/home/dlstreamer/models}
+    VIDEOS_PATH=${VIDEOS_PATH:-/home/dlstreamer/videos}
     CONFIG_FILE=${CONFIG_FILE:-/workspace/optimizer_tests/test_config.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/workspace/optimizer_tests/scripts/compare_results.py}
     VALIDATION_SCRIPT=${VALIDATION_SCRIPT:-/workspace/optimizer_tests/scripts/validate_advanced_features.py}
@@ -45,6 +46,7 @@ else
     STREAMS_TIMEOUT=${STREAMS_TIMEOUT:-300}  # Default 5 minutes for streams tests on host
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-/home/runner/optimizer/optimizer_results/host}
     MODELS_PATH=${MODELS_PATH:-/home/runner/models}
+    VIDEOS_PATH=${VIDEOS_PATH:-/home/runner/videos}
     CONFIG_FILE=${CONFIG_FILE:-/home/runner/optimizer/functional_tests/optimizer_tests/test_config.json}
     COMPARE_SCRIPT=${COMPARE_SCRIPT:-/home/runner/optimizer/functional_tests/optimizer_tests/scripts/compare_results.py}
     VALIDATION_SCRIPT=${VALIDATION_SCRIPT:-/home/runner/optimizer/functional_tests/optimizer_tests/scripts/validate_advanced_features.py}

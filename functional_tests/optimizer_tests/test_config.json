@@ -55,7 +55,8 @@
       "check_device_modifications": true,
       "check_batch_size_modifications": true,
       "check_nireq_modifications": true,
-      "check_stream_count_modifications": true
+      "check_stream_count_modifications": true,
+      "streams_timeout": 240
     }
   },
   "verbose_flag_test": {

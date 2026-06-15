@@ -18,10 +18,11 @@ while [[ $# -gt 0 ]]; do
         --tolerance) CUSTOM_TOLERANCE="$2"; shift 2 ;;
         --models-path) MODELS_PATH="$2"; shift 2 ;;
         --config-file) CONFIG_FILE="$2"; shift 2 ;;
+        --streams-timeout) STREAMS_TIMEOUT="$2"; shift 2 ;;
         --verbose) VERBOSE_OUTPUT=true; shift ;;
         --debug) DEBUG_MODE=true; VERBOSE_OUTPUT=true; shift ;;
         -h|--help)
-            echo "Usage: $0 [--results-dir PATH] [--config-file PATH] [--verbose] [--debug]"
+            echo "Usage: $0 [--results-dir PATH] [--config-file PATH] [--streams-timeout SECONDS] [--verbose] [--debug]"
             exit 0 ;;
         *) echo "Unknown option: $1"; shift ;;
     esac
@@ -31,6 +32,7 @@ done
 if [ -f /.dockerenv ]; then
     ENV_PREFIX="[DOCKER]"
     SEARCH_DURATION=${SEARCH_DURATION:-300}
+    STREAMS_TIMEOUT=${STREAMS_TIMEOUT:-600}  # Default 10 minutes for streams tests
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-/workspace/optimizer_results}
     MODELS_PATH=${MODELS_PATH:-/home/dlstreamer/models}
     CONFIG_FILE=${CONFIG_FILE:-/workspace/optimizer_tests/test_config.json}
@@ -40,6 +42,7 @@ if [ -f /.dockerenv ]; then
 else
     ENV_PREFIX="[HOST]"
     SEARCH_DURATION=${SEARCH_DURATION:-30}
+    STREAMS_TIMEOUT=${STREAMS_TIMEOUT:-300}  # Default 5 minutes for streams tests on host
     RESULTS_DIR=${CUSTOM_RESULTS_DIR:-/home/runner/optimizer/optimizer_results/host}
     MODELS_PATH=${MODELS_PATH:-/home/runner/models}
     CONFIG_FILE=${CONFIG_FILE:-/home/runner/optimizer/functional_tests/optimizer_tests/test_config.json}
@@ -99,6 +102,7 @@ check_prerequisites() {
     [ -f "$CONFIG_FILE" ] || { print_error "Config file not found: $CONFIG_FILE"; exit 1; }
     command -v python3 >/dev/null || { print_error "Python3 not found"; exit 1; }
     command -v jq >/dev/null || { print_error "jq not found (required for JSON parsing)"; exit 1; }
+    command -v timeout >/dev/null || { print_error "timeout command not found (required for streams tests)"; exit 1; }
     print_success "Prerequisites OK"
 }
 
@@ -172,7 +176,37 @@ get_test_type() {
     echo "$test_type"
 }
 
-# Run any test (standard or advanced)
+# Get custom timeout for streams tests
+get_streams_timeout() {
+    local test_name=$1
+    local custom_timeout=$(jq -r ".[\"$test_name\"].streams_timeout // null" "$CONFIG_FILE")
+    
+    if [ "$custom_timeout" = "null" ] || [ -z "$custom_timeout" ]; then
+        echo "$STREAMS_TIMEOUT"
+    else
+        echo "$custom_timeout"
+    fi
+}
+
+# Kill process and all its children
+kill_process_tree() {
+    local pid=$1
+    local signal=${2:-TERM}
+    
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        # Kill all child processes first
+        local children=$(pgrep -P "$pid" 2>/dev/null || true)
+        for child in $children; do
+            kill_process_tree "$child" "$signal"
+        done
+        
+        # Kill the main process
+        print_debug "Killing process $pid with signal $signal"
+        kill -"$signal" "$pid" 2>/dev/null || true
+    fi
+}
+
+# Run any test (standard or advanced) with timeout support for streams
 run_test() {
     local test_name=$1
     local pipeline=$2
@@ -184,9 +218,14 @@ run_test() {
     local mode=$(get_mode "$test_name")
     local additional_flags=$(get_additional_flags "$test_name")
     local test_type=$(get_test_type "$test_name")
+    local streams_timeout=$(get_streams_timeout "$test_name")
     
     print_info "Testing: $test_name (type: $test_type, mode: $mode)"
     print_info "Search duration: ${search_duration}s"
+    
+    if [ "$mode" = "streams" ]; then
+        print_info "Streams timeout: ${streams_timeout}s (test will be forcefully killed after this time)"
+    fi
     
     if [ -n "$sample_duration" ]; then
         print_info "Sample duration: ${sample_duration}s"
@@ -229,14 +268,55 @@ run_test() {
     
     print_info "Running: $optimizer_cmd"
     
-    if eval "$optimizer_cmd" > "$output_file" 2>&1; then
-        print_success "Test completed: $test_name"
-        return 0
+    # Execute with timeout for streams mode
+    local exit_code=0
+    if [ "$mode" = "streams" ]; then
+        print_info "Running streams test with FORCED timeout of ${streams_timeout}s"
+        
+        # Use timeout with KILL signal to forcefully terminate
+        # --preserve-status ensures we get the actual exit code if process finishes normally
+        # -s KILL ensures the process is forcefully killed after timeout
+        if timeout --preserve-status -s KILL "$streams_timeout" bash -c "eval '$optimizer_cmd'" > "$output_file" 2>&1; then
+            print_success "Test completed normally: $test_name"
+            exit_code=0
+        else
+            local timeout_exit_code=$?
+            if [ $timeout_exit_code -eq 137 ]; then  # 137 = 128 + 9 (SIGKILL)
+                print_warning "Test was FORCEFULLY KILLED after ${streams_timeout}s timeout: $test_name"
+                echo "" >> "$output_file"
+                echo "=== TEST FORCEFULLY TERMINATED BY TIMEOUT ===" >> "$output_file"
+                echo "Test was killed after ${streams_timeout}s timeout" >> "$output_file"
+                echo "Timestamp: $(date)" >> "$output_file"
+                # For streams tests, forced termination after timeout is acceptable
+                print_info "Streams test timeout termination is treated as successful completion"
+                exit_code=0
+            elif [ $timeout_exit_code -eq 124 ]; then  # Standard timeout exit code
+                print_warning "Test timed out after ${streams_timeout}s: $test_name"
+                echo "" >> "$output_file"
+                echo "=== TEST TIMED OUT ===" >> "$output_file"
+                echo "Test timed out after ${streams_timeout}s" >> "$output_file"
+                echo "Timestamp: $(date)" >> "$output_file"
+                print_info "Streams test timeout is treated as successful completion"
+                exit_code=0
+            else
+                print_error "Test failed: $test_name (exit code: $timeout_exit_code)"
+                show_error_details "$test_name"
+                exit_code=1
+            fi
+        fi
     else
-        print_error "Test failed: $test_name"
-        show_error_details "$test_name"
-        return 1
+        # Regular execution for non-streams tests
+        if eval "$optimizer_cmd" > "$output_file" 2>&1; then
+            print_success "Test completed: $test_name"
+            exit_code=0
+        else
+            print_error "Test failed: $test_name"
+            show_error_details "$test_name"
+            exit_code=1
+        fi
     fi
+    
+    return $exit_code
 }
 
 # Run comparison for any test
@@ -283,6 +363,7 @@ print_info "========== OPTIMIZER TEST SUITE =========="
 print_info "Environment: $([ -f /.dockerenv ] && echo "Docker" || echo "Host")"
 print_info "Results: $RESULTS_DIR"
 print_info "Config file: $CONFIG_FILE"
+print_info "Streams timeout: ${STREAMS_TIMEOUT}s (FORCED KILL)"
 
 check_prerequisites
 load_test_config

@@ -46,7 +46,7 @@
     }
   },
   "streams_mode_modifications": {
-    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml ! queue ! gvawatermark ! fakesink",
     "test_type": "streams_modifications",
     "mode": "streams",
     "search_duration": 300,

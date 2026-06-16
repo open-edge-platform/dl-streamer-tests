@@ -46,7 +46,7 @@
     }
   },
   "streams_mode_modifications": {
-    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml ! queue ! gvawatermark ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "streams_modifications",
     "mode": "streams",
     "search_duration": 300,
@@ -60,7 +60,7 @@
     }
   },
   "verbose_flag_test": {
-    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "pipeline_to_test": "videotestsrc num-buffers=20 ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "verbose_flag",
     "search_duration": 30,
     "sample_duration": 5,

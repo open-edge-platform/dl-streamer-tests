@@ -356,29 +356,35 @@ class OptimizerValidator:
             return False
     
     def validate_cross_stream_batching(self, content: str, test_config: Dict) -> bool:
-        """Validate cross stream batching - check if instance-id is same in final pipeline"""
+        """Validate cross stream batching - check if model-instance-id appears multiple times with same value"""
         print("🔍 Validating cross stream batching...")
         
-        # Find final pipeline section
-        final_pipeline_match = re.search(r'final.*pipeline.*?instance-id=(\w+)', 
-                                       content, re.IGNORECASE | re.DOTALL)
+        # Find all model-instance-id occurrences
+        model_instance_matches = re.findall(r'model-instance-id=(\w+)', content, re.IGNORECASE)
         
-        if not final_pipeline_match:
-            print("  ❌ No final pipeline with instance-id found")
+        if not model_instance_matches:
+            print("  ❌ No model-instance-id found in output")
             return False
         
-        instance_id = final_pipeline_match.group(1)
+        if len(model_instance_matches) < 2:
+            print(f"  ❌ Only {len(model_instance_matches)} model-instance-id found, need at least 2 findings")
+            return False
         
-        # Count occurrences of this instance-id
-        all_instances = re.findall(r'instance-id=(\w+)', content, re.IGNORECASE)
-        same_id_count = all_instances.count(instance_id)
+        # Check if all model-instance-id values are the same
+        unique_ids = set(model_instance_matches)
         
-        success = same_id_count > 1  # Should appear multiple times for batching
+        if len(unique_ids) != 1:
+            print(f"  ❌ Found different model-instance-id values: {unique_ids}")
+            return False
         
-        print(f"  ✓ Final pipeline instance-id: {instance_id}")
-        print(f"  ✓ Same instance-id occurrences: {same_id_count}")
-        print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
-        return success
+        instance_id = model_instance_matches[0]
+        count = len(model_instance_matches)
+        
+        print(f"  ✓ Model-instance-id: {instance_id}")
+        print(f"  ✓ Number of occurrences: {count}")
+        print(f"  ✓ All values are identical: {len(unique_ids) == 1}")
+        print(f"  Result: ✅ PASS")
+        return True
     
     def validate_allowed_devices(self, content: str, test_config: Dict) -> bool:
         """Validate allowed devices - check only specified devices appear in output"""
@@ -402,8 +408,90 @@ class OptimizerValidator:
         print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
         return success
     
+    def validate_standard_test(self, content: str, test_config: Dict) -> bool:
+        """Validate standard test - check FPS improvement and golden FPS comparison"""
+        print("🔍 Validating standard test performance...")
+        
+        golden_fps = test_config.get('golden_fps')
+        tolerance = test_config.get('tolerance', 10)  # Default 10% tolerance
+        
+        # Extract FPS values from output
+        original_fps = None
+        optimized_fps = None
+        improvement = None
+        
+        # Look for summary section
+        original_match = re.search(r'Original pipeline FPS:\s*(\d+\.?\d*)', content, re.IGNORECASE)
+        if original_match:
+            original_fps = float(original_match.group(1))
+        
+        optimized_match = re.search(r'Optimized pipeline FPS:\s*(\d+\.?\d*)', content, re.IGNORECASE)
+        if optimized_match:
+            optimized_fps = float(optimized_match.group(1))
+        
+        improvement_match = re.search(r'(\d+\.?\d*)\s*fps improvement', content, re.IGNORECASE)
+        if improvement_match:
+            improvement = float(improvement_match.group(1))
+        
+        print(f"  📊 Original pipeline FPS: {original_fps if original_fps else 'N/A'}")
+        print(f"  📊 Optimized pipeline FPS: {optimized_fps if optimized_fps else 'N/A'}")
+        print(f"  📊 FPS improvement: {improvement if improvement else 'N/A'}")
+        
+        if golden_fps:
+            print(f"  📊 Golden FPS target: {golden_fps}")
+            print(f"  📊 Tolerance: ±{tolerance}")
+        
+        success = True
+        checks = []
+        
+        # Check 1: FPS values extracted successfully
+        if original_fps is None or optimized_fps is None:
+            checks.append(("❌", "FPS extraction", "Could not extract FPS values from output"))
+            success = False
+        else:
+            checks.append(("✅", "FPS extraction", f"Original: {original_fps}, Optimized: {optimized_fps}"))
+            
+            # Check 2: Performance improvement
+            if improvement is not None and improvement > 0:
+                checks.append(("✅", "Performance improvement", f"{improvement:.2f} fps improvement"))
+            elif optimized_fps > original_fps:
+                actual_improvement = optimized_fps - original_fps
+                checks.append(("✅", "Performance improvement", f"{actual_improvement:.2f} fps improvement (calculated)"))
+            else:
+                checks.append(("❌", "Performance improvement", "No performance improvement detected"))
+                success = False
+            
+            # Check 3: Golden FPS comparison (if specified)
+            if golden_fps:
+                fps_diff = abs(optimized_fps - golden_fps)
+                tolerance_value = golden_fps * (tolerance / 100.0)
+                
+                if fps_diff <= tolerance_value:
+                    checks.append(("✅", "Golden FPS match", f"Within tolerance: {optimized_fps:.2f} vs {golden_fps} (±{tolerance_value:.2f})"))
+                else:
+                    checks.append(("❌", "Golden FPS match", f"Outside tolerance: {optimized_fps:.2f} vs {golden_fps} (±{tolerance_value:.2f})"))
+                    success = False
+            else:
+                checks.append(("ℹ️", "Golden FPS match", "No golden FPS specified, skipping"))
+        
+        # Check 4: Optimized pipeline found
+        optimized_pipeline_match = re.search(r'Optimized pipeline:\s*(.+)', content, re.IGNORECASE)
+        if optimized_pipeline_match:
+            optimized_pipeline = optimized_pipeline_match.group(1).strip()
+            checks.append(("✅", "Optimized pipeline", f"Found: {optimized_pipeline[:80]}..."))
+        else:
+            checks.append(("❌", "Optimized pipeline", "No optimized pipeline found in output"))
+            success = False
+        
+        # Print all checks
+        for status, check_name, details in checks:
+            print(f"  {status} {check_name}: {details}")
+        
+        print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
+        return success
+
     def validate_test(self, test_name: str, output_file: str, 
-                     compare_file: Optional[str] = None, log_file: Optional[str] = None) -> bool:
+                    compare_file: Optional[str] = None, log_file: Optional[str] = None) -> bool:
         """Main validation method"""
         test_config = self.config.get(test_name, {})
         test_type = test_config.get('test_type', 'standard')
@@ -413,11 +501,12 @@ class OptimizerValidator:
         print(f"{'='*60}")
         
         try:
-            # For standard tests, just check if file exists and has content
+            # For standard tests, validate performance
             if test_type == 'standard':
                 if os.path.exists(output_file) and os.path.getsize(output_file) > 0:
-                    print("✅ Standard test validation: Output file exists and has content")
-                    return True
+                    with open(output_file, 'r') as f:
+                        content = f.read()
+                    return self.validate_standard_test(content, test_config)
                 else:
                     print("❌ Standard test validation: Output file missing or empty")
                     return False

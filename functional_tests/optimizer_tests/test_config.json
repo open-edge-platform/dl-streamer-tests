@@ -1,115 +1,154 @@
 {
   "ARL_yolo11s_cpu_shorter": {
+    "test_type": "standard",
+    "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_pipeline": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 nireq=7 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_fps": 280,
     "tolerance": 35,
     "sample_duration": 20,
-    "search_duration": 300
+    "search_duration": 300,
+    "description": "ARL YOLO11s CPU optimization test with shorter sample duration"
   },
+  
   "ARL_yolo11s_gpu_shorter": {
+    "test_type": "standard",
+    "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_pipeline": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_fps": 280,
     "tolerance": 35,
     "sample_duration": 15,
-    "search_duration": 300
+    "search_duration": 300,
+    "description": "ARL YOLO11s GPU optimization test with shorter sample duration"
   },
+  
   "ARL_yolo11s_gpu_longer": {
+    "test_type": "standard",
+    "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_pipeline": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_fps": 280,
     "tolerance": 35,
-    "search_duration": 100
+    "search_duration": 100,
+    "description": "ARL YOLO11s GPU optimization test with longer search duration"
   },
+  
   "output_flag_basic": {
-    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "output_flag",
-    "expected_output_file": true,
+    "mode": "fps",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "search_duration": 30,
     "sample_duration": 10,
-    "validation": {
-      "check_baseline_pipeline": true,
-      "check_optimal_pipeline": true,
-      "check_candidate_pipelines": true
-    }
+    "description": "Test output flag functionality - check for baseline, optimal, and candidate pipelines"
   },
+  
   "fps_mode_modifications": {
-    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "fps_modifications",
-    "search_duration": 60,
-    "sample_duration": 10,
-    "validation": {
-      "check_device_modifications": true,
-      "check_batch_size_modifications": true,
-      "check_nireq_modifications": true
-    }
+    "mode": "fps",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU batch-size=1 nireq=1 ! fakesink",
+    "search_duration": 120,
+    "sample_duration": 20,
+    "base_config": {
+      "device": "CPU",
+      "batch_size": 1,
+      "nireq": 1
+    },
+    "description": "Test FPS mode parameter modifications - device, batch-size, nireq should change"
   },
+  
   "streams_mode_modifications": {
-    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "streams_modifications",
     "mode": "streams",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU batch-size=1 nireq=1 ! fakesink",
     "search_duration": 300,
-    "sample_duration": 30,
-    "validation": {
-      "check_device_modifications": true,
-      "check_batch_size_modifications": true,
-      "check_nireq_modifications": true,
-      "check_stream_count_modifications": true,
-      "streams_timeout": 250
-    }
+    "sample_duration": 20,
+    "streams_timeout": 250,
+    "base_config": {
+      "device": "CPU",
+      "batch_size": 1,
+      "nireq": 1
+    },
+    "description": "Test streams mode parameter modifications - device, batch-size, nireq, streams should change"
   },
+  
   "verbose_flag_test": {
-    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "verbose_flag",
+    "mode": "fps",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "search_duration": 30,
     "sample_duration": 5,
-    "validation": {
-      "check_candidate_logs": true,
-      "expected_log_pattern": "CANDIDATE"
-    }
+    "description": "Test verbose flag - output should contain candidate information"
   },
+  
   "search_duration_short": {
+    "test_type": "search_duration",
+    "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
-    "test_type": "search_duration_timing",
     "search_duration": 30,
     "sample_duration": 5,
-    "timing_test": true
+    "compare_with": "search_duration_long",
+    "description": "Short search duration test - should run faster than long version"
   },
+  
   "search_duration_long": {
+    "test_type": "search_duration",
+    "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
-    "test_type": "search_duration_timing",
     "search_duration": 60,
     "sample_duration": 5,
-    "timing_test": true
+    "description": "Long search duration test - should run longer than short version"
   },
+  
   "sample_duration_short": {
+    "test_type": "sample_duration",
+    "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
-    "test_type": "sample_duration_candidates",
     "search_duration": 30,
     "sample_duration": 5,
-    "validation": {
-      "check_candidate_count": true
-    }
+    "compare_with": "sample_duration_long",
+    "description": "Short sample duration test - should have different candidate count than long version"
   },
+  
   "sample_duration_long": {
+    "test_type": "sample_duration",
+    "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
-    "test_type": "sample_duration_candidates",
     "search_duration": 30,
     "sample_duration": 10,
-    "validation": {
-      "check_candidate_count": true
-    }
+    "description": "Long sample duration test - should have different candidate count than short version"
   },
+  
+  "cross_stream_batching_test": {
+    "test_type": "cross_stream_batching",
+    "mode": "streams",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml ! fakesink",
+    "search_duration": 60,
+    "sample_duration": 10,
+    "streams_timeout": 200,
+    "additional_flags": ["--enable-cross-stream-batching"],
+    "description": "Test cross stream batching - final pipeline should have shared instance-id"
+  },
+  
   "allowed_devices_cpu_only": {
-    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "test_type": "allowed_devices",
+    "mode": "fps",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "search_duration": 60,
     "sample_duration": 10,
     "additional_flags": ["--allowed-devices", "CPU"],
-    "validation": {
-      "check_device_restriction": true,
-      "allowed_devices": ["CPU"]
-    }
+    "allowed_devices": ["CPU"],
+    "description": "Test device restriction - only CPU devices should appear in output"
+  },
+  
+  "allowed_devices_cpu_gpu": {
+    "test_type": "allowed_devices",
+    "mode": "fps", 
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "search_duration": 60,
+    "sample_duration": 10,
+    "additional_flags": ["--allowed-devices", "CPU,GPU"],
+    "allowed_devices": ["CPU", "GPU"],
+    "description": "Test device restriction - only CPU and GPU devices should appear in output"
   }
 }

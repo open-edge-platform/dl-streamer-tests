@@ -104,8 +104,8 @@
     "test_type": "sample_duration",
     "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
-    "search_duration": 60,
-    "sample_duration": 10,
+    "search_duration": 30,
+    "sample_duration": 5,
     "compare_with": "sample_duration_long",
     "description": "Short sample duration test - should have different candidate count than long version"
   },
@@ -114,8 +114,8 @@
     "test_type": "sample_duration",
     "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
-    "search_duration": 60,
-    "sample_duration": 20,
+    "search_duration": 30,
+    "sample_duration": 10,
     "description": "Long sample duration test - should have different candidate count than short version"
   },
 

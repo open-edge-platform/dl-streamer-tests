@@ -130,15 +130,15 @@
     "description": "Test cross stream batching - final pipeline should have shared instance-id"
   },
   
-  "allowed_devices_cpu_only": {
+  "allowed_devices_gpu_only": {
     "test_type": "allowed_devices",
     "mode": "fps",
-    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! fakesink",
     "search_duration": 60,
     "sample_duration": 10,
-    "additional_flags": ["--allowed-devices", "CPU"],
-    "allowed_devices": ["CPU"],
-    "description": "Test device restriction - only CPU devices should appear in output"
+    "additional_flags": ["--allowed-devices", "GPU"],
+    "allowed_devices": ["GPU"],
+    "description": "Test device restriction - only GPU device should appear in output"
   },
   
   "allowed_devices_cpu_gpu": {
@@ -147,7 +147,7 @@
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! fakesink",
     "search_duration": 60,
     "sample_duration": 10,
-    "additional_flags": ["--allowed-devices", "CPU,GPU"],
+    "additional_flags": ["--allowed-devices", "CPU","GPU"],
     "allowed_devices": ["CPU", "GPU"],
     "description": "Test device restriction - only CPU and GPU devices should appear in output"
   }

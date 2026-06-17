@@ -43,6 +43,18 @@ else
     CONFIG_FILE=${CONFIG_FILE:-/home/runner/optimizer/functional_tests/optimizer_tests/test_config.json}
     VALIDATION_SCRIPT=${VALIDATION_SCRIPT:-/home/runner/optimizer/functional_tests/optimizer_tests/scripts/validate_advanced_features.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/opt/intel/dlstreamer/scripts/optimizer}
+
+    # Set environment variables for host
+    export LIBVA_DRIVER_NAME=iHD
+    export GST_VA_ALL_DRIVERS=1
+    export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+    export GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/
+    export LD_LIBRARY_PATH=/opt/intel/dlstreamer/gstreamer/lib:/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/lib/gstreamer-1.0:/usr/lib:/opt/intel/dlstreamer/lib:/opt/opencv:/opt/openh264:/opt/rdkafka:/opt/ffmpeg:/usr/local/lib/gstreamer-1.0:/usr/local/lib
+    export PYTHONPATH=/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:/opt/intel/dlstreamer/python:/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:
+    export PATH=/home/runner/.virtualenvs/dlstreamer/bin:/opt/intel/dlstreamer/gstreamer/bin:/opt/intel/dlstreamer/bin:$PATH
+    export GI_TYPELIB_PATH=/opt/intel/dlstreamer/gstreamer/lib/girepository-1.0:/opt/intel/dlstreamer/lib/girepository-1.0:/usr/lib/x86_64-linux-gnu/girepository-1.0
+    export MODELS_PATH=/home/runner/models
+    export ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
 fi
 
 mkdir -p "$RESULTS_DIR"
@@ -86,6 +98,7 @@ check_prerequisites() {
     command -v python3 >/dev/null || { print_error "Python3 not found"; exit 1; }
     command -v jq >/dev/null || { print_error "jq not found (required for JSON parsing)"; exit 1; }
     command -v timeout >/dev/null || { print_error "timeout command not found (required for streams tests)"; exit 1; }
+    command -v bc >/dev/null || { print_error "bc not found (required for timing calculations)"; exit 1; }
     print_success "Prerequisites OK"
 }
 
@@ -111,6 +124,7 @@ get_pipeline_to_test() {
     local test_name=$1
     local pipeline=$(jq -r ".[\"$test_name\"].pipeline_to_test" "$CONFIG_FILE")
     pipeline=${pipeline//\$MODELS_PATH/$MODELS_PATH}
+    pipeline=${pipeline//\$VIDEOS_PATH/$VIDEOS_PATH}
     echo "$pipeline"
 }
 
@@ -171,11 +185,12 @@ get_streams_timeout() {
     fi
 }
 
-# Run test - one output file per test
+# Run test - one output file per test with timing
 run_test() {
     local test_name=$1
     local pipeline=$2
     local output_file="$RESULTS_DIR/${test_name}.txt"
+    local timing_file="$RESULTS_DIR/${test_name}_timing.txt"
 
     # Get test configuration
     local search_duration=$(get_search_duration "$test_name")
@@ -188,6 +203,7 @@ run_test() {
     print_info "Testing: $test_name (type: $test_type, mode: $mode)"
     print_info "Search duration: ${search_duration}s"
     print_info "Output file: $output_file"
+    print_info "Timing file: $timing_file"
 
     if [ "$mode" = "streams" ]; then
         print_info "Streams timeout: ${streams_timeout}s (test will be forcefully killed after this time)"
@@ -233,6 +249,9 @@ run_test() {
 
     print_info "Running: $optimizer_cmd"
 
+    # Record start time
+    local start_time=$(date +%s.%N)
+    
     # Execute with timeout for streams mode
     local exit_code=0
     if [ "$mode" = "streams" ]; then
@@ -268,6 +287,28 @@ run_test() {
             exit_code=1
         fi
     fi
+
+    # Record end time and calculate duration
+    local end_time=$(date +%s.%N)
+    local duration=$(echo "$end_time - $start_time" | bc -l)
+    
+    # Save timing information
+    cat > "$timing_file" << EOF
+{
+  "test_name": "$test_name",
+  "start_time": $start_time,
+  "end_time": $end_time,
+  "duration_seconds": $duration,
+  "search_duration_config": $search_duration,
+  "sample_duration_config": "$sample_duration",
+  "mode": "$mode",
+  "test_type": "$test_type",
+  "exit_code": $exit_code,
+  "timestamp": "$(date -Iseconds)"
+}
+EOF
+    
+    print_info "Test duration: ${duration}s (saved to $timing_file)"
 
     return $exit_code
 }

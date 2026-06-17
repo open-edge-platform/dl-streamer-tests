@@ -70,18 +70,51 @@ class OptimizerValidator:
         """Validate output flag test - check for baseline, optimal, and candidate pipelines"""
         print("🔍 Validating output flag structure...")
         
-        # Check for required sections
-        has_baseline = bool(re.search(r'baseline.*pipeline', content, re.IGNORECASE | re.DOTALL))
-        has_optimal = bool(re.search(r'optimal.*pipeline', content, re.IGNORECASE | re.DOTALL))
-        has_candidates = bool(re.search(r'candidate.*pipeline', content, re.IGNORECASE | re.DOTALL))
+        try:
+            # Try to parse as JSON first
+            data = json.loads(content)
+            if isinstance(data, dict):
+                has_baseline = 'baseline' in data and data['baseline'] is not None
+                has_optimal = 'optimal' in data and data['optimal'] is not None
+                has_candidates = 'candidates' in data and isinstance(data['candidates'], list) and len(data['candidates']) > 0
+                
+                candidate_count = len(data['candidates']) if has_candidates else 0
+                
+                print(f"  ✓ Baseline pipeline: {'✅' if has_baseline else '❌'}")
+                print(f"  ✓ Optimal pipeline: {'✅' if has_optimal else '❌'}")
+                print(f"  ✓ Candidate pipelines: {'✅' if has_candidates else '❌'} ({candidate_count} candidates)")
+                
+                if has_baseline:
+                    baseline_fps = data['baseline'].get('fps', 'N/A')
+                    print(f"    📊 Baseline FPS: {baseline_fps}")
+                
+                if has_optimal:
+                    optimal_fps = data['optimal'].get('fps', 'N/A')
+                    print(f"    📊 Optimal FPS: {optimal_fps}")
+                
+                success = has_baseline and has_optimal and has_candidates
+                print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
+                return success
         
-        print(f"  ✓ Baseline pipeline: {'✅' if has_baseline else '❌'}")
-        print(f"  ✓ Optimal pipeline: {'✅' if has_optimal else '❌'}")
-        print(f"  ✓ Candidate pipelines: {'✅' if has_candidates else '❌'}")
+        except json.JSONDecodeError:
+            # Fallback to regex search for non-JSON output
+            print("  📝 Non-JSON output detected, using text-based validation...")
+            
+            has_baseline = bool(re.search(r'baseline.*pipeline', content, re.IGNORECASE | re.DOTALL))
+            has_optimal = bool(re.search(r'optimal.*pipeline', content, re.IGNORECASE | re.DOTALL))
+            has_candidates = bool(re.search(r'candidate.*pipeline', content, re.IGNORECASE | re.DOTALL))
+            
+            print(f"  ✓ Baseline pipeline: {'✅' if has_baseline else '❌'}")
+            print(f"  ✓ Optimal pipeline: {'✅' if has_optimal else '❌'}")
+            print(f"  ✓ Candidate pipelines: {'✅' if has_candidates else '❌'}")
+            
+            success = has_baseline and has_optimal and has_candidates
+            print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
+            return success
         
-        success = has_baseline and has_optimal and has_candidates
-        print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
-        return success
+        except Exception as e:
+            print(f"  ❌ Error parsing output: {e}")
+            return False
     
     def validate_streams_modifications(self, content: str, test_config: Dict) -> bool:
         """Validate streams modifications - check device, batch_size, nireq, and streams changes"""
@@ -161,60 +194,159 @@ class OptimizerValidator:
         """Validate verbose flag - check if output contains candidate information"""
         print("🔍 Validating verbose flag...")
         
-        candidate_count = len(re.findall(r'candidate', content, re.IGNORECASE))
-        success = candidate_count > 0
+        try:
+            # Try JSON parsing first
+            data = json.loads(content)
+            if isinstance(data, dict) and 'candidates' in data:
+                candidate_count = len(data['candidates'])
+                success = candidate_count > 0
+                
+                print(f"  ✓ Candidate entries found: {candidate_count}")
+                
+                # Show some candidate details if verbose
+                if candidate_count > 0:
+                    for i, candidate in enumerate(data['candidates'][:3]):  # Show first 3
+                        fps = candidate.get('fps', 'N/A')
+                        print(f"    📊 Candidate {i+1} FPS: {fps}")
+                    if candidate_count > 3:
+                        print(f"    ... and {candidate_count - 3} more candidates")
+                
+                print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
+                return success
         
-        print(f"  ✓ Candidate entries found: {candidate_count}")
-        print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
-        return success
+        except json.JSONDecodeError:
+            # Fallback to regex search
+            candidate_count = len(re.findall(r'candidate', content, re.IGNORECASE))
+            success = candidate_count > 0
+            
+            print(f"  ✓ Candidate entries found: {candidate_count} (text-based count)")
+            print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
+            return success
+        
+        except Exception as e:
+            print(f"  ❌ Error validating verbose output: {e}")
+            return False
     
     def validate_search_duration(self, file1: str, file2: str, test_config: Dict) -> bool:
-        """Validate search duration - compare execution times"""
+        """Validate search duration - compare actual execution times from timing files"""
         print("🔍 Validating search duration...")
         
-        def extract_duration(filepath: str) -> Optional[float]:
-            with open(filepath, 'r') as f:
-                content = f.read()
-            duration_match = re.search(r'duration[:\s]*(\d+\.?\d*)', content, re.IGNORECASE)
-            return float(duration_match.group(1)) if duration_match else None
+        def extract_timing_info(filepath: str) -> Optional[Dict]:
+            # Look for timing file
+            timing_file = filepath.replace('.txt', '_timing.txt')
+            
+            try:
+                if os.path.exists(timing_file):
+                    with open(timing_file, 'r') as f:
+                        return json.loads(f.read())
+                else:
+                    print(f"    ⚠️  Timing file not found: {timing_file}")
+                    return None
+            except Exception as e:
+                print(f"    ⚠️  Error reading timing file: {e}")
+                return None
         
         try:
-            duration1 = extract_duration(file1)
-            duration2 = extract_duration(file2)
+            timing1 = extract_timing_info(file1)
+            timing2 = extract_timing_info(file2)
             
-            if duration1 is None or duration2 is None:
-                print("  ❌ Could not extract durations from files")
+            if not timing1 or not timing2:
+                print("  ❌ Could not extract timing information from both files")
                 return False
             
-            different_durations = duration1 != duration2
-            print(f"  ✓ Duration 1: {duration1}s")
-            print(f"  ✓ Duration 2: {duration2}s")
-            print(f"  ✓ Different durations: {'✅' if different_durations else '❌'}")
+            duration1 = float(timing1['duration_seconds'])
+            duration2 = float(timing2['duration_seconds'])
+            search_duration1 = timing1.get('search_duration_config', 'N/A')
+            search_duration2 = timing2.get('search_duration_config', 'N/A')
+            test_name1 = timing1.get('test_name', 'Test1')
+            test_name2 = timing2.get('test_name', 'Test2')
             
-            print(f"  Result: {'✅ PASS' if different_durations else '❌ FAIL'}")
-            return different_durations
+            # Calculate difference
+            time_diff = abs(duration1 - duration2)
+            percentage_diff = (time_diff / min(duration1, duration2)) * 100 if min(duration1, duration2) > 0 else 0
+            
+            # Tests should have different durations (at least 10% difference)
+            significant_difference = percentage_diff > 10
+            
+            print(f"  ✓ {test_name1} - Config: {search_duration1}s, Actual: {duration1:.2f}s")
+            print(f"  ✓ {test_name2} - Config: {search_duration2}s, Actual: {duration2:.2f}s")
+            print(f"  ✓ Time difference: {time_diff:.2f}s ({percentage_diff:.1f}%)")
+            print(f"  ✓ Significant difference (>10%): {'✅' if significant_difference else '❌'}")
+            
+            # Additional validation - check if longer search_duration actually took longer
+            logical_order = True
+            if search_duration1 != 'N/A' and search_duration2 != 'N/A':
+                try:
+                    config1 = int(search_duration1)
+                    config2 = int(search_duration2)
+                    
+                    if config1 > config2:
+                        longer_actual = duration1
+                        shorter_actual = duration2
+                        longer_config = config1
+                        shorter_config = config2
+                    else:
+                        longer_actual = duration2
+                        shorter_actual = duration1
+                        longer_config = config2
+                        shorter_config = config1
+                    
+                    logical_order = longer_actual > shorter_actual
+                    print(f"  ✓ Logical duration order: {'✅' if logical_order else '❌'}")
+                    print(f"    📊 Longer config ({longer_config}s) took {longer_actual:.2f}s")
+                    print(f"    📊 Shorter config ({shorter_config}s) took {shorter_actual:.2f}s")
+                    
+                except (ValueError, TypeError):
+                    print(f"  ⚠️  Could not parse search duration configs for logical order check")
+            
+            success = significant_difference and logical_order
+            
+            print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
+            return success
             
         except Exception as e:
-            print(f"  ❌ Error comparing durations: {e}")
+            print(f"  ❌ Error comparing search durations: {e}")
             return False
     
     def validate_sample_duration(self, file1: str, file2: str, test_config: Dict) -> bool:
-        """Validate sample duration - compare candidate counts"""
+        """Validate sample duration - compare candidate counts from JSON output"""
         print("🔍 Validating sample duration...")
         
-        def count_candidates(filepath: str) -> int:
-            with open(filepath, 'r') as f:
-                content = f.read()
-            return len(re.findall(r'candidate', content, re.IGNORECASE))
+        def count_candidates_json(filepath: str) -> int:
+            try:
+                with open(filepath, 'r') as f:
+                    content = f.read()
+                
+                # Try to parse as JSON first
+                try:
+                    data = json.loads(content)
+                    if isinstance(data, dict) and 'candidates' in data:
+                        return len(data['candidates'])
+                except json.JSONDecodeError:
+                    pass
+                
+                # Fallback to regex search for non-JSON output
+                return len(re.findall(r'candidate', content, re.IGNORECASE))
+                
+            except Exception as e:
+                print(f"    ⚠️  Error reading {filepath}: {e}")
+                return 0
         
         try:
-            count1 = count_candidates(file1)
-            count2 = count_candidates(file2)
+            count1 = count_candidates_json(file1)
+            count2 = count_candidates_json(file2)
             
             different_counts = count1 != count2
+            
             print(f"  ✓ Candidates in file 1: {count1}")
             print(f"  ✓ Candidates in file 2: {count2}")
             print(f"  ✓ Different candidate counts: {'✅' if different_counts else '❌'}")
+            
+            # Additional validation - show some details about the candidates
+            if different_counts:
+                print(f"    📊 Sample duration difference resulted in {abs(count1 - count2)} candidate difference")
+            else:
+                print(f"    ⚠️  Same number of candidates - sample duration may not have significant impact")
             
             print(f"  Result: {'✅ PASS' if different_counts else '❌ FAIL'}")
             return different_counts
@@ -298,7 +430,15 @@ class OptimizerValidator:
                     compare_file = os.path.join(results_dir, f"{compare_with}.txt")
                     print(f"🔍 Looking for comparison file: {compare_file}")
             
-            # Read main output file for advanced tests
+            # For search_duration, we don't need to read the main output file content
+            if test_type == 'search_duration':
+                if compare_file and os.path.exists(compare_file):
+                    return self.validate_search_duration(output_file, compare_file, test_config)
+                else:
+                    print(f"⚠️  Search duration test needs comparison file, skipping detailed validation")
+                    return True
+            
+            # Read main output file for other advanced tests
             with open(output_file, 'r') as f:
                 content = f.read()
             
@@ -318,13 +458,6 @@ class OptimizerValidator:
                     with open(log_file, 'r') as f:
                         log_content = f.read()
                 return self.validate_verbose_flag(log_content)
-            
-            elif test_type == 'search_duration':
-                if compare_file and os.path.exists(compare_file):
-                    return self.validate_search_duration(output_file, compare_file, test_config)
-                else:
-                    print(f"⚠️  Search duration test needs comparison file, skipping detailed validation")
-                    return True
             
             elif test_type == 'sample_duration':
                 if compare_file and os.path.exists(compare_file):

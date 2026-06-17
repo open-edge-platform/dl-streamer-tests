@@ -332,7 +332,7 @@ while IFS= read -r test_name; do
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     print_info "========== Test $TOTAL_TESTS: $test_name =========="
     
-    local pipeline=$(get_pipeline_to_test "$test_name")
+    pipeline=$(get_pipeline_to_test "$test_name")
     if [ -z "$pipeline" ]; then
         print_error "No pipeline found for test: $test_name"
         FAILED_TESTS=$((FAILED_TESTS + 1))

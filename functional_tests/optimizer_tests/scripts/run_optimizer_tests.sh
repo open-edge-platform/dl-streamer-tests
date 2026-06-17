@@ -259,7 +259,7 @@ run_test() {
     
     # Execute with timeout for streams mode
     local exit_code=0
-    if [ "$test_type" = "streams_modifications" ] || [ "$test_type" = "cross_stream_batching" ]; then
+    if [ "$test_type" = "streams_modifications" ]; then
         print_info "Running $test_type test with FORCED timeout of ${streams_timeout}s"
 
         if timeout --preserve-status -s KILL "$streams_timeout" bash -c "eval '$optimizer_cmd'" > "$output_file" 2>&1; then

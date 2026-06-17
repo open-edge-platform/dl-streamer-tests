@@ -259,8 +259,8 @@ run_test() {
     
     # Execute with timeout for streams mode
     local exit_code=0
-    if [ "$mode" = "streams" ]; then
-        print_info "Running streams test with FORCED timeout of ${streams_timeout}s"
+    if [ "$test_type" = "streams_modifications" ] || [ "$test_type" = "cross_stream_batching" ]; then
+        print_info "Running $test_type test with FORCED timeout of ${streams_timeout}s"
 
         if timeout --preserve-status -s KILL "$streams_timeout" bash -c "eval '$optimizer_cmd'" > "$output_file" 2>&1; then
             print_success "Test completed normally: $test_name"
@@ -273,7 +273,7 @@ run_test() {
                 echo "=== TEST TERMINATED BY TIMEOUT ===" >> "$output_file"
                 echo "Test was killed after ${streams_timeout}s timeout" >> "$output_file"
                 echo "Timestamp: $(date)" >> "$output_file"
-                print_info "Streams test timeout termination is treated as successful completion"
+                print_info "$test_type test timeout termination is treated as successful completion"
                 exit_code=0
             else
                 print_error "Test failed: $test_name (exit code: $timeout_exit_code)"

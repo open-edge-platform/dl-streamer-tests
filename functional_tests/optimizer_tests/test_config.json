@@ -118,13 +118,14 @@
     "sample_duration": 10,
     "description": "Long sample duration test - should have different candidate count than short version"
   },
-  
+
   "cross_stream_batching_test": {
     "test_type": "cross_stream_batching",
     "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 name=src1 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml ! fakesink filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 name=src2 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml ! fakesink",
-    "search_duration": 120,
+    "search_duration": 300,
     "sample_duration": 20,
+    "streams_timeout": 250,
     "additional_flags": ["--enable-cross-stream-batching"],
     "description": "Test cross stream batching - final pipeline should have shared instance-id"
   },

@@ -121,11 +121,10 @@
   
   "cross_stream_batching_test": {
     "test_type": "cross_stream_batching",
-    "mode": "streams",
+    "mode": "fps",
     "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 name=src1 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml ! fakesink filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 name=src2 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml ! fakesink",
-    "search_duration": 60,
-    "sample_duration": 10,
-    "streams_timeout": 200,
+    "search_duration": 120,
+    "sample_duration": 20,
     "additional_flags": ["--enable-cross-stream-batching"],
     "description": "Test cross stream batching - final pipeline should have shared instance-id"
   },

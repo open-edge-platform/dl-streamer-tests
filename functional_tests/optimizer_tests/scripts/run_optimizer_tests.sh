@@ -98,7 +98,6 @@ check_prerequisites() {
     command -v python3 >/dev/null || { print_error "Python3 not found"; exit 1; }
     command -v jq >/dev/null || { print_error "jq not found (required for JSON parsing)"; exit 1; }
     command -v timeout >/dev/null || { print_error "timeout command not found (required for streams tests)"; exit 1; }
-    command -v bc >/dev/null || { print_error "bc not found (required for timing calculations)"; exit 1; }
     print_success "Prerequisites OK"
 }
 
@@ -185,7 +184,7 @@ get_streams_timeout() {
     fi
 }
 
-# Run test - one output file per test with timing
+# Run test - one output file per test with timing (no bc needed)
 run_test() {
     local test_name=$1
     local pipeline=$2
@@ -288,9 +287,9 @@ run_test() {
         fi
     fi
 
-    # Record end time and calculate duration
+    # Record end time and calculate duration using Python (no bc needed!)
     local end_time=$(date +%s.%N)
-    local duration=$(echo "$end_time - $start_time" | bc -l)
+    local duration=$(python3 -c "print($end_time - $start_time)")
     
     # Save timing information
     cat > "$timing_file" << EOF

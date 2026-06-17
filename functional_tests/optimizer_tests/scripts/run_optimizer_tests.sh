@@ -1,4 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# ==============================================================================
+# Copyright (C) 2026 Intel Corporation
+#
+# SPDX-License-Identifier: MIT
+# ==============================================================================
+
 set -e
 
 # Parse arguments

@@ -195,38 +195,38 @@ class OptimizerValidator:
         print("🔍 Validating verbose flag...")
         
         try:
-            # Try JSON parsing first
             data = json.loads(content)
-            if isinstance(data, dict) and 'candidates' in data:
-                candidate_count = len(data['candidates'])
-                success = candidate_count > 0
-                
-                print(f"  ✓ Candidate entries found: {candidate_count}")
-                
-                # Show some candidate details if verbose
-                if candidate_count > 0:
-                    for i, candidate in enumerate(data['candidates'][:3]):  # Show first 3
-                        fps = candidate.get('fps', 'N/A')
-                        print(f"    📊 Candidate {i+1} FPS: {fps}")
-                    if candidate_count > 3:
-                        print(f"    ... and {candidate_count - 3} more candidates")
-                
-                print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
-                return success
-        
-        except json.JSONDecodeError:
-            # Fallback to regex search
-            candidate_count = len(re.findall(r'candidate', content, re.IGNORECASE))
+            if not isinstance(data, dict):
+                print("  ❌ Invalid JSON structure - expected object")
+                return False
+            
+            if 'candidates' not in data or not isinstance(data['candidates'], list):
+                print("  ❌ No candidates array found in JSON")
+                return False
+            
+            candidate_count = len(data['candidates'])
             success = candidate_count > 0
             
-            print(f"  ✓ Candidate entries found: {candidate_count} (text-based count)")
+            print(f"  ✓ Candidate entries found: {candidate_count}")
+            
+            # Show some candidate details
+            if candidate_count > 0:
+                for i, candidate in enumerate(data['candidates'][:3]):  # Show first 3
+                    fps = candidate.get('fps', 'N/A')
+                    print(f"    📊 Candidate {i+1} FPS: {fps}")
+                if candidate_count > 3:
+                    print(f"    ... and {candidate_count - 3} more candidates")
+            
             print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
             return success
-        
-        except Exception as e:
-            print(f"  ❌ Error validating verbose output: {e}")
+            
+        except json.JSONDecodeError as e:
+            print(f"  ❌ Invalid JSON format: {e}")
             return False
-    
+        except Exception as e:
+            print(f"  ❌ Error parsing JSON: {e}")
+            return False
+
     def validate_search_duration(self, file1: str, file2: str, test_config: Dict) -> bool:
         """Validate search duration - compare actual execution times from timing files"""
         print("🔍 Validating search duration...")
@@ -317,17 +317,16 @@ class OptimizerValidator:
                 with open(filepath, 'r') as f:
                     content = f.read()
                 
-                # Try to parse as JSON first
-                try:
-                    data = json.loads(content)
-                    if isinstance(data, dict) and 'candidates' in data:
-                        return len(data['candidates'])
-                except json.JSONDecodeError:
-                    pass
-                
-                # Fallback to regex search for non-JSON output
-                return len(re.findall(r'candidate', content, re.IGNORECASE))
-                
+                data = json.loads(content)
+                if isinstance(data, dict) and 'candidates' in data and isinstance(data['candidates'], list):
+                    return len(data['candidates'])
+                else:
+                    print(f"    ⚠️  No candidates array in {filepath}")
+                    return 0
+                    
+            except json.JSONDecodeError as e:
+                print(f"    ❌ Invalid JSON in {filepath}: {e}")
+                return 0
             except Exception as e:
                 print(f"    ⚠️  Error reading {filepath}: {e}")
                 return 0
@@ -342,7 +341,6 @@ class OptimizerValidator:
             print(f"  ✓ Candidates in file 2: {count2}")
             print(f"  ✓ Different candidate counts: {'✅' if different_counts else '❌'}")
             
-            # Additional validation - show some details about the candidates
             if different_counts:
                 print(f"    📊 Sample duration difference resulted in {abs(count1 - count2)} candidate difference")
             else:
@@ -409,86 +407,97 @@ class OptimizerValidator:
         return success
     
     def validate_standard_test(self, content: str, test_config: Dict) -> bool:
-        """Validate standard test - check FPS improvement and golden FPS comparison"""
+        """Validate standard test - check FPS improvement and golden FPS comparison from JSON"""
         print("🔍 Validating standard test performance...")
         
         golden_fps = test_config.get('golden_fps')
         tolerance = test_config.get('tolerance', 10)  # Default 10% tolerance
         
-        # Extract FPS values from output
-        original_fps = None
-        optimized_fps = None
-        improvement = None
-        
-        # Look for summary section
-        original_match = re.search(r'Original pipeline FPS:\s*(\d+\.?\d*)', content, re.IGNORECASE)
-        if original_match:
-            original_fps = float(original_match.group(1))
-        
-        optimized_match = re.search(r'Optimized pipeline FPS:\s*(\d+\.?\d*)', content, re.IGNORECASE)
-        if optimized_match:
-            optimized_fps = float(optimized_match.group(1))
-        
-        improvement_match = re.search(r'(\d+\.?\d*)\s*fps improvement', content, re.IGNORECASE)
-        if improvement_match:
-            improvement = float(improvement_match.group(1))
-        
-        print(f"  📊 Original pipeline FPS: {original_fps if original_fps else 'N/A'}")
-        print(f"  📊 Optimized pipeline FPS: {optimized_fps if optimized_fps else 'N/A'}")
-        print(f"  📊 FPS improvement: {improvement if improvement else 'N/A'}")
-        
-        if golden_fps:
-            print(f"  📊 Golden FPS target: {golden_fps}")
-            print(f"  📊 Tolerance: ±{tolerance}")
-        
-        success = True
-        checks = []
-        
-        # Check 1: FPS values extracted successfully
-        if original_fps is None or optimized_fps is None:
-            checks.append(("❌", "FPS extraction", "Could not extract FPS values from output"))
-            success = False
-        else:
-            checks.append(("✅", "FPS extraction", f"Original: {original_fps}, Optimized: {optimized_fps}"))
+        try:
+            # Parse JSON
+            data = json.loads(content)
+            if not isinstance(data, dict):
+                print("  ❌ Invalid JSON structure - expected object")
+                return False
             
-            # Check 2: Performance improvement
-            if improvement is not None and improvement > 0:
-                checks.append(("✅", "Performance improvement", f"{improvement:.2f} fps improvement"))
-            elif optimized_fps > original_fps:
-                actual_improvement = optimized_fps - original_fps
-                checks.append(("✅", "Performance improvement", f"{actual_improvement:.2f} fps improvement (calculated)"))
+            # Extract baseline (original) FPS
+            original_fps = None
+            if 'baseline' in data and isinstance(data['baseline'], dict):
+                original_fps = data['baseline'].get('fps')
+            
+            # Extract optimal (best) FPS and pipeline
+            optimized_fps = None
+            optimized_pipeline = None
+            if 'optimal' in data and isinstance(data['optimal'], dict):
+                optimized_fps = data['optimal'].get('fps')
+                optimized_pipeline = data['optimal'].get('pipeline')
+            
+            # Calculate improvement
+            improvement = None
+            if original_fps is not None and optimized_fps is not None:
+                improvement = optimized_fps - original_fps
+            
+            # Display extracted values
+            print(f"  📊 Original pipeline FPS: {original_fps if original_fps is not None else 'N/A'}")
+            print(f"  📊 Optimized pipeline FPS: {optimized_fps if optimized_fps is not None else 'N/A'}")
+            print(f"  📊 FPS improvement: {improvement if improvement is not None else 'N/A'}")
+            
+            if golden_fps:
+                print(f"  📊 Golden FPS target: {golden_fps}")
+                print(f"  📊 Tolerance: ±{tolerance}")
+            
+            success = True
+            checks = []
+            
+            # Check 1: FPS values extracted successfully
+            if original_fps is None or optimized_fps is None:
+                checks.append(("❌", "FPS extraction", "Could not extract FPS values from JSON"))
+                success = False
             else:
-                checks.append(("❌", "Performance improvement", "No performance improvement detected"))
+                checks.append(("✅", "FPS extraction", f"Original: {original_fps}, Optimized: {optimized_fps}"))
+                
+                # Check 2: Performance improvement
+                if improvement > 0:
+                    checks.append(("✅", "Performance improvement", f"{improvement:.2f} fps improvement"))
+                else:
+                    checks.append(("❌", "Performance improvement", f"No improvement: {improvement:.2f} fps"))
+                    success = False
+                
+                # Check 3: Golden FPS comparison (if specified)
+                if golden_fps:
+                    fps_diff = abs(optimized_fps - golden_fps)
+                    tolerance_value = golden_fps * (tolerance / 100.0)
+                    
+                    if fps_diff <= tolerance_value:
+                        checks.append(("✅", "Golden FPS match", f"Within tolerance: {optimized_fps:.2f} vs {golden_fps} (±{tolerance_value:.2f})"))
+                    else:
+                        checks.append(("❌", "Golden FPS match", f"Outside tolerance: {optimized_fps:.2f} vs {golden_fps} (±{tolerance_value:.2f})"))
+                        success = False
+                else:
+                    checks.append(("ℹ️", "Golden FPS match", "No golden FPS specified, skipping"))
+            
+            # Check 4: Optimized pipeline found
+            if optimized_pipeline:
+                # Truncate long pipelines for display
+                display_pipeline = optimized_pipeline[:80] + "..." if len(optimized_pipeline) > 80 else optimized_pipeline
+                checks.append(("✅", "Optimized pipeline", f"Found: {display_pipeline}"))
+            else:
+                checks.append(("❌", "Optimized pipeline", "No optimized pipeline found in JSON"))
                 success = False
             
-            # Check 3: Golden FPS comparison (if specified)
-            if golden_fps:
-                fps_diff = abs(optimized_fps - golden_fps)
-                tolerance_value = golden_fps * (tolerance / 100.0)
-                
-                if fps_diff <= tolerance_value:
-                    checks.append(("✅", "Golden FPS match", f"Within tolerance: {optimized_fps:.2f} vs {golden_fps} (±{tolerance_value:.2f})"))
-                else:
-                    checks.append(("❌", "Golden FPS match", f"Outside tolerance: {optimized_fps:.2f} vs {golden_fps} (±{tolerance_value:.2f})"))
-                    success = False
-            else:
-                checks.append(("ℹ️", "Golden FPS match", "No golden FPS specified, skipping"))
-        
-        # Check 4: Optimized pipeline found
-        optimized_pipeline_match = re.search(r'Optimized pipeline:\s*(.+)', content, re.IGNORECASE)
-        if optimized_pipeline_match:
-            optimized_pipeline = optimized_pipeline_match.group(1).strip()
-            checks.append(("✅", "Optimized pipeline", f"Found: {optimized_pipeline[:80]}..."))
-        else:
-            checks.append(("❌", "Optimized pipeline", "No optimized pipeline found in output"))
-            success = False
-        
-        # Print all checks
-        for status, check_name, details in checks:
-            print(f"  {status} {check_name}: {details}")
-        
-        print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
-        return success
+            # Print all checks
+            for status, check_name, details in checks:
+                print(f"  {status} {check_name}: {details}")
+            
+            print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
+            return success
+            
+        except json.JSONDecodeError as e:
+            print(f"  ❌ Invalid JSON format: {e}")
+            return False
+        except Exception as e:
+            print(f"  ❌ Error validating JSON: {e}")
+            return False
 
     def validate_test(self, test_name: str, output_file: str, 
                     compare_file: Optional[str] = None, log_file: Optional[str] = None) -> bool:

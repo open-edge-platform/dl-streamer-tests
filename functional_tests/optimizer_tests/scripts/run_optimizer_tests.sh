@@ -80,15 +80,42 @@ print_debug() {
     fi
 }
 
+# Validate JSON output
+validate_json_output() {
+    local json_file=$1
+    local test_name=$2
+    
+    if [ ! -f "$json_file" ]; then
+        print_error "JSON output file not found: $json_file"
+        return 1
+    fi
+    
+    if ! jq empty "$json_file" 2>/dev/null; then
+        print_error "Invalid JSON in output file for test $test_name - treating as BUG"
+        print_error "JSON file: $json_file"
+        if [ "$DEBUG_MODE" = true ]; then
+            print_error "=== INVALID JSON CONTENT ==="
+            head -20 "$json_file" | while IFS= read -r line; do
+                echo -e "${RED}  $line${NC}"
+            done
+            print_error "=== END INVALID JSON ==="
+        fi
+        return 1
+    fi
+    
+    print_success "JSON output is valid for test: $test_name"
+    return 0
+}
+
 # Show error details if debug mode
 show_error_details() {
     local test_name=$1
-    local output_file="$RESULTS_DIR/${test_name}.txt"
+    local log_file="$RESULTS_DIR/${test_name}_log.txt"
 
-    if [ "$DEBUG_MODE" = true ] && [ -f "$output_file" ]; then
+    if [ "$DEBUG_MODE" = true ] && [ -f "$log_file" ]; then
         print_error "=== ERROR DETAILS for $test_name ==="
-        print_error "Last 10 lines of output:"
-        tail -10 "$output_file" | while IFS= read -r line; do
+        print_error "Last 10 lines of log:"
+        tail -10 "$log_file" | while IFS= read -r line; do
             echo -e "${RED}  $line${NC}"
         done
         print_error "=== END ERROR DETAILS ==="
@@ -190,11 +217,12 @@ get_streams_timeout() {
     fi
 }
 
-# Run test - one output file per test with timing (no bc needed)
+# Run test - separate JSON and log files
 run_test() {
     local test_name=$1
     local pipeline=$2
-    local output_file="$RESULTS_DIR/${test_name}.txt"
+    local json_file="$RESULTS_DIR/${test_name}.json"
+    local log_file="$RESULTS_DIR/${test_name}_log.txt"
     local timing_file="$RESULTS_DIR/${test_name}_timing.txt"
 
     # Get test configuration
@@ -207,7 +235,8 @@ run_test() {
 
     print_info "Testing: $test_name (type: $test_type, mode: $mode)"
     print_info "Search duration: ${search_duration}s"
-    print_info "Output file: $output_file"
+    print_info "JSON output: $json_file"
+    print_info "Log output: $log_file"
     print_info "Timing file: $timing_file"
 
     if [ "$mode" = "streams" ]; then
@@ -239,10 +268,8 @@ run_test() {
         optimizer_cmd="$optimizer_cmd $additional_flags"
     fi
 
-    # Add output flag for advanced tests (JSON output)
-    if [[ "$test_type" != "standard" ]]; then
-        optimizer_cmd="$optimizer_cmd --output $output_file"
-    fi
+    # Always add JSON output flag
+    optimizer_cmd="$optimizer_cmd --output $json_file"
 
     # Add verbose flag for verbose tests
     if [[ "$test_type" == "verbose_flag" ]]; then
@@ -257,22 +284,23 @@ run_test() {
     # Record start time
     local start_time=$(date +%s.%N)
     
-    # Execute with timeout for streams mode
+    # Execute based on test type
     local exit_code=0
     if [ "$test_type" = "streams_modifications" ]; then
+        # Streams modifications - capture logs with timeout
         print_info "Running $test_type test with FORCED timeout of ${streams_timeout}s"
 
-        if timeout --preserve-status -s KILL "$streams_timeout" bash -c "eval '$optimizer_cmd'" > "$output_file" 2>&1; then
+        if timeout --preserve-status -s KILL "$streams_timeout" bash -c "eval '$optimizer_cmd'" > "$log_file" 2>&1; then
             print_success "Test completed normally: $test_name"
             exit_code=0
         else
             local timeout_exit_code=$?
             if [ $timeout_exit_code -eq 137 ] || [ $timeout_exit_code -eq 124 ]; then
                 print_warning "Test was terminated by timeout after ${streams_timeout}s: $test_name"
-                echo "" >> "$output_file"
-                echo "=== TEST TERMINATED BY TIMEOUT ===" >> "$output_file"
-                echo "Test was killed after ${streams_timeout}s timeout" >> "$output_file"
-                echo "Timestamp: $(date)" >> "$output_file"
+                echo "" >> "$log_file"
+                echo "=== TEST TERMINATED BY TIMEOUT ===" >> "$log_file"
+                echo "Test was killed after ${streams_timeout}s timeout" >> "$log_file"
+                echo "Timestamp: $(date)" >> "$log_file"
                 print_info "$test_type test timeout termination is treated as successful completion"
                 exit_code=0
             else
@@ -282,10 +310,16 @@ run_test() {
             fi
         fi
     else
-        # Regular execution for non-streams tests
-        if eval "$optimizer_cmd" > "$output_file" 2>&1; then
+        # Regular execution - capture logs separately from JSON
+        if eval "$optimizer_cmd" 2> "$log_file"; then
             print_success "Test completed: $test_name"
             exit_code=0
+            
+            # Validate JSON output for non-streams tests
+            if ! validate_json_output "$json_file" "$test_name"; then
+                print_error "JSON validation failed - treating as BUG"
+                exit_code=1
+            fi
         else
             print_error "Test failed: $test_name"
             show_error_details "$test_name"
@@ -309,6 +343,8 @@ run_test() {
   "mode": "$mode",
   "test_type": "$test_type",
   "exit_code": $exit_code,
+  "json_file": "$json_file",
+  "log_file": "$log_file",
   "timestamp": "$(date -Iseconds)"
 }
 EOF
@@ -322,16 +358,26 @@ EOF
 run_validation() {
     local test_name=$1
     local test_type=$(get_test_type "$test_name")
-    local output_file="$RESULTS_DIR/${test_name}.txt"
+    local json_file="$RESULTS_DIR/${test_name}.json"
+    local log_file="$RESULTS_DIR/${test_name}_log.txt"
 
     print_debug "Running validation for $test_name (type: $test_type)"
 
     if [ -f "$VALIDATION_SCRIPT" ]; then
-        local validation_cmd="python3 $VALIDATION_SCRIPT --config-file $CONFIG_FILE --test-name $test_name --output-file $output_file"
+        local validation_cmd="python3 $VALIDATION_SCRIPT --config-file $CONFIG_FILE --test-name $test_name"
         
-        # Add log file for verbose tests (same file in this case)
+        # Choose appropriate file based on test type
+        if [[ "$test_type" == "streams_modifications" ]]; then
+            # For streams modifications, use log file
+            validation_cmd="$validation_cmd --output-file $log_file"
+        else
+            # For other tests, use JSON file
+            validation_cmd="$validation_cmd --output-file $json_file"
+        fi
+        
+        # Add log file for verbose tests
         if [[ "$test_type" == "verbose_flag" ]]; then
-            validation_cmd="$validation_cmd --log-file $output_file"
+            validation_cmd="$validation_cmd --log-file $log_file"
         fi
         
         print_info "Running validation: $validation_cmd"
@@ -345,12 +391,19 @@ run_validation() {
         fi
     else
         print_warning "Validation script not found: $VALIDATION_SCRIPT"
-        # Just check if output file exists and has content
-        if [ -f "$output_file" ] && [ -s "$output_file" ]; then
+        # Basic validation - check if appropriate file exists and has content
+        local file_to_check
+        if [[ "$test_type" == "streams_modifications" ]]; then
+            file_to_check="$log_file"
+        else
+            file_to_check="$json_file"
+        fi
+        
+        if [ -f "$file_to_check" ] && [ -s "$file_to_check" ]; then
             print_success "Basic validation passed for $test_name (file exists and not empty)"
             return 0
         else
-            print_error "Basic validation failed for $test_name (file missing or empty)"
+            print_error "Basic validation failed for $test_name (file missing or empty: $file_to_check)"
             return 1
         fi
     fi

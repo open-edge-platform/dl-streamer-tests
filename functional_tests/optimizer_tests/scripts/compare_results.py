@@ -11,9 +11,34 @@ import argparse
 import json
 from datetime import datetime
 
-def extract_pipeline_and_fps(filename):
-    """Extract pipeline, FPS and initial FPS from logs"""
-    print(f"🔍 DEBUG: Starting extraction from file: {filename}")
+def extract_pipeline_and_fps_from_json(filename):
+    """Extract pipeline and FPS from JSON output"""
+    print(f"🔍 DEBUG: Extracting from JSON file: {filename}")
+    
+    try:
+        with open(filename, 'r') as f:
+            data = json.load(f)
+        
+        # Extract from JSON structure
+        pipeline = data.get('best_pipeline', data.get('optimized_pipeline'))
+        fps = data.get('best_fps', data.get('optimized_fps'))
+        initial_fps = data.get('initial_fps', data.get('baseline_fps'))
+        no_optimization_found = data.get('no_optimization_found', False)
+        
+        print(f"🔍 DEBUG: JSON extraction - Pipeline: {'Found' if pipeline else 'None'}, FPS: {fps}, Initial FPS: {initial_fps}")
+        
+        return pipeline, fps, initial_fps, no_optimization_found
+        
+    except json.JSONDecodeError as e:
+        print(f"❌ DEBUG: Invalid JSON in {filename}: {e}")
+        return None, None, None, False
+    except Exception as e:
+        print(f"❌ DEBUG: Error extracting from JSON {filename}: {e}")
+        return None, None, None, False
+
+def extract_pipeline_and_fps_from_logs(filename):
+    """Extract pipeline and FPS from log output (legacy method)"""
+    print(f"🔍 DEBUG: Extracting from log file: {filename}")
     
     try:
         with open(filename, 'r') as f:
@@ -77,13 +102,27 @@ def extract_pipeline_and_fps(filename):
                 if pipeline and fps:
                     break
         
-        print(f"🔍 DEBUG: Final results - Pipeline: {'Found' if pipeline else 'None'}, FPS: {fps}, Initial FPS: {initial_fps}, No optimization: {no_optimization_found}")
+        print(f"🔍 DEBUG: Log extraction - Pipeline: {'Found' if pipeline else 'None'}, FPS: {fps}, Initial FPS: {initial_fps}")
         
         return pipeline, fps, initial_fps, no_optimization_found
         
     except Exception as e:
-        print(f"❌ DEBUG: Error extracting from {filename}: {e}")
+        print(f"❌ DEBUG: Error extracting from logs {filename}: {e}")
         return None, None, None, False
+
+def extract_pipeline_and_fps(filename):
+    """Extract pipeline and FPS - auto-detect JSON vs log format"""
+    
+    # First try JSON format
+    if filename.endswith('.json'):
+        result = extract_pipeline_and_fps_from_json(filename)
+        if result[1] is not None:  # If FPS was found
+            return result
+        else:
+            print(f"🔍 DEBUG: JSON extraction failed, trying log format fallback")
+    
+    # Fallback to log format
+    return extract_pipeline_and_fps_from_logs(filename)
 
 def load_golden_values(config_file, test_name):
     """Load golden values from JSON config file"""
@@ -126,6 +165,7 @@ def append_to_final_report(final_report_path, test_name, result):
             f.write(f"Current FPS: {result['current_fps']}\n")
             f.write(f"Tolerance: {result['tolerance']}\n")
             f.write(f"FPS Match: {'PASS' if result['fps_match'] else 'FAIL'}\n")
+            f.write(f"File Type: {result.get('file_type', 'Unknown')}\n")
             
             # Add no optimization info
             if result.get('no_optimization_found'):
@@ -147,13 +187,18 @@ def append_to_final_report(final_report_path, test_name, result):
         import traceback
         traceback.print_exc()
 
-def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, final_report_path=None):
+def compare_results(output_file, config_file, test_name, fps_tolerance=1, final_report_path=None):
     """Compare current results with golden values"""
     
     print(f"🔍 DEBUG: Starting comparison for test: {test_name}")
+    print(f"🔍 DEBUG: Using output file: {output_file}")
+    
+    # Determine file type
+    file_type = "JSON" if output_file.endswith('.json') else "LOG"
+    print(f"🔍 DEBUG: Detected file type: {file_type}")
     
     # Extract current results
-    current_pipeline, current_fps, initial_fps, no_optimization_found = extract_pipeline_and_fps(full_output_path)
+    current_pipeline, current_fps, initial_fps, no_optimization_found = extract_pipeline_and_fps(output_file)
     
     if current_fps is None:
         print("❌ Failed to extract current FPS")
@@ -188,6 +233,7 @@ def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, f
     # Print results
     print("="*50)
     print(f"TEST: {test_name}")
+    print(f"FILE TYPE: {file_type}")
     print("="*50)
     print(f"Golden FPS:  {golden_fps}")
     print(f"Current FPS: {current_fps}")
@@ -222,7 +268,8 @@ def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, f
             'fps_match': fps_match,
             'golden_pipeline': golden_pipeline,
             'current_pipeline': current_pipeline if current_pipeline else 'N/A',
-            'no_optimization_found': no_optimization_found
+            'no_optimization_found': no_optimization_found,
+            'file_type': file_type
         }
         append_to_final_report(final_report_path, test_name, result)
     
@@ -230,17 +277,26 @@ def compare_results(full_output_path, config_file, test_name, fps_tolerance=1, f
 
 def main():
     parser = argparse.ArgumentParser(description='Compare optimizer FPS results')
-    parser.add_argument('--full-output', '-f', required=True, help='Full output file')
+    parser.add_argument('--output-file', '-f', required=True, help='Output file (JSON or log)')
     parser.add_argument('--config-file', '-c', required=True, help='Test configuration file (JSON)')
     parser.add_argument('--test-name', '-n', required=True, help='Test name')
     parser.add_argument('--tolerance', '-t', type=float, default=0.01, help='FPS tolerance')
     parser.add_argument('--final-report', '-r', help='Final report file')
     
+    # Legacy support
+    parser.add_argument('--full-output', help='Legacy: same as --output-file')
+    
     args = parser.parse_args()
     
+    # Handle legacy argument
+    output_file = args.output_file or args.full_output
+    if not output_file:
+        print("❌ Either --output-file or --full-output must be specified")
+        sys.exit(1)
+    
     # Check files exist
-    if not os.path.exists(args.full_output):
-        print(f"❌ File not found: {args.full_output}")
+    if not os.path.exists(output_file):
+        print(f"❌ File not found: {output_file}")
         sys.exit(1)
     
     if not os.path.exists(args.config_file):
@@ -249,7 +305,7 @@ def main():
     
     # Run comparison
     print(f"🔍 DEBUG: Final report will be saved to: {args.final_report}")
-    success = compare_results(args.full_output, args.config_file, args.test_name, args.tolerance, args.final_report)
+    success = compare_results(output_file, args.config_file, args.test_name, args.tolerance, args.final_report)
 
     if args.final_report:
         print(f"🔍 DEBUG: Final report exists: {os.path.exists(args.final_report)}")

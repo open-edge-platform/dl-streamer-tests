@@ -310,8 +310,8 @@ run_test() {
             fi
         fi
     else
-        # Regular execution - capture logs separately from JSON
-        if eval "$optimizer_cmd" 2> "$log_file"; then
+        # Regular execution - hide FpsCounter from console completely
+        if eval "$optimizer_cmd" 2> "$log_file" >/dev/null; then
             print_success "Test completed: $test_name"
             exit_code=0
             

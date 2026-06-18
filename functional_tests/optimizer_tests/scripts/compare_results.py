@@ -36,78 +36,64 @@ def extract_pipeline_and_fps_from_json(filename):
         print(f"❌ DEBUG: Error extracting from JSON {filename}: {e}")
         return None, None, None, False
 
-def extract_pipeline_and_fps_from_logs(filename):
-    """Extract pipeline and FPS from log output (legacy method)"""
-    print(f"🔍 DEBUG: Extracting from log file: {filename}")
+def extract_pipeline_and_fps_from_json(filename):
+    """Extract pipeline and FPS from JSON output"""
+    print(f"🔍 DEBUG: Extracting from JSON file: {filename}")
     
     try:
         with open(filename, 'r') as f:
-            content = f.read()
-        
-        lines = content.split('\n')
-        print(f"🔍 DEBUG: Total lines: {len(lines)}")
+            data = json.load(f)
         
         pipeline = None
         fps = None
         initial_fps = None
         no_optimization_found = False
         
-        # Check for the exact phrase
-        exact_phrase = "No optimized pipeline found that outperforms the original pipeline"
+        # Extract baseline (initial) FPS
+        if 'baseline' in data and isinstance(data['baseline'], dict):
+            initial_fps = data['baseline'].get('fps')
+            print(f"🔍 DEBUG: Found baseline FPS: {initial_fps}")
         
-        for line in lines:
-            if exact_phrase in line:
+        # Extract optimal (best) pipeline and FPS
+        if 'optimal' in data and isinstance(data['optimal'], dict):
+            pipeline = data['optimal'].get('pipeline')
+            fps = data['optimal'].get('fps')
+            print(f"🔍 DEBUG: Found optimal pipeline and FPS: {fps}")
+        
+        # If no optimal found, check if there are candidates
+        if fps is None and 'candidates' in data and isinstance(data['candidates'], list) and len(data['candidates']) > 0:
+            # Find the candidate with highest FPS
+            best_candidate = max(data['candidates'], key=lambda x: x.get('fps', 0))
+            pipeline = best_candidate.get('pipeline')
+            fps = best_candidate.get('fps')
+            print(f"🔍 DEBUG: Using best candidate FPS: {fps}")
+        
+        # Check if no optimization was found (optimal FPS <= baseline FPS)
+        if initial_fps is not None and fps is not None:
+            if fps <= initial_fps:
                 no_optimization_found = True
-                print(f"🔍 DEBUG: Found exact no optimization message: {exact_phrase}")
-                break
+                print(f"🔍 DEBUG: No optimization found - optimal FPS ({fps}) <= baseline FPS ({initial_fps})")
         
-        # Extract initial FPS
-        initial_patterns = ['Initial pipeline FPS:', 'Original pipeline FPS:', 'Baseline FPS:']
-        for line_num, line in enumerate(lines):
-            for pattern in initial_patterns:
-                if pattern in line:
-                    match = re.search(r'FPS:\s*([\d.]+)', line)
-                    if match:
-                        initial_fps = float(match.group(1))
-                        print(f"🔍 DEBUG: Extracted initial FPS: {initial_fps}")
-                        break
-            if initial_fps:
-                break
+        # If still no FPS found, try legacy field names
+        if fps is None:
+            fps = data.get('best_fps', data.get('optimized_fps'))
+            pipeline = data.get('best_pipeline', data.get('optimized_pipeline'))
+            print(f"🔍 DEBUG: Using legacy fields - FPS: {fps}")
         
-        # If no optimization found, use initial FPS as final FPS
-        if no_optimization_found and initial_fps is not None:
-            fps = initial_fps
-            pipeline = "Original pipeline (no optimization found)"
-            print(f"🔍 DEBUG: No optimization found, using initial FPS: {fps}")
-        else:
-            # Extract best pipeline and FPS
-            best_patterns = ['Best found pipeline:', 'Optimized pipeline:', 'Best pipeline:']
-            for i, line in enumerate(lines):
-                for pattern in best_patterns:
-                    if pattern in line:
-                        pipeline = line.split(pattern, 1)[1].strip()
-                        
-                        # Look for FPS in next few lines
-                        for j in range(i+1, min(i+5, len(lines))):
-                            fps_patterns = [r'with fps:\s*([\d.]+)', r'FPS:\s*([\d.]+)', r'(\d+\.?\d*)\s*fps']
-                            for fps_pattern in fps_patterns:
-                                match = re.search(fps_pattern, lines[j], re.IGNORECASE)
-                                if match:
-                                    fps = float(match.group(1))
-                                    print(f"🔍 DEBUG: Found FPS: {fps}")
-                                    break
-                            if fps:
-                                break
-                        break
-                if pipeline and fps:
-                    break
+        # Check for explicit no_optimization_found flag
+        if data.get('no_optimization_found', False):
+            no_optimization_found = True
+            print(f"🔍 DEBUG: Explicit no_optimization_found flag set")
         
-        print(f"🔍 DEBUG: Log extraction - Pipeline: {'Found' if pipeline else 'None'}, FPS: {fps}, Initial FPS: {initial_fps}")
+        print(f"🔍 DEBUG: JSON extraction - Pipeline: {'Found' if pipeline else 'None'}, FPS: {fps}, Initial FPS: {initial_fps}, No optimization: {no_optimization_found}")
         
         return pipeline, fps, initial_fps, no_optimization_found
         
+    except json.JSONDecodeError as e:
+        print(f"❌ DEBUG: Invalid JSON in {filename}: {e}")
+        return None, None, None, False
     except Exception as e:
-        print(f"❌ DEBUG: Error extracting from logs {filename}: {e}")
+        print(f"❌ DEBUG: Error extracting from JSON {filename}: {e}")
         return None, None, None, False
 
 def extract_pipeline_and_fps(filename):

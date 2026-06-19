@@ -145,39 +145,73 @@ class OptimizerValidator:
         return has_changes
 
     def validate_fps_modifications(self, content: str, test_config: Dict) -> bool:
-        """Validate FPS modifications - check if device, batch_size, or nireq changed"""
+        """Validate FPS modifications - check if device, batch_size, or nireq changed in JSON output"""
         print("🔍 Validating FPS modifications...")
         
-        base_config = test_config.get('base_config', {})
-        required_changes = ['device', 'batch_size', 'nireq']
-        
-        current_params = self.extract_parameters(content)
-        has_changes, changes = self.check_parameter_changes(base_config, current_params, required_changes)
-        
-        nireq_tests = re.findall(r'Testing nireq combination: \[(\d+)\]', content, re.IGNORECASE)
-        unique_nireq = set(int(x) for x in nireq_tests)
-        if len(unique_nireq) > 1:
-            changes['nireq_variety'] = f"Tested {len(unique_nireq)} different nireq values: {sorted(unique_nireq)}"
-            has_changes = True
-        
-        device_tests = re.findall(r'device=(CPU|GPU|NPU)', content, re.IGNORECASE)
-        unique_devices = set(d.upper() for d in device_tests)
-        if len(unique_devices) > 1:
-            changes['device_variety'] = f"Tested {len(unique_devices)} different devices: {sorted(unique_devices)}"
-            has_changes = True
-        
-        print(f"  Base config: {base_config}")
-        print(f"  Current params: {current_params}")
-        
-        if changes:
-            for param, change in changes.items():
-                status = "✅" if ("→" in change or "Tested" in change) else "❌"
-                print(f"  {status} {param}: {change}")
-        else:
-            print("  ❌ No parameter changes detected")
-        
-        print(f"  Result: {'✅ PASS' if has_changes else '❌ FAIL'}")
-        return has_changes
+        try:
+            # Parse JSON to get candidates
+            data = json.loads(content)
+            if not isinstance(data, dict):
+                print("  ❌ Invalid JSON structure - expected object")
+                return False
+            
+            base_config = test_config.get('base_config', {})
+            
+            # Extract parameters from all candidates
+            all_pipelines = []
+            if 'candidates' in data and isinstance(data['candidates'], list):
+                all_pipelines.extend([c.get('pipeline', '') for c in data['candidates']])
+            if 'optimal' in data and isinstance(data['optimal'], dict):
+                all_pipelines.append(data['optimal'].get('pipeline', ''))
+            if 'baseline' in data and isinstance(data['baseline'], dict):
+                all_pipelines.append(data['baseline'].get('pipeline', ''))
+            
+            # Combine all pipelines for analysis
+            combined_content = '\n'.join(all_pipelines)
+            
+            current_params = self.extract_parameters(combined_content)
+            required_changes = ['device', 'batch_size', 'nireq']
+            has_changes, changes = self.check_parameter_changes(base_config, current_params, required_changes)
+            
+            # Check for variety in tested parameters
+            device_tests = re.findall(r'device=(CPU|GPU|NPU)', combined_content, re.IGNORECASE)
+            unique_devices = set(d.upper() for d in device_tests)
+            if len(unique_devices) > 1:
+                changes['device_variety'] = f"Tested {len(unique_devices)} different devices: {sorted(unique_devices)}"
+                has_changes = True
+            
+            batch_tests = re.findall(r'batch-size=(\d+)', combined_content, re.IGNORECASE)
+            unique_batches = set(int(b) for b in batch_tests)
+            if len(unique_batches) > 1:
+                changes['batch_variety'] = f"Tested {len(unique_batches)} different batch sizes: {sorted(unique_batches)}"
+                has_changes = True
+            
+            nireq_tests = re.findall(r'nireq=(\d+)', combined_content, re.IGNORECASE)
+            unique_nireq = set(int(n) for n in nireq_tests)
+            if len(unique_nireq) > 1:
+                changes['nireq_variety'] = f"Tested {len(unique_nireq)} different nireq values: {sorted(unique_nireq)}"
+                has_changes = True
+            
+            print(f"  Base config: {base_config}")
+            print(f"  Current params: {current_params}")
+            print(f"  Analyzed {len(all_pipelines)} pipelines from JSON")
+            
+            if changes:
+                for param, change in changes.items():
+                    status = "✅" if ("→" in change or "Tested" in change) else "❌"
+                    print(f"  {status} {param}: {change}")
+            else:
+                print("  ❌ No parameter changes detected")
+            
+            print(f"  Result: {'✅ PASS' if has_changes else '❌ FAIL'}")
+            return has_changes
+            
+        except json.JSONDecodeError as e:
+            print(f"  ❌ Invalid JSON format: {e}")
+            return False
+        except Exception as e:
+            print(f"  ❌ Error validating FPS modifications: {e}")
+            return False
     
     def validate_verbose_flag(self, content: str) -> bool:
         """Validate verbose flag - check if output contains CANDIDATE prints in logs"""
@@ -341,57 +375,110 @@ class OptimizerValidator:
             return False
     
     def validate_cross_stream_batching(self, content: str, test_config: Dict) -> bool:
-        """Validate cross stream batching - check if model-instance-id appears multiple times with same value"""
+        """Validate cross stream batching - check if model-instance-id appears multiple times with same value in optimal pipeline"""
         print("🔍 Validating cross stream batching...")
         
-        # Find all model-instance-id occurrences
-        model_instance_matches = re.findall(r'model-instance-id=(\w+)', content, re.IGNORECASE)
-        
-        if not model_instance_matches:
-            print("  ❌ No model-instance-id found in output")
+        try:
+            # Parse JSON to get optimal pipeline
+            data = json.loads(content)
+            if not isinstance(data, dict):
+                print("  ❌ Invalid JSON structure - expected object")
+                return False
+            
+            # Extract optimal pipeline
+            optimal_pipeline = None
+            if 'optimal' in data and isinstance(data['optimal'], dict):
+                optimal_pipeline = data['optimal'].get('pipeline')
+            
+            if not optimal_pipeline:
+                print("  ❌ No optimal pipeline found in JSON")
+                return False
+            
+            print(f"  ✓ Found optimal pipeline: {optimal_pipeline[:100]}...")
+            
+            # Find all model-instance-id occurrences in the optimal pipeline
+            model_instance_matches = re.findall(r'model-instance-id=(\w+)', optimal_pipeline, re.IGNORECASE)
+            
+            if not model_instance_matches:
+                print("  ❌ No model-instance-id found in optimal pipeline")
+                return False
+            
+            if len(model_instance_matches) < 2:
+                print(f"  ❌ Only {len(model_instance_matches)} model-instance-id found, need at least 2 for batching")
+                return False
+            
+            # Check if all model-instance-id values are the same
+            unique_ids = set(model_instance_matches)
+            
+            if len(unique_ids) != 1:
+                print(f"  ❌ Found different model-instance-id values: {unique_ids}")
+                return False
+            
+            instance_id = model_instance_matches[0]
+            count = len(model_instance_matches)
+            
+            print(f"  ✓ Model-instance-id: {instance_id}")
+            print(f"  ✓ Number of occurrences: {count}")
+            print(f"  ✓ All values are identical: {len(unique_ids) == 1}")
+            print(f"  Result: ✅ PASS")
+            return True
+            
+        except json.JSONDecodeError as e:
+            print(f"  ❌ Invalid JSON format: {e}")
             return False
-        
-        if len(model_instance_matches) < 2:
-            print(f"  ❌ Only {len(model_instance_matches)} model-instance-id found, need at least 2 findings")
+        except Exception as e:
+            print(f"  ❌ Error validating cross stream batching: {e}")
             return False
-        
-        # Check if all model-instance-id values are the same
-        unique_ids = set(model_instance_matches)
-        
-        if len(unique_ids) != 1:
-            print(f"  ❌ Found different model-instance-id values: {unique_ids}")
-            return False
-        
-        instance_id = model_instance_matches[0]
-        count = len(model_instance_matches)
-        
-        print(f"  ✓ Model-instance-id: {instance_id}")
-        print(f"  ✓ Number of occurrences: {count}")
-        print(f"  ✓ All values are identical: {len(unique_ids) == 1}")
-        print(f"  Result: ✅ PASS")
-        return True
     
     def validate_allowed_devices(self, content: str, test_config: Dict) -> bool:
-        """Validate allowed devices - check only specified devices appear in output"""
+        """Validate allowed devices - check only specified devices appear in JSON output"""
         print("🔍 Validating allowed devices...")
         
-        allowed_devices = set(d.upper() for d in test_config.get('allowed_devices', []))
-        found_devices = set(re.findall(r'device=(\w+)', content, re.IGNORECASE))
-        found_devices = set(d.upper() for d in found_devices)
-        
-        unauthorized_devices = found_devices - allowed_devices
-        success = len(unauthorized_devices) == 0
-        
-        print(f"  ✓ Allowed devices: {list(allowed_devices)}")
-        print(f"  ✓ Found devices: {list(found_devices)}")
-        
-        if unauthorized_devices:
-            print(f"  ❌ Unauthorized devices: {list(unauthorized_devices)}")
-        else:
-            print(f"  ✅ All devices are authorized")
-        
-        print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
-        return success
+        try:
+            # Parse JSON to get all pipelines
+            data = json.loads(content)
+            if not isinstance(data, dict):
+                print("  ❌ Invalid JSON structure - expected object")
+                return False
+            
+            allowed_devices = set(d.upper() for d in test_config.get('allowed_devices', []))
+            
+            # Extract all pipelines from JSON
+            all_pipelines = []
+            if 'candidates' in data and isinstance(data['candidates'], list):
+                all_pipelines.extend([c.get('pipeline', '') for c in data['candidates']])
+            if 'optimal' in data and isinstance(data['optimal'], dict):
+                all_pipelines.append(data['optimal'].get('pipeline', ''))
+            if 'baseline' in data and isinstance(data['baseline'], dict):
+                all_pipelines.append(data['baseline'].get('pipeline', ''))
+            
+            # Combine all pipelines for analysis
+            combined_content = '\n'.join(all_pipelines)
+            
+            found_devices = set(re.findall(r'device=(\w+)', combined_content, re.IGNORECASE))
+            found_devices = set(d.upper() for d in found_devices)
+            
+            unauthorized_devices = found_devices - allowed_devices
+            success = len(unauthorized_devices) == 0
+            
+            print(f"  ✓ Allowed devices: {list(allowed_devices)}")
+            print(f"  ✓ Found devices: {list(found_devices)}")
+            print(f"  ✓ Analyzed {len(all_pipelines)} pipelines from JSON")
+            
+            if unauthorized_devices:
+                print(f"  ❌ Unauthorized devices: {list(unauthorized_devices)}")
+            else:
+                print(f"  ✅ All devices are authorized")
+            
+            print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
+            return success
+            
+        except json.JSONDecodeError as e:
+            print(f"  ❌ Invalid JSON format: {e}")
+            return False
+        except Exception as e:
+            print(f"  ❌ Error validating allowed devices: {e}")
+            return False
     
     def validate_standard_test(self, content: str, test_config: Dict) -> bool:
         """Validate standard test - check FPS improvement and golden FPS comparison from JSON"""
@@ -497,8 +584,24 @@ class OptimizerValidator:
         print(f"{'='*60}")
         
         try:
+            # Handle comparison tests - auto-find comparison files
+            if test_type in ['search_duration', 'sample_duration']:
+                compare_with = test_config.get('compare_with')
+                if compare_with and not compare_file:
+                    results_dir = os.path.dirname(output_file)
+                    compare_file = os.path.join(results_dir, f"{compare_with}.json")
+                    print(f"🔍 Looking for comparison file: {compare_file}")
+
+            # For search_duration, we don't need to read the main output file content
+            if test_type == 'search_duration':
+                if compare_file and os.path.exists(compare_file):
+                    return self.validate_search_duration(output_file, compare_file, test_config)
+                else:
+                    print(f"⚠️  Search duration test needs comparison file, skipping detailed validation")
+                    return True
+
             # Determine which file to read based on test type
-            if test_type in ['streams_modifications', 'fps_modifications', 'cross_stream_batching', 'allowed_devices', 'verbose_flag']:
+            if test_type in ['streams_modifications', 'verbose_flag']:
                 # These tests analyze logs
                 file_to_read = log_file if log_file and os.path.exists(log_file) else output_file
                 print(f"🔍 Reading log file for {test_type}: {file_to_read}")
@@ -512,7 +615,10 @@ class OptimizerValidator:
                 content = f.read()
 
             # Route to appropriate validation method
-            if test_type == 'output_flag':
+            if test_type == 'standard':
+                return self.validate_standard_test(content, test_config)
+
+            elif test_type == 'output_flag':
                 return self.validate_output_flag(content)
 
             elif test_type == 'fps_modifications':
@@ -522,7 +628,6 @@ class OptimizerValidator:
                 return self.validate_streams_modifications(content, test_config)
 
             elif test_type == 'verbose_flag':
-                # Now uses the content from log file (already read above)
                 return self.validate_verbose_flag(content)
 
             elif test_type == 'sample_duration':

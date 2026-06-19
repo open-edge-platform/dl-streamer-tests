@@ -254,7 +254,7 @@ class OptimizerValidator:
         
         def extract_timing_info(filepath: str) -> Optional[Dict]:
             # Look for timing file
-            timing_file = filepath.replace('.txt', '_timing.txt')
+            timing_file = filepath
             
             try:
                 if os.path.exists(timing_file):
@@ -594,9 +594,13 @@ class OptimizerValidator:
                     print(f"🔍 Looking for timing comparison file: {compare_file}")
                 
                 if compare_file and os.path.exists(compare_file):
-                    # For search_duration, output_file should also be timing file
+                    # Convert output_file to timing file
                     timing_file = output_file.replace('.json', '_timing.txt')
+                    print(f"🔍 Using timing files: {timing_file} vs {compare_file}")
                     return self.validate_search_duration(timing_file, compare_file, test_config)
+                else:
+                    print(f"⚠️  Search duration test needs comparison file, skipping detailed validation")
+                    return True
                 else:
                     print(f"⚠️  Search duration test needs comparison file, skipping detailed validation")
                     return True

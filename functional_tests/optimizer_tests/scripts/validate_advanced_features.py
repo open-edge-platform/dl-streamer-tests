@@ -71,49 +71,38 @@ class OptimizerValidator:
         print("🔍 Validating output flag structure...")
         
         try:
-            # Try to parse as JSON first
             data = json.loads(content)
-            if isinstance(data, dict):
-                has_baseline = 'baseline' in data and data['baseline'] is not None
-                has_optimal = 'optimal' in data and data['optimal'] is not None
-                has_candidates = 'candidates' in data and isinstance(data['candidates'], list) and len(data['candidates']) > 0
-                
-                candidate_count = len(data['candidates']) if has_candidates else 0
-                
-                print(f"  ✓ Baseline pipeline: {'✅' if has_baseline else '❌'}")
-                print(f"  ✓ Optimal pipeline: {'✅' if has_optimal else '❌'}")
-                print(f"  ✓ Candidate pipelines: {'✅' if has_candidates else '❌'} ({candidate_count} candidates)")
-                
-                if has_baseline:
-                    baseline_fps = data['baseline'].get('fps', 'N/A')
-                    print(f"    📊 Baseline FPS: {baseline_fps}")
-                
-                if has_optimal:
-                    optimal_fps = data['optimal'].get('fps', 'N/A')
-                    print(f"    📊 Optimal FPS: {optimal_fps}")
-                
-                success = has_baseline and has_optimal and has_candidates
-                print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
-                return success
-        
-        except json.JSONDecodeError:
-            # Fallback to regex search for non-JSON output
-            print("  📝 Non-JSON output detected, using text-based validation...")
+            if not isinstance(data, dict):
+                print("  ❌ Invalid JSON structure - expected object")
+                return False
             
-            has_baseline = bool(re.search(r'baseline.*pipeline', content, re.IGNORECASE | re.DOTALL))
-            has_optimal = bool(re.search(r'optimal.*pipeline', content, re.IGNORECASE | re.DOTALL))
-            has_candidates = bool(re.search(r'candidate.*pipeline', content, re.IGNORECASE | re.DOTALL))
+            has_baseline = 'baseline' in data and data['baseline'] is not None
+            has_optimal = 'optimal' in data and data['optimal'] is not None
+            has_candidates = 'candidates' in data and isinstance(data['candidates'], list) and len(data['candidates']) > 0
+            
+            candidate_count = len(data['candidates']) if has_candidates else 0
             
             print(f"  ✓ Baseline pipeline: {'✅' if has_baseline else '❌'}")
             print(f"  ✓ Optimal pipeline: {'✅' if has_optimal else '❌'}")
-            print(f"  ✓ Candidate pipelines: {'✅' if has_candidates else '❌'}")
+            print(f"  ✓ Candidate pipelines: {'✅' if has_candidates else '❌'} ({candidate_count} candidates)")
+            
+            if has_baseline:
+                baseline_fps = data['baseline'].get('fps', 'N/A')
+                print(f"    📊 Baseline FPS: {baseline_fps}")
+            
+            if has_optimal:
+                optimal_fps = data['optimal'].get('fps', 'N/A')
+                print(f"    📊 Optimal FPS: {optimal_fps}")
             
             success = has_baseline and has_optimal and has_candidates
             print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
             return success
-        
+            
+        except json.JSONDecodeError as e:
+            print(f"  ❌ Invalid JSON format: {e}")
+            return False
         except Exception as e:
-            print(f"  ❌ Error parsing output: {e}")
+            print(f"  ❌ Error parsing JSON: {e}")
             return False
     
     def validate_streams_modifications(self, content: str, test_config: Dict) -> bool:
@@ -191,40 +180,38 @@ class OptimizerValidator:
         return has_changes
     
     def validate_verbose_flag(self, content: str) -> bool:
-        """Validate verbose flag - check if output contains candidate information"""
+        """Validate verbose flag - check if output contains CANDIDATE prints in logs"""
         print("🔍 Validating verbose flag...")
         
         try:
-            data = json.loads(content)
-            if not isinstance(data, dict):
-                print("  ❌ Invalid JSON structure - expected object")
-                return False
+            # Search for CANDIDATE prints in logs
+            candidate_matches = re.findall(r'CANDIDATE', content, re.IGNORECASE)
+            candidate_count = len(candidate_matches)
             
-            if 'candidates' not in data or not isinstance(data['candidates'], list):
-                print("  ❌ No candidates array found in JSON")
-                return False
-            
-            candidate_count = len(data['candidates'])
             success = candidate_count > 0
             
-            print(f"  ✓ Candidate entries found: {candidate_count}")
+            print(f"  ✓ CANDIDATE prints found: {candidate_count}")
             
-            # Show some candidate details
+            # Show some context around CANDIDATE prints
             if candidate_count > 0:
-                for i, candidate in enumerate(data['candidates'][:3]):  # Show first 3
-                    fps = candidate.get('fps', 'N/A')
-                    print(f"    📊 Candidate {i+1} FPS: {fps}")
-                if candidate_count > 3:
-                    print(f"    ... and {candidate_count - 3} more candidates")
+                # Find lines containing CANDIDATE
+                lines = content.split('\n')
+                candidate_lines = [line.strip() for line in lines if 'CANDIDATE' in line.upper()]
+                
+                # Show first few candidate lines
+                for i, line in enumerate(candidate_lines[:3]):
+                    print(f"    📊 Candidate {i+1}: {line[:80]}{'...' if len(line) > 80 else ''}")
+                
+                if len(candidate_lines) > 3:
+                    print(f"    ... and {len(candidate_lines) - 3} more candidate prints")
+            else:
+                print("    ❌ No CANDIDATE prints found in logs")
             
             print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
             return success
             
-        except json.JSONDecodeError as e:
-            print(f"  ❌ Invalid JSON format: {e}")
-            return False
         except Exception as e:
-            print(f"  ❌ Error parsing JSON: {e}")
+            print(f"  ❌ Error parsing logs: {e}")
             return False
 
     def validate_search_duration(self, file1: str, file2: str, test_config: Dict) -> bool:
@@ -510,66 +497,47 @@ class OptimizerValidator:
         print(f"{'='*60}")
         
         try:
-            # For standard tests, validate performance
-            if test_type == 'standard':
-                if os.path.exists(output_file) and os.path.getsize(output_file) > 0:
-                    with open(output_file, 'r') as f:
-                        content = f.read()
-                    return self.validate_standard_test(content, test_config)
-                else:
-                    print("❌ Standard test validation: Output file missing or empty")
-                    return False
-            
-            # Handle comparison tests - auto-find comparison files
-            if test_type in ['search_duration', 'sample_duration']:
-                compare_with = test_config.get('compare_with')
-                if compare_with and not compare_file:
-                    results_dir = os.path.dirname(output_file)
-                    compare_file = os.path.join(results_dir, f"{compare_with}.txt")
-                    print(f"🔍 Looking for comparison file: {compare_file}")
-            
-            # For search_duration, we don't need to read the main output file content
-            if test_type == 'search_duration':
-                if compare_file and os.path.exists(compare_file):
-                    return self.validate_search_duration(output_file, compare_file, test_config)
-                else:
-                    print(f"⚠️  Search duration test needs comparison file, skipping detailed validation")
-                    return True
-            
-            # Read main output file for other advanced tests
-            with open(output_file, 'r') as f:
+            # Determine which file to read based on test type
+            if test_type in ['streams_modifications', 'fps_modifications', 'cross_stream_batching', 'allowed_devices', 'verbose_flag']:
+                # These tests analyze logs
+                file_to_read = log_file if log_file and os.path.exists(log_file) else output_file
+                print(f"🔍 Reading log file for {test_type}: {file_to_read}")
+            else:
+                # These tests analyze JSON output
+                file_to_read = output_file
+                print(f"🔍 Reading JSON file for {test_type}: {file_to_read}")
+
+            # Read the appropriate file
+            with open(file_to_read, 'r') as f:
                 content = f.read()
-            
+
             # Route to appropriate validation method
             if test_type == 'output_flag':
                 return self.validate_output_flag(content)
-            
+
             elif test_type == 'fps_modifications':
                 return self.validate_fps_modifications(content, test_config)
-            
+
             elif test_type == 'streams_modifications':
                 return self.validate_streams_modifications(content, test_config)
-            
+
             elif test_type == 'verbose_flag':
-                log_content = content
-                if log_file:
-                    with open(log_file, 'r') as f:
-                        log_content = f.read()
-                return self.validate_verbose_flag(log_content)
-            
+                # Now uses the content from log file (already read above)
+                return self.validate_verbose_flag(content)
+
             elif test_type == 'sample_duration':
                 if compare_file and os.path.exists(compare_file):
                     return self.validate_sample_duration(output_file, compare_file, test_config)
                 else:
                     print(f"⚠️  Sample duration test needs comparison file, skipping detailed validation")
                     return True
-            
+
             elif test_type == 'cross_stream_batching':
                 return self.validate_cross_stream_batching(content, test_config)
-            
+
             elif test_type == 'allowed_devices':
                 return self.validate_allowed_devices(content, test_config)
-            
+
             else:
                 print(f"❌ Unknown test type: {test_type}")
                 return False

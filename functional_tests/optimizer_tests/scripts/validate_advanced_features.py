@@ -601,9 +601,6 @@ class OptimizerValidator:
                 else:
                     print(f"⚠️  Search duration test needs comparison file, skipping detailed validation")
                     return True
-                else:
-                    print(f"⚠️  Search duration test needs comparison file, skipping detailed validation")
-                    return True
             
             elif test_type == 'sample_duration':
                 compare_with = test_config.get('compare_with')

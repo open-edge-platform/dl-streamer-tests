@@ -585,20 +585,29 @@ class OptimizerValidator:
         
         try:
             # Handle comparison tests - auto-find comparison files
-            if test_type in ['search_duration', 'sample_duration']:
+            if test_type == 'search_duration':
                 compare_with = test_config.get('compare_with')
                 if compare_with and not compare_file:
                     results_dir = os.path.dirname(output_file)
-                    compare_file = os.path.join(results_dir, f"{compare_with}.json")
-                    print(f"🔍 Looking for comparison file: {compare_file}")
-
-            # For search_duration, we don't need to read the main output file content
-            if test_type == 'search_duration':
+                    # Use _timing.txt extension for timing files
+                    compare_file = os.path.join(results_dir, f"{compare_with}_timing.txt")
+                    print(f"🔍 Looking for timing comparison file: {compare_file}")
+                
                 if compare_file and os.path.exists(compare_file):
-                    return self.validate_search_duration(output_file, compare_file, test_config)
+                    # For search_duration, output_file should also be timing file
+                    timing_file = output_file.replace('.json', '_timing.txt')
+                    return self.validate_search_duration(timing_file, compare_file, test_config)
                 else:
                     print(f"⚠️  Search duration test needs comparison file, skipping detailed validation")
                     return True
+            
+            elif test_type == 'sample_duration':
+                compare_with = test_config.get('compare_with')
+                if compare_with and not compare_file:
+                    results_dir = os.path.dirname(output_file)
+                    # Use .json extension for JSON files
+                    compare_file = os.path.join(results_dir, f"{compare_with}.json")
+                    print(f"🔍 Looking for JSON comparison file: {compare_file}")
 
             # Determine which file to read based on test type
             if test_type in ['streams_modifications', 'verbose_flag']:

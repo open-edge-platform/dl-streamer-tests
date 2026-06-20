@@ -19,6 +19,18 @@ class OptimizerValidator:
         with open(config_file, 'r') as f:
             self.config = json.load(f)
     
+    def extract_fps_from_entry(self, entry: Dict) -> Optional[float]:
+        """Extract FPS from json"""
+        if isinstance(entry, dict) and 'metrics' in entry and isinstance(entry['metrics'], dict):
+            return entry['metrics'].get('fps')
+        return None
+    
+    def extract_detections_from_entry(self, entry: Dict) -> Optional[int]:
+        """Extract detections from json"""
+        if isinstance(entry, dict) and 'metrics' in entry and isinstance(entry['metrics'], dict):
+            return entry['metrics'].get('detections')
+        return None
+    
     def extract_parameters(self, content: str) -> Dict[str, Any]:
         """Extract parameters from content"""
         params = {}
@@ -87,12 +99,16 @@ class OptimizerValidator:
             print(f"  ✓ Candidate pipelines: {'✅' if has_candidates else '❌'} ({candidate_count} candidates)")
             
             if has_baseline:
-                baseline_fps = data['baseline'].get('fps', 'N/A')
+                baseline_fps = self.extract_fps_from_entry(data['baseline'])
+                baseline_detections = self.extract_detections_from_entry(data['baseline'])
                 print(f"    📊 Baseline FPS: {baseline_fps}")
+                print(f"    📊 Baseline Detections: {baseline_detections}")
             
             if has_optimal:
-                optimal_fps = data['optimal'].get('fps', 'N/A')
+                optimal_fps = self.extract_fps_from_entry(data['optimal'])
+                optimal_detections = self.extract_detections_from_entry(data['optimal'])
                 print(f"    📊 Optimal FPS: {optimal_fps}")
+                print(f"    📊 Optimal Detections: {optimal_detections}")
             
             success = has_baseline and has_optimal and has_candidates
             print(f"  Result: {'✅ PASS' if success else '❌ FAIL'}")
@@ -494,31 +510,37 @@ class OptimizerValidator:
                 print("  ❌ Invalid JSON structure - expected object")
                 return False
             
-            # Extract baseline (original) FPS
+            # Extract baseline (original) FPS and detections
             original_fps = None
+            original_detections = None
             if 'baseline' in data and isinstance(data['baseline'], dict):
-                original_fps = data['baseline'].get('fps')
+                original_fps = self.extract_fps_from_entry(data['baseline'])
+                original_detections = self.extract_detections_from_entry(data['baseline'])
             
-            # Extract optimal (best) FPS and pipeline
+            # Extract optimal (best) FPS, detections and pipeline
             optimized_fps = None
+            optimized_detections = None
             optimized_pipeline = None
             if 'optimal' in data and isinstance(data['optimal'], dict):
-                optimized_fps = data['optimal'].get('fps')
+                optimized_fps = self.extract_fps_from_entry(data['optimal'])
+                optimized_detections = self.extract_detections_from_entry(data['optimal'])
                 optimized_pipeline = data['optimal'].get('pipeline')
             
             # Calculate improvement
-            improvement = None
+            fps_improvement = None
             if original_fps is not None and optimized_fps is not None:
-                improvement = optimized_fps - original_fps
+                fps_improvement = optimized_fps - original_fps
             
             # Display extracted values
             print(f"  📊 Original pipeline FPS: {original_fps if original_fps is not None else 'N/A'}")
+            print(f"  📊 Original pipeline detections: {original_detections if original_detections is not None else 'N/A'}")
             print(f"  📊 Optimized pipeline FPS: {optimized_fps if optimized_fps is not None else 'N/A'}")
-            print(f"  📊 FPS improvement: {improvement if improvement is not None else 'N/A'}")
+            print(f"  📊 Optimized pipeline detections: {optimized_detections if optimized_detections is not None else 'N/A'}")
+            print(f"  📊 FPS improvement: {fps_improvement if fps_improvement is not None else 'N/A'}")
             
             if golden_fps:
                 print(f"  📊 Golden FPS target: {golden_fps}")
-                print(f"  📊 Tolerance: ±{tolerance}")
+                print(f"  📊 Tolerance: ±{tolerance}%")
             
             success = True
             checks = []
@@ -531,10 +553,10 @@ class OptimizerValidator:
                 checks.append(("✅", "FPS extraction", f"Original: {original_fps}, Optimized: {optimized_fps}"))
                 
                 # Check 2: Performance improvement
-                if improvement > 0:
-                    checks.append(("✅", "Performance improvement", f"{improvement:.2f} fps improvement"))
+                if fps_improvement > 0:
+                    checks.append(("✅", "Performance improvement", f"{fps_improvement:.2f} fps improvement"))
                 else:
-                    checks.append(("❌", "Performance improvement", f"No improvement: {improvement:.2f} fps"))
+                    checks.append(("❌", "Performance improvement", f"No improvement: {fps_improvement:.2f} fps"))
                     success = False
                 
                 # Check 3: Golden FPS comparison (if specified)
@@ -550,7 +572,13 @@ class OptimizerValidator:
                 else:
                     checks.append(("ℹ️", "Golden FPS match", "No golden FPS specified, skipping"))
             
-            # Check 4: Optimized pipeline found
+            # Check 4: Detections extracted successfully
+            if original_detections is not None and optimized_detections is not None:
+                checks.append(("✅", "Detections extraction", f"Original: {original_detections}, Optimized: {optimized_detections}"))
+            else:
+                checks.append(("⚠️", "Detections extraction", "Could not extract detection counts"))
+            
+            # Check 5: Optimized pipeline found
             if optimized_pipeline:
                 # Truncate long pipelines for display
                 display_pipeline = optimized_pipeline[:80] + "..." if len(optimized_pipeline) > 80 else optimized_pipeline

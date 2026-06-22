@@ -409,6 +409,57 @@ run_validation() {
     fi
 }
 
+# Generate final report
+generate_final_report() {
+    local report_file="$RESULTS_DIR/FINAL_TEST_REPORT.txt"
+    
+    echo "========================================" > "$report_file"
+    echo "       OPTIMIZER TEST FINAL REPORT      " >> "$report_file"
+    echo "========================================" >> "$report_file"
+    echo "Environment: $([ -f /.dockerenv ] && echo "Docker" || echo "Host")" >> "$report_file"
+    echo "Timestamp: $(date)" >> "$report_file"
+    echo "Results Directory: $RESULTS_DIR" >> "$report_file"
+    echo "" >> "$report_file"
+    
+    echo "SUMMARY:" >> "$report_file"
+    echo "--------" >> "$report_file"
+    echo "Total tests: $TOTAL_TESTS" >> "$report_file"
+    echo "Passed: $PASSED_TESTS" >> "$report_file"
+    echo "Failed: $FAILED_TESTS" >> "$report_file"
+    echo "" >> "$report_file"
+    
+    if [ $FAILED_TESTS -eq 0 ]; then
+        echo "OVERALL RESULT: ✅ ALL TESTS PASSED" >> "$report_file"
+    else
+        echo "OVERALL RESULT: ❌ SOME TESTS FAILED" >> "$report_file"
+    fi
+    echo "" >> "$report_file"
+    
+    echo "DETAILED RESULTS:" >> "$report_file"
+    echo "-----------------" >> "$report_file"
+    
+    # Process timing files to show individual test results
+    for timing_file in "$RESULTS_DIR"/*_timing.txt; do
+        if [ -f "$timing_file" ]; then
+            test_name=$(jq -r '.test_name' "$timing_file" 2>/dev/null || echo "Unknown")
+            exit_code=$(jq -r '.exit_code' "$timing_file" 2>/dev/null || echo "1")
+            duration=$(jq -r '.duration_seconds' "$timing_file" 2>/dev/null || echo "0")
+            test_type=$(jq -r '.test_type' "$timing_file" 2>/dev/null || echo "standard")
+            
+            if [ "$exit_code" = "0" ]; then
+                printf "✅ %-30s PASSED (%.2fs, %s)\n" "$test_name" "$duration" "$test_type" >> "$report_file"
+            else
+                printf "❌ %-30s FAILED (%.2fs, %s)\n" "$test_name" "$duration" "$test_type" >> "$report_file"
+            fi
+        fi
+    done
+    
+    echo "" >> "$report_file"
+    echo "========================================" >> "$report_file"
+    
+    print_info "Final report generated: $report_file"
+}
+
 # Main execution
 print_info "========== OPTIMIZER TEST SUITE =========="
 print_info "Environment: $([ -f /.dockerenv ] && echo "Docker" || echo "Host")"
@@ -453,6 +504,9 @@ while IFS= read -r test_name; do
     print_info "Progress: $TOTAL_TESTS tests completed"
 
 done < <(get_all_test_names)
+
+# Call the function before final summary
+generate_final_report
 
 # Summary
 print_info "========== FINAL SUMMARY =========="

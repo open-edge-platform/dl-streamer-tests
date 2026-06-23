@@ -1,25 +1,36 @@
 {
   "ARL_yolo11s_cpu_shorter": {
-    "pipeline_to_test": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
-    "golden_pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 nireq=7 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+    "test_type": "standard",
+    "mode": "fps",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=CPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+    "golden_pipeline": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 nireq=7 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_fps": 280,
     "tolerance": 35,
     "sample_duration": 20,
-    "search_duration": 300
+    "search_duration": 300,
+    "description": "ARL YOLO11s CPU optimization test with shorter sample duration"
   },
+  
   "ARL_yolo11s_gpu_shorter": {
-    "pipeline_to_test": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
-    "golden_pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+    "test_type": "standard",
+    "mode": "fps",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+    "golden_pipeline": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_fps": 280,
     "tolerance": 35,
     "sample_duration": 15,
-    "search_duration": 300
+    "search_duration": 300,
+    "description": "ARL YOLO11s GPU optimization test with shorter sample duration"
   },
+  
   "ARL_yolo11s_gpu_longer": {
-    "pipeline_to_test": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
-    "golden_pipeline": "urisourcebin buffer-size=4096 uri=https://videos.pexels.com/video-files/1192116/1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+    "test_type": "standard",
+    "mode": "fps",
+    "pipeline_to_test": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin ! gvadetect model=$MODELS_PATH/public/yolo11s/INT8/yolo11s.xml device=GPU ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
+    "golden_pipeline": "filesrc location=$VIDEOS_PATH/Pexels_Videos_1192116-sd_640_360_30fps.mp4 ! decodebin3 ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect model=/home/dlstreamer/models/public/yolo11s/INT8/yolo11s.xml device=GPU pre-process-backend=va-surface-sharing batch-size=2 ! queue ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! fakesink",
     "golden_fps": 280,
     "tolerance": 35,
-    "search_duration": 100
+    "search_duration": 100,
+    "description": "ARL YOLO11s GPU optimization test with longer search duration"
   }
 }

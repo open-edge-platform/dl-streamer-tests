@@ -725,6 +725,47 @@
             "name": "gvaanalytics_NPU",
             "dataset.groundtruth": "gvaanalytics_tripwire_vehicle_counter_NPU.json",
             "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh,file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,NPU,output.json"
+        },
+        "python_face_detection_and_classification_CPU": {
+            "name": "python_face_detection_and_classification_CPU",
+            "dataset.groundtruth": "python_face_detection_and_classification_CPU.json",
+            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,CPU,json"
+        },
+        "python_face_detection_and_classification_GPU": {
+            "name": "python_face_detection_and_classification_GPU",
+            "dataset.groundtruth": "python_face_detection_and_classification_GPU.json",
+            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,GPU,json"
+        },
+        "prompted_detection_CPU": {
+            "name": "prompted_detection_CPU",
+            "dataset.groundtruth": "prompted_detection_CPU.json",
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/dog_sign.mp4,CPU,json"
+        },
+        "prompted_detection_GPU": {
+            "name": "prompted_detection_GPU",
+            "dataset.groundtruth": "prompted_detection_GPU.json",
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/dog_sign.mp4,GPU,json"
+        },
+        "smart_nvr_CPU": {
+            "name": "smart_nvr_CPU",
+            "exe.dir.template": "{sample.dir}/python/smart_nvr",
+            "dataset.groundtruth": "smart_nvr_CPU.json",
+            "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,CPU,json"
+        },
+        "smart_nvr_GPU": {
+            "name": "smart_nvr_GPU",
+            "exe.dir.template": "{sample.dir}/python/smart_nvr",
+            "dataset.groundtruth": "smart_nvr_GPU.json",
+            "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,GPU,json"
+        },
+        "watermark_meta": {
+            "name": "watermark_meta",
+            "dataset.comparator_type": "watermark",
+            "dataset.pixel_threshold": 2,
+            "dataset.bad_pixel_fraction": 0.001,
+            "pipeline.out_frames_dir": "watermark_meta",
+            "dataset.groundtruth": "watermark_meta",
+            "sample.command": "python3,{sample.dir}/python/watermark_meta/watermark_meta.py,videotestsrc,{dataset.artifacts}/watermark_meta"
         }
     }
 }

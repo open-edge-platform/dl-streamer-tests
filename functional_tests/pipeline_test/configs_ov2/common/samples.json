@@ -711,20 +711,59 @@
             "dataset.groundtruth": "gvamotiondetect_GPU_detection_GPU_yolov8n_FP16.json",
             "sample.command": "{sample.dir}/gst_launch/motion_detect/gvamotiondetect_demo.sh,--device,GPU,--source,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--precision,FP16,--output,json"
         },
-        "gvaanalytics_CPU": {
-            "name": "gvaanalytics_CPU",
-            "dataset.groundtruth": "gvaanalytics_tripwire_vehicle_counter_CPU.json",
+        "python_gvaanalytics_tripwire_vehicle_counter_CPU": {
+            "name": "python_gvaanalytics_tripwire_vehicle_counter_CPU",
+            "dataset.groundtruth": "python_gvaanalytics_tripwire_vehicle_counter_CPU.json",
             "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh,file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,CPU,output.json"
         },
-        "gvaanalytics_GPU": {
-            "name": "gvaanalytics_GPU",
-            "dataset.groundtruth": "gvaanalytics_tripwire_vehicle_counter_GPU.json",
+        "python_gvaanalytics_tripwire_vehicle_counter_GPU": {
+            "name": "python_gvaanalytics_tripwire_vehicle_counter_GPU",
+            "dataset.groundtruth": "python_gvaanalytics_tripwire_vehicle_counter_GPU.json",
             "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh,file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,GPU,output.json"
         },
-        "gvaanalytics_NPU": {
-            "name": "gvaanalytics_NPU",
-            "dataset.groundtruth": "gvaanalytics_tripwire_vehicle_counter_NPU.json",
+        "python_gvaanalytics_tripwire_vehicle_counter_NPU": {
+            "name": "python_gvaanalytics_tripwire_vehicle_counter_NPU",
+            "dataset.groundtruth": "python_gvaanalytics_tripwire_vehicle_counter_NPU.json",
             "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh,file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,NPU,output.json"
+        },
+        "python_face_detection_and_classification_CPU": {
+            "name": "python_face_detection_and_classification_CPU",
+            "dataset.groundtruth": "python_face_detection_and_classification_CPU.json",
+            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,CPU,json"
+        },
+        "python_face_detection_and_classification_GPU": {
+            "name": "python_face_detection_and_classification_GPU",
+            "dataset.groundtruth": "python_face_detection_and_classification_GPU.json",
+            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,GPU,json"
+        },
+        "python_face_detection_and_classification_NPU": {
+            "name": "python_face_detection_and_classification_NPU",
+            "dataset.groundtruth": "python_face_detection_and_classification_NPU.json",
+            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,NPU,json"
+        },
+        "python_prompted_detection_CPU": {
+            "name": "python_prompted_detection_CPU",
+            "dataset.groundtruth": "python_prompted_detection_CPU.json",
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/dog_sign.mp4,CPU,json"
+        },
+        "python_prompted_detection_GPU": {
+            "name": "python_prompted_detection_GPU",
+            "dataset.groundtruth": "python_prompted_detection_GPU.json",
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/dog_sign.mp4,GPU,json"
+        },
+        "python_prompted_detection_NPU": {
+            "name": "python_prompted_detection_NPU",
+            "dataset.groundtruth": "python_prompted_detection_NPU.json",
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/dog_sign.mp4,NPU,json"
+        },
+        "python_watermark_meta": {
+            "name": "python_watermark_meta",
+            "dataset.comparator_type": "watermark",
+            "dataset.pixel_threshold": 2,
+            "dataset.bad_pixel_fraction": 0.001,
+            "pipeline.out_frames_dir": "python_watermark_meta",
+            "dataset.groundtruth": "python_watermark_meta",
+            "sample.command": "python3,{sample.dir}/python/watermark_meta/watermark_meta.py,videotestsrc,{dataset.artifacts}/python_watermark_meta"
         }
     }
 }

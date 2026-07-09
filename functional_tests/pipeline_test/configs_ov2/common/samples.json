@@ -736,6 +736,11 @@
             "dataset.groundtruth": "python_face_detection_and_classification_GPU.json",
             "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,GPU,json"
         },
+        "python_face_detection_and_classification_NPU": {
+            "name": "python_face_detection_and_classification_NPU",
+            "dataset.groundtruth": "python_face_detection_and_classification_NPU.json",
+            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,NPU,json"
+        },
         "python_prompted_detection_CPU": {
             "name": "python_prompted_detection_CPU",
             "dataset.groundtruth": "python_prompted_detection_CPU.json",
@@ -745,6 +750,11 @@
             "name": "python_prompted_detection_GPU",
             "dataset.groundtruth": "python_prompted_detection_GPU.json",
             "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/dog_sign.mp4,GPU,json"
+        },
+        "python_prompted_detection_NPU": {
+            "name": "python_prompted_detection_NPU",
+            "dataset.groundtruth": "python_prompted_detection_NPU.json",
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/dog_sign.mp4,NPU,json"
         },
         "python_smart_nvr_CPU": {
             "name": "python_smart_nvr_CPU",
@@ -757,6 +767,12 @@
             "exe.dir.template": "{sample.dir}/python/smart_nvr",
             "dataset.groundtruth": "python_smart_nvr_GPU.json",
             "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,GPU,json"
+        },
+        "python_smart_nvr_NPU": {
+            "name": "python_smart_nvr_NPU",
+            "exe.dir.template": "{sample.dir}/python/smart_nvr",
+            "dataset.groundtruth": "python_smart_nvr_NPU.json",
+            "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,NPU,json"
         },
         "python_watermark_meta": {
             "name": "python_watermark_meta",

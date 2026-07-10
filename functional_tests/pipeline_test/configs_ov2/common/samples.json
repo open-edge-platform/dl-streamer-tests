@@ -729,32 +729,32 @@
         "python_face_detection_and_classification_CPU": {
             "name": "python_face_detection_and_classification_CPU",
             "dataset.groundtruth": "python_face_detection_and_classification_CPU.json",
-            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,CPU,json"
+            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,CPU,json"
         },
         "python_face_detection_and_classification_GPU": {
             "name": "python_face_detection_and_classification_GPU",
             "dataset.groundtruth": "python_face_detection_and_classification_GPU.json",
-            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,GPU,json"
+            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,GPU,json"
         },
         "python_face_detection_and_classification_NPU": {
             "name": "python_face_detection_and_classification_NPU",
             "dataset.groundtruth": "python_face_detection_and_classification_NPU.json",
-            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,NPU,json"
+            "sample.command": "{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,NPU,json"
         },
         "python_prompted_detection_CPU": {
             "name": "python_prompted_detection_CPU",
             "dataset.groundtruth": "python_prompted_detection_CPU.json",
-            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/dog_sign.mp4,CPU,json"
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,white car,CPU,json"
         },
         "python_prompted_detection_GPU": {
             "name": "python_prompted_detection_GPU",
             "dataset.groundtruth": "python_prompted_detection_GPU.json",
-            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/dog_sign.mp4,GPU,json"
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,white car,GPU,json"
         },
         "python_prompted_detection_NPU": {
             "name": "python_prompted_detection_NPU",
             "dataset.groundtruth": "python_prompted_detection_NPU.json",
-            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/dog_sign.mp4,NPU,json"
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,white car,NPU,json"
         },
         "python_smart_nvr_CPU": {
             "name": "python_smart_nvr_CPU",

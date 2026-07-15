@@ -334,9 +334,6 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
 
     # adjust directories to local enviroment as necessary
     echo "Running tests at local system with DLS installed via apt-get"
-
-    # adjust directories to local enviroment as necessary
-    echo "Running tests at local system with DLS installed via apt-get"
     export LIBVA_DRIVER_NAME=iHD
     export GST_VA_ALL_DRIVERS=1
     export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri

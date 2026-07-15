@@ -335,20 +335,22 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
     # adjust directories to local enviroment as necessary
     echo "Running tests at local system with DLS installed via apt-get"
 
-    # Source DLStreamer environment
-    source "$HOME_DIR/scripts/setup_dls_env.sh"
-
-    # Prepend virtualenv and git-checkout Python to paths set by setup_dls_env.sh
-    export PATH=$HOME_DIR/.virtualenvs/dlstreamer/bin:$PATH
-    export PYTHONPATH=$HOME_DIR/python:$PYTHONPATH
-
-    # Test-runner-specific vars not covered by setup_dls_env.sh
+    # adjust directories to local enviroment as necessary
+    echo "Running tests at local system with DLS installed via apt-get"
+    export LIBVA_DRIVER_NAME=iHD
+    export GST_VA_ALL_DRIVERS=1
+    export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
     export TERM=xterm
-    export ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
+    export GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/
+    export LD_LIBRARY_PATH=/opt/intel/dlstreamer/gstreamer/lib:/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/lib/gstreamer-1.0:/usr/lib:/opt/intel/dlstreamer/lib:/opt/opencv:/opt/openh264:/opt/rdkafka:/opt/ffmpeg:/usr/local/lib/gstreamer-1.0:/usr/local/lib
+    export PYTHONPATH=/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:$HOME_DIR/python:/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:
+    export PATH=$HOME_DIR/.virtualenvs/dlstreamer/bin:/opt/intel/dlstreamer/gstreamer/bin:/opt/intel/dlstreamer/bin:$PATH
+    export GI_TYPELIB_PATH=/opt/intel/dlstreamer/gstreamer/lib/girepository-1.0:/opt/intel/dlstreamer/lib/girepository-1.0:/usr/lib/x86_64-linux-gnu/girepository-1.0
     export LABELS_PATH=/opt/intel/dlstreamer/samples/labels
     export MODEL_PROC_PATH=/opt/intel/dlstreamer/samples/gstreamer/model_proc
     export MODEL_PROCS_PATH=/opt/intel/dlstreamer/samples/gstreamer/model_proc
     export MODELS_PATH=$MODELS_PATH
+    export ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
     echo "LIBVA_DRIVER_NAME: ${LIBVA_DRIVER_NAME}"
     echo "GST_PLUGIN_PATH: ${GST_PLUGIN_PATH}"
     echo "LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}"

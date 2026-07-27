@@ -352,7 +352,6 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
     export MODEL_PROC_PATH=/opt/intel/dlstreamer/samples/gstreamer/model_proc
     export MODEL_PROCS_PATH=/opt/intel/dlstreamer/samples/gstreamer/model_proc
     export MODELS_PATH=$MODELS_PATH
-    export ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
     echo "LIBVA_DRIVER_NAME: ${LIBVA_DRIVER_NAME}"
     echo "GST_PLUGIN_PATH: ${GST_PLUGIN_PATH}"
     echo "LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}"
@@ -401,7 +400,6 @@ else
         -e MODEL_PROC_PATH=/home/dlstreamer/dlstreamer/samples/gstreamer/model_proc \
         -e MODEL_PROCS_PATH=/home/dlstreamer/dlstreamer/samples/gstreamer/model_proc \
         -e LABELS_PATH=/home/dlstreamer/dlstreamer/samples/labels \
-        -e ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so \
         $EXTRA_PARAMS \
         $IMAGE_NAME \
         $RUN_CMD

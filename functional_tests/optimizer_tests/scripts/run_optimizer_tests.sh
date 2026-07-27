@@ -62,7 +62,6 @@ else
 
     # Test-specific overrides not covered by the setup script
     export PATH=/home/runner/.virtualenvs/dlstreamer/bin:$PATH
-    export ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
 fi
 
 mkdir -p "$RESULTS_DIR"

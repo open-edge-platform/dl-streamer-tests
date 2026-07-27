@@ -6,6 +6,6 @@
             "docker.dataset.groundtruth.base": "groundtruth_ov2/watermark_ARL"
         },
         "test_set_properties_removals": {},
-        "excluded_tests": ["watermark_full_frame_NV12_sysmem_displ_no_labels"]
+        "excluded_tests": []
     }
 }

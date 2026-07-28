@@ -50,16 +50,18 @@ else
     VALIDATION_SCRIPT=${VALIDATION_SCRIPT:-/home/runner/optimizer/functional_tests/optimizer_tests/scripts/validate_advanced_features.py}
     OPTIMIZER_DIR=${OPTIMIZER_DIR:-/opt/intel/dlstreamer/scripts/optimizer}
 
-    # Set environment variables for host
-    export LIBVA_DRIVER_NAME=iHD
-    export GST_VA_ALL_DRIVERS=1
-    export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
-    export GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/
-    export LD_LIBRARY_PATH=/opt/intel/dlstreamer/gstreamer/lib:/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/lib/gstreamer-1.0:/usr/lib:/opt/intel/dlstreamer/lib:/opt/opencv:/opt/openh264:/opt/rdkafka:/opt/ffmpeg:/usr/local/lib/gstreamer-1.0:/usr/local/lib
-    export PYTHONPATH=/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:/opt/intel/dlstreamer/python:/opt/intel/dlstreamer/gstreamer/lib/python3/dist-packages:
-    export PATH=/home/runner/.virtualenvs/dlstreamer/bin:/opt/intel/dlstreamer/gstreamer/bin:/opt/intel/dlstreamer/bin:$PATH
-    export GI_TYPELIB_PATH=/opt/intel/dlstreamer/gstreamer/lib/girepository-1.0:/opt/intel/dlstreamer/lib/girepository-1.0:/usr/lib/x86_64-linux-gnu/girepository-1.0
-    export ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
+    # Set environment variables for host using the DL Streamer setup script
+    DLS_ENV_SCRIPT=${DLS_ENV_SCRIPT:-/opt/intel/dlstreamer/scripts/setup_dls_env.sh}
+    if [ -f "$DLS_ENV_SCRIPT" ]; then
+        # shellcheck source=/dev/null
+        source "$DLS_ENV_SCRIPT"
+    else
+        echo "DL Streamer environment script not found: $DLS_ENV_SCRIPT" >&2
+        exit 1
+    fi
+
+    # Test-specific overrides not covered by the setup script
+    export PATH=/home/runner/.virtualenvs/dlstreamer/bin:$PATH
 fi
 
 mkdir -p "$RESULTS_DIR"

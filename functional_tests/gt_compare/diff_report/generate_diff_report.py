@@ -112,25 +112,40 @@ def _read_jsonl(path: str) -> List[dict]:
     return frames
 
 
-def _object_to_box(obj: dict) -> Optional[Box]:
+def _object_to_box(obj: dict, frame_width: Optional[float] = None,
+                   frame_height: Optional[float] = None) -> Optional[Box]:
     """Extract a drawable pixel-space box + label + confidence from one
-    'objects[]' entry of a gvametapublish json line. Supports both detection
-    (bounding box) and classification-only (full-frame) entries."""
-    x, y, w, h = obj.get("x"), obj.get("y"), obj.get("w"), obj.get("h")
-    if x is None or y is None or w is None or h is None:
-        return None
-
+    'objects[]' entry of a gvametapublish json line. Mirrors the real
+    comparator (gt_comparators/video_gt_comparator.py::_filtered_meta_objects),
+    which reads the *normalized* 'detection.bounding_box' /
+    'classification.bounding_box' (x_min/y_min/x_max/y_max in [0, 1]) - NOT
+    the root-level pixel 'x'/'y'/'w'/'h' fields. Those two can disagree (e.g.
+    after any cropping/scaling), so using the wrong one here would make this
+    tool blind to differences the real test framework actually flags. Falls
+    back to the root pixel box only when there is no nested bounding_box
+    (e.g. some classification-only full-frame entries)."""
+    label, prob, bbox = "?", -1, None
     if "detection" in obj:
         det = obj["detection"]
         label = det.get("label") or str(det.get("label_id", "?"))
         prob = det.get("confidence", -1)
+        bbox = det.get("bounding_box")
     elif "classification" in obj:
         cls = obj["classification"]
         label = cls.get("label") or str(cls.get("label_id", "?"))
         prob = cls.get("confidence", -1)
-    else:
-        label, prob = "?", -1
+        bbox = cls.get("bounding_box")
 
+    if bbox and frame_width and frame_height:
+        xmin = bbox.get("x_min", 0) * frame_width
+        ymin = bbox.get("y_min", 0) * frame_height
+        xmax = bbox.get("x_max", 0) * frame_width
+        ymax = bbox.get("y_max", 0) * frame_height
+        return Box(xmin=xmin, ymin=ymin, xmax=xmax, ymax=ymax, label=label, prob=prob)
+
+    x, y, w, h = obj.get("x"), obj.get("y"), obj.get("w"), obj.get("h")
+    if x is None or y is None or w is None or h is None:
+        return None
     return Box(xmin=x, ymin=y, xmax=x + w, ymax=y + h, label=label, prob=prob)
 
 
@@ -139,7 +154,10 @@ def load_frames(path: str) -> Dict[int, List[Box]]:
     for frame in _read_jsonl(path):
         if "timestamp" not in frame:
             continue
-        boxes = [b for b in (_object_to_box(o) for o in frame.get("objects", [])) if b is not None]
+        resolution = frame.get("resolution", {})
+        frame_width, frame_height = resolution.get("width"), resolution.get("height")
+        boxes = [b for b in (_object_to_box(o, frame_width, frame_height) for o in frame.get("objects", []))
+                if b is not None]
         result[frame["timestamp"]] = boxes
     return result
 

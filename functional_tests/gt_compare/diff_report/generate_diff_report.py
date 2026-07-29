@@ -55,6 +55,7 @@ import json
 import os
 import re
 import string
+import sys
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
@@ -647,9 +648,18 @@ def main():
         if missing:
             parser.error(f"Generic mode requires all of --config/--test-name/--gt-dir/--pred-dir "
                         f"(missing: {', '.join(missing)})")
-        gt_path, pred_path, video_path = resolve_test_paths(
-            args.config, args.test_name, args.gt_dir, args.pred_dir,
-            env_context=args.env_context, video_dir=args.video_dir)
+        try:
+            gt_path, pred_path, video_path = resolve_test_paths(
+                args.config, args.test_name, args.gt_dir, args.pred_dir,
+                env_context=args.env_context, video_dir=args.video_dir)
+        except KeyError as err:
+            # Expected/normal when a caller (e.g. a CI step) probes multiple
+            # *_final.json configs looking for the one that defines this test
+            # case - print a short message instead of a full traceback and
+            # use a distinct exit code so it's clearly "not in this config",
+            # not a real bug.
+            print(f"Test not found in this config: {err}", file=sys.stderr)
+            sys.exit(2)
         print(f"Resolved from config: gt={gt_path} pred={pred_path} video={video_path}")
     elif args.gt or args.pred or args.video:
         missing = [name for name, val in [("--gt", args.gt), ("--pred", args.pred), ("--video", args.video)] if not val]
@@ -660,8 +670,12 @@ def main():
         parser.error("Provide either --config/--test-name/--gt-dir/--pred-dir (generic mode) "
                     "or --gt/--pred/--video (direct mode)")
 
-    report_path = generate_report(gt_path, pred_path, video_path, args.output_dir,
-                                  top_percent=args.top_percent, max_frames=args.max_frames)
+    try:
+        report_path = generate_report(gt_path, pred_path, video_path, args.output_dir,
+                                      top_percent=args.top_percent, max_frames=args.max_frames)
+    except Exception as err:
+        print(f"Failed to generate diff report: {type(err).__name__}: {err}", file=sys.stderr)
+        sys.exit(1)
     print(f"Report generated: {report_path}")
 
 

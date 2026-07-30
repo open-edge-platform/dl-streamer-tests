@@ -70,11 +70,10 @@ PRED_COLOR = (0, 0, 230)    # red (BGR) - predicted
 
 
 def detect_cpu_info() -> str:
-    """Best-effort CPU model string; platform.processor() is often empty on
-    Linux, so fall back to parsing /proc/cpuinfo's 'model name'."""
-    proc = platform.processor()
-    if proc:
-        return proc
+    """Best-effort CPU model string, e.g. 'Intel(R) Core(TM) Ultra 9 285H'
+    (same value as lscpu's 'Model name'). /proc/cpuinfo's 'model name' field
+    has this, whereas platform.processor() on Linux usually just returns the
+    architecture (e.g. 'x86_64'), so only fall back to it if that's missing."""
     try:
         with open("/proc/cpuinfo") as f:
             for line in f:
@@ -82,7 +81,7 @@ def detect_cpu_info() -> str:
                     return line.split(":", 1)[1].strip()
     except OSError:
         pass
-    return "unknown"
+    return platform.processor() or "unknown"
 
 
 @dataclass
@@ -340,6 +339,7 @@ h1 { font-size: 20px; }
 .legend span { display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:middle; }
 table { border-collapse: collapse; margin-top: 8px; }
 td, th { border:1px solid #ccc; padding:4px 8px; font-size: 13px; }
+.metadata td:first-child { font-weight:bold; white-space:nowrap; }
 .severity { font-weight:bold; color:#b33; }
 """
 
@@ -354,9 +354,14 @@ def build_html_report(diffs: List[FrameDiff], rendered: Dict[int, str], output_d
     total_frames = len(diffs)
     diffing_frames = len([d for d in diffs if d.severity > 0])
 
+    metadata = dict(report_metadata or {})
+    metadata["Total compared frames"] = total_frames
+    metadata["Frames with any diff"] = diffing_frames
+    metadata[f"Rendered top {top_percent:.0f}% of diffing frames"] = len(rendered_diffs)
+
     metadata_rows = "".join(
         f"<tr><td>{html.escape(label)}</td><td>{html.escape(str(value))}</td></tr>"
-        for label, value in (report_metadata or {}).items() if value
+        for label, value in metadata.items() if value is not None and value != ""
     )
     metadata_block = f'<table class="metadata">{metadata_rows}</table>' if metadata_rows else ""
 
@@ -377,12 +382,10 @@ def build_html_report(diffs: List[FrameDiff], rendered: Dict[int, str], output_d
 <body>
 <h1>Groundtruth vs. predicted - visual diff report</h1>
 <div class="summary">
-  {metadata_block}
   <p><b>GT file:</b> {html.escape(gt_path)}<br/>
      <b>Predicted file:</b> {html.escape(pred_path)}<br/>
      <b>Video:</b> {html.escape(video_path)}</p>
-  <p><b>Total compared frames:</b> {total_frames}, <b>frames with any diff:</b> {diffing_frames},
-     <b>rendered (top {top_percent:.0f}% of diffing frames):</b> {len(rendered_diffs)}</p>
+  {metadata_block}
   {f'<p><b>Groundtruth update proposal:</b> <a href="{html.escape(os.path.relpath(gt_update_proposal_path, output_dir))}">{html.escape(os.path.relpath(gt_update_proposal_path, output_dir))}</a> (copy of the predicted file, drop-in replacement for the current GT if this diff turns out to be an intentional/cosmetic change)</p>' if gt_update_proposal_path else ''}
   <p class="legend"><span style="background:rgb(0,200,0)"></span>GT box
      &nbsp;&nbsp;<span style="background:rgb(230,0,0)"></span>Predicted box</p>

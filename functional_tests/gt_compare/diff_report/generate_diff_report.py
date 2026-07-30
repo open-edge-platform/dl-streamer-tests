@@ -53,10 +53,13 @@ import html
 import itertools
 import json
 import os
+import platform
 import re
+import shutil
 import string
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
 import cv2
@@ -64,6 +67,22 @@ import numpy as np
 
 GT_COLOR = (0, 200, 0)      # green (BGR) - groundtruth
 PRED_COLOR = (0, 0, 230)    # red (BGR) - predicted
+
+
+def detect_cpu_info() -> str:
+    """Best-effort CPU model string; platform.processor() is often empty on
+    Linux, so fall back to parsing /proc/cpuinfo's 'model name'."""
+    proc = platform.processor()
+    if proc:
+        return proc
+    try:
+        with open("/proc/cpuinfo") as f:
+            for line in f:
+                if line.lower().startswith("model name"):
+                    return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return "unknown"
 
 
 @dataclass
@@ -326,12 +345,20 @@ td, th { border:1px solid #ccc; padding:4px 8px; font-size: 13px; }
 
 
 def build_html_report(diffs: List[FrameDiff], rendered: Dict[int, str], output_dir: str,
-                       gt_path: str, pred_path: str, video_path: str, top_percent: float) -> str:
+                       gt_path: str, pred_path: str, video_path: str, top_percent: float,
+                       gt_update_proposal_path: Optional[str] = None,
+                       report_metadata: Optional[Dict[str, str]] = None) -> str:
     rendered_diffs = [d for d in diffs if d.timestamp in rendered]
     rendered_diffs.sort(key=lambda d: d.severity, reverse=True)
 
     total_frames = len(diffs)
     diffing_frames = len([d for d in diffs if d.severity > 0])
+
+    metadata_rows = "".join(
+        f"<tr><td>{html.escape(label)}</td><td>{html.escape(str(value))}</td></tr>"
+        for label, value in (report_metadata or {}).items() if value
+    )
+    metadata_block = f'<table class="metadata">{metadata_rows}</table>' if metadata_rows else ""
 
     cards = []
     for d in rendered_diffs:
@@ -350,11 +377,13 @@ def build_html_report(diffs: List[FrameDiff], rendered: Dict[int, str], output_d
 <body>
 <h1>Groundtruth vs. predicted - visual diff report</h1>
 <div class="summary">
+  {metadata_block}
   <p><b>GT file:</b> {html.escape(gt_path)}<br/>
      <b>Predicted file:</b> {html.escape(pred_path)}<br/>
      <b>Video:</b> {html.escape(video_path)}</p>
   <p><b>Total compared frames:</b> {total_frames}, <b>frames with any diff:</b> {diffing_frames},
      <b>rendered (top {top_percent:.0f}% of diffing frames):</b> {len(rendered_diffs)}</p>
+  {f'<p><b>Groundtruth update proposal:</b> <a href="{html.escape(os.path.relpath(gt_update_proposal_path, output_dir))}">{html.escape(os.path.relpath(gt_update_proposal_path, output_dir))}</a> (copy of the predicted file, drop-in replacement for the current GT if this diff turns out to be an intentional/cosmetic change)</p>' if gt_update_proposal_path else ''}
   <p class="legend"><span style="background:rgb(0,200,0)"></span>GT box
      &nbsp;&nbsp;<span style="background:rgb(230,0,0)"></span>Predicted box</p>
 </div>
@@ -385,6 +414,18 @@ def write_summary_json(diffs: List[FrameDiff], output_dir: str) -> str:
     with open(path, "w") as f:
         json.dump(summary, f, indent=2)
     return path
+
+
+def write_gt_update_proposal(gt_path: str, pred_path: str, output_dir: str) -> str:
+    # Mirrors the groundtruth's own category subfolder (e.g. samples_ARL,
+    # aliveness_ARL) so a reviewer can drop the file straight into repo's
+    # groundtruth_ov2/<category>/ if it looks right.
+    category = os.path.basename(os.path.dirname(gt_path)) or "misc"
+    dest_dir = os.path.join(output_dir, "gt_update_proposal", category)
+    os.makedirs(dest_dir, exist_ok=True)
+    dest_path = os.path.join(dest_dir, os.path.basename(gt_path))
+    shutil.copyfile(pred_path, dest_path)
+    return dest_path
 
 
 # ----------------------------------------------------------------------------
@@ -589,7 +630,9 @@ def resolve_test_paths(config_path: str, test_name: str, gt_dir: str, pred_dir: 
 
 
 def generate_report(gt_path: str, pred_path: str, video_path: str, output_dir: str,
-                     top_percent: float = 20.0, max_frames: Optional[int] = None) -> str:
+                     top_percent: float = 20.0, max_frames: Optional[int] = None,
+                     dls_branch: Optional[str] = None, dls_commit: Optional[str] = None,
+                     test_repo_branch: Optional[str] = None) -> str:
     gt = load_frames(gt_path)
     pred = load_frames(pred_path)
     diffs = compute_frame_diffs(gt, pred)
@@ -608,7 +651,16 @@ def generate_report(gt_path: str, pred_path: str, video_path: str, output_dir: s
             rendered[d.timestamp] = out_path
 
     write_summary_json(diffs, output_dir)
-    return build_html_report(diffs, rendered, output_dir, gt_path, pred_path, video_path, top_percent)
+    gt_update_proposal_path = write_gt_update_proposal(gt_path, pred_path, output_dir)
+    report_metadata = {
+        "Generated at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+        "CPU": detect_cpu_info(),
+        "DLS repo branch": dls_branch,
+        "DLS test repo branch": test_repo_branch,
+        "DLS commit ID": dls_commit,
+    }
+    return build_html_report(diffs, rendered, output_dir, gt_path, pred_path, video_path, top_percent,
+                             gt_update_proposal_path, report_metadata)
 
 
 def main():
@@ -640,6 +692,11 @@ def main():
                         help="Percent of the most divergent frames to render (default: 20)")
     parser.add_argument("--max-frames", type=int, default=None,
                         help="Optional hard cap on number of rendered frames")
+
+    metadata = parser.add_argument_group("report metadata (optional, shown in the HTML report header)")
+    metadata.add_argument("--dls-branch", help="dlstreamer repo branch/ref the build was run from")
+    metadata.add_argument("--dls-commit", help="dlstreamer repo commit SHA the build was run from")
+    metadata.add_argument("--test-repo-branch", help="dl-streamer-tests repo branch used for this run")
     args = parser.parse_args()
 
     if args.config or args.test_name or args.gt_dir or args.pred_dir:
@@ -672,10 +729,18 @@ def main():
 
     try:
         report_path = generate_report(gt_path, pred_path, video_path, args.output_dir,
-                                      top_percent=args.top_percent, max_frames=args.max_frames)
+                                      top_percent=args.top_percent, max_frames=args.max_frames,
+                                      dls_branch=args.dls_branch, dls_commit=args.dls_commit,
+                                      test_repo_branch=args.test_repo_branch)
     except Exception as err:
         print(f"Failed to generate diff report: {type(err).__name__}: {err}", file=sys.stderr)
         sys.exit(1)
+
+    # Written so downstream tooling (e.g. ai_verdict.py / propose_gt_update.py)
+    # can reuse the exact resolved paths instead of re-deriving them.
+    with open(os.path.join(args.output_dir, "paths.json"), "w") as f:
+        json.dump({"gt_path": gt_path, "pred_path": pred_path, "video_path": video_path}, f, indent=2)
+
     print(f"Report generated: {report_path}")
 
 

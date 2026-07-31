@@ -730,6 +730,20 @@ def main():
         parser.error("Provide either --config/--test-name/--gt-dir/--pred-dir (generic mode) "
                     "or --gt/--pred/--video (direct mode)")
 
+    if not os.path.isfile(pred_path):
+        # Most common cause: the test itself failed before writing any output (pipeline
+        # crash/error), so there is genuinely nothing to diff - not a script bug.
+        print(f"No predicted-output file at {pred_path} - the test likely produced no "
+             f"output at all (e.g. pipeline crashed/errored before writing results). "
+             f"Check the test's own run log for the real failure cause; there is nothing to diff.",
+             file=sys.stderr)
+        sys.exit(3)
+    if not os.path.isfile(gt_path):
+        print(f"No groundtruth file at {gt_path} - the 'dataset.groundtruth' filename in the "
+             f"config does not match any file in --gt-dir. Check the config/GT data, not the test run.",
+             file=sys.stderr)
+        sys.exit(3)
+
     try:
         report_path = generate_report(gt_path, pred_path, video_path, args.output_dir,
                                       top_percent=args.top_percent, max_frames=args.max_frames,

@@ -746,6 +746,19 @@ def main():
             print(f"Test not found in this config: {err}", file=sys.stderr)
             sys.exit(2)
         print(f"Resolved from config: gt={gt_path} pred={pred_path} video={video_path}")
+
+        if not os.path.isfile(pred_path):
+            # "sample"/"benchmark_performance" test types write their predicted json
+            # directly under the framework's flat 'dataset.artifacts' dir (e.g. docker
+            # CI's /tmp/results), NOT under --pred-dir's 'metadata' subfolder that
+            # "pipeline" type tests use - if the CI's post-run step that relocates
+            # them into metadata/ hasn't (yet) put it there, fall back to pred-dir's
+            # parent directory before giving up.
+            fallback_dir = os.path.dirname(os.path.normpath(args.pred_dir))
+            fallback_path = os.path.join(fallback_dir, os.path.basename(pred_path))
+            if fallback_dir and os.path.isfile(fallback_path):
+                print(f"Predicted output not found at {pred_path}, using fallback at {fallback_path}")
+                pred_path = fallback_path
     elif args.gt or args.pred or args.video:
         missing = [name for name, val in [("--gt", args.gt), ("--pred", args.pred), ("--video", args.video)] if not val]
         if missing:

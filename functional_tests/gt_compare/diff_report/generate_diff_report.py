@@ -68,6 +68,11 @@ import numpy as np
 GT_COLOR = (0, 200, 0)      # green (BGR) - groundtruth
 PRED_COLOR = (0, 0, 230)    # red (BGR) - predicted
 
+# Default severity weights, also referenced in the HTML report's explanation text.
+IOU_WEIGHT = 1.0
+PROB_WEIGHT = 0.5
+MISSING_WEIGHT = 1.5
+
 
 def detect_cpu_info() -> str:
     """Best-effort CPU model string, e.g. 'Intel(R) Core(TM) Ultra 9 285H'
@@ -223,8 +228,8 @@ def _match_boxes(gt_boxes: List[Box], pred_boxes: List[Box]) -> Tuple[List[BoxPa
 
 
 def compute_frame_diffs(gt: Dict[int, List[Box]], pred: Dict[int, List[Box]],
-                         iou_weight: float = 1.0, prob_weight: float = 0.5,
-                         missing_weight: float = 1.5) -> List[FrameDiff]:
+                         iou_weight: float = IOU_WEIGHT, prob_weight: float = PROB_WEIGHT,
+                         missing_weight: float = MISSING_WEIGHT) -> List[FrameDiff]:
     diffs = []
     all_ts = sorted(set(gt.keys()) | set(pred.keys()))
     for ts in all_ts:
@@ -336,7 +341,8 @@ h1 { font-size: 20px; }
 .summary { background:#fff; border:1px solid #ddd; border-radius:6px; padding:12px 16px; margin-bottom:20px; }
 .frame-card { background:#fff; border:1px solid #ddd; border-radius:6px; padding:16px; margin-bottom:20px; }
 .frame-card img { max-width: 100%; border:1px solid #ccc; }
-.legend span { display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:middle; }
+.severity-explainer { margin-top: 10px; }
+.severity-explainer summary { cursor: pointer; font-weight: bold; }
 table { border-collapse: collapse; margin-top: 8px; }
 td, th { border:1px solid #ccc; padding:4px 8px; font-size: 13px; }
 .metadata td:first-child { font-weight:bold; white-space:nowrap; }
@@ -382,13 +388,32 @@ def build_html_report(diffs: List[FrameDiff], rendered: Dict[int, str], output_d
 <body>
 <h1>Groundtruth vs. predicted - visual diff report</h1>
 <div class="summary">
+  <p>This report highlights the frames where the pipeline test's predicted detections/classifications
+  diverge the most from the groundtruth (GT), so a reviewer can quickly judge whether a failing test
+  is a real regression or an intentional/cosmetic GT change. Each frame below is rendered with GT boxes
+  in <b style="color:rgb(0,150,0)">green</b> and predicted boxes in <b style="color:rgb(230,0,0)">red</b>
+  (also labelled on the image itself), sorted worst-to-least-bad by severity.</p>
   <p><b>GT file:</b> {html.escape(gt_path)}<br/>
      <b>Predicted file:</b> {html.escape(pred_path)}<br/>
      <b>Video:</b> {html.escape(video_path)}</p>
   {metadata_block}
   {f'<p><b>Groundtruth update proposal:</b> <a href="{html.escape(os.path.relpath(gt_update_proposal_path, output_dir))}">{html.escape(os.path.relpath(gt_update_proposal_path, output_dir))}</a> (copy of the predicted file, drop-in replacement for the current GT if this diff turns out to be an intentional/cosmetic change)</p>' if gt_update_proposal_path else ''}
-  <p class="legend"><span style="background:rgb(0,200,0)"></span>GT box
-     &nbsp;&nbsp;<span style="background:rgb(230,0,0)"></span>Predicted box</p>
+  <details class="severity-explainer">
+    <summary>What does "severity" mean?</summary>
+    <p>Severity is a per-frame score estimating how different the predicted output is from the
+    groundtruth; higher means worse. It has no fixed upper bound and is <em>not</em> a percentage.
+    It is the sum of, over all GT/predicted boxes in the frame:</p>
+    <ul>
+      <li><b>Missing/extra boxes:</b> {MISSING_WEIGHT:g} points for each GT box with no matching
+      prediction (missed detection) or predicted box with no matching GT (false positive).</li>
+      <li><b>Box position mismatch:</b> {IOU_WEIGHT:g} &times; (1 - IoU) for each matched GT/predicted
+      pair, where IoU (Intersection over Union) is 0 for no overlap and 1 for a perfect box match.</li>
+      <li><b>Confidence mismatch:</b> {PROB_WEIGHT:g} &times; |GT confidence - predicted confidence|
+      for each matched pair (only when both confidences are available).</li>
+    </ul>
+    <p>Boxes are matched greedily by highest IoU, only between boxes sharing the same label.
+    A severity of 0 means the frame matched exactly.</p>
+  </details>
 </div>
 {''.join(cards)}
 </body></html>

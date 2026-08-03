@@ -68,17 +68,14 @@ import numpy as np
 GT_COLOR = (0, 200, 0)      # green (BGR) - groundtruth
 PRED_COLOR = (0, 0, 230)    # red (BGR) - predicted
 
-# Default severity weights, also referenced in the HTML report's explanation text.
+# Default severity weights, also used in the HTML report's explanation text.
 IOU_WEIGHT = 1.0
 PROB_WEIGHT = 0.5
 MISSING_WEIGHT = 1.5
 
 
 def detect_cpu_info() -> str:
-    """Best-effort CPU model string, e.g. 'Intel(R) Core(TM) Ultra 9 285H'
-    (same value as lscpu's 'Model name'). /proc/cpuinfo's 'model name' field
-    has this, whereas platform.processor() on Linux usually just returns the
-    architecture (e.g. 'x86_64'), so only fall back to it if that's missing."""
+    """Best-effort CPU model string (e.g. 'Intel(R) Core(TM) Ultra 9 285H')."""
     try:
         with open("/proc/cpuinfo") as f:
             for line in f:
@@ -138,16 +135,9 @@ def _read_jsonl(path: str) -> List[dict]:
 
 def _object_to_box(obj: dict, frame_width: Optional[float] = None,
                    frame_height: Optional[float] = None) -> Optional[Box]:
-    """Extract a drawable pixel-space box + label + confidence from one
-    'objects[]' entry of a gvametapublish json line. Mirrors the real
-    comparator (gt_comparators/video_gt_comparator.py::_filtered_meta_objects),
-    which reads the *normalized* 'detection.bounding_box' /
-    'classification.bounding_box' (x_min/y_min/x_max/y_max in [0, 1]) - NOT
-    the root-level pixel 'x'/'y'/'w'/'h' fields. Those two can disagree (e.g.
-    after any cropping/scaling), so using the wrong one here would make this
-    tool blind to differences the real test framework actually flags. Falls
-    back to the root pixel box only when there is no nested bounding_box
-    (e.g. some classification-only full-frame entries)."""
+    """Extract a pixel-space box + label + confidence from one 'objects[]' entry.
+    Prefers the normalized detection/classification bounding_box (matches the
+    real comparator); falls back to the root pixel x/y/w/h box if absent."""
     label, prob, bbox = "?", -1, None
     if "detection" in obj:
         det = obj["detection"]
@@ -198,8 +188,7 @@ def _iou(a: Box, b: Box) -> float:
 
 
 def _match_boxes(gt_boxes: List[Box], pred_boxes: List[Box]) -> Tuple[List[BoxPairDiff], int, int]:
-    """Greedy best-IoU matching, restricted to same label, mirroring the
-    approach used by the real ObjectDetectionComparator."""
+    """Greedy best-IoU matching, restricted to same label."""
     pairs: List[BoxPairDiff] = []
     gt_remaining = list(gt_boxes)
     pred_remaining = list(pred_boxes)
@@ -268,9 +257,7 @@ def _draw_boxes(frame: np.ndarray, boxes: List[Box], color: Tuple[int, int, int]
 
 
 def _draw_legend(frame: np.ndarray):
-    """Burns a small 'GT' / 'Predicted' color legend into the top-left corner
-    of the frame, so the image is self-explanatory even without the HTML
-    report around it (e.g. when shared standalone)."""
+    """Burns a small 'GT' / 'Predicted' color legend into the top-left corner."""
     entries = [("GT", GT_COLOR), ("Predicted", PRED_COLOR)]
     pad, swatch, line_h = 6, 14, 20
     text_w = max(cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0][0] for text, _ in entries)
@@ -445,9 +432,7 @@ def write_summary_json(diffs: List[FrameDiff], output_dir: str) -> str:
 
 
 def write_gt_update_proposal(gt_path: str, pred_path: str, output_dir: str) -> str:
-    # Mirrors the groundtruth's own category subfolder (e.g. samples_ARL,
-    # aliveness_ARL) so a reviewer can drop the file straight into repo's
-    # groundtruth_ov2/<category>/ if it looks right.
+    # Mirrors GT's category subfolder (e.g. samples_ARL) for easy drop-in replacement.
     category = os.path.basename(os.path.dirname(gt_path)) or "misc"
     dest_dir = os.path.join(output_dir, "gt_update_proposal", category)
     os.makedirs(dest_dir, exist_ok=True)
@@ -456,15 +441,9 @@ def write_gt_update_proposal(gt_path: str, pred_path: str, output_dir: str) -> s
     return dest_path
 
 
-# ----------------------------------------------------------------------------
-# Generic resolution of (gt_path, pred_path, video_path) from an existing
-# functional_tests test-suite config (e.g. pipeline_test/configs_ov2/common/
-# samples.json), by test name. This intentionally re-implements the two small,
-# dependency-free building blocks used by regression_test/case_parser.py and
-# regression_test/case_generator.py (case matrix expansion + '{dotted.key}'
-# template substitution) instead of importing that package, so this tool
-# stays fully standalone and usable outside of the test runner / CI.
-# ----------------------------------------------------------------------------
+# Generic resolution of (gt_path, pred_path, video_path) from an existing test-suite config by
+# test name. Reimplements case_parser.py/case_generator.py's matrix expansion + '{dotted.key}'
+# substitution to stay standalone, dependency-free.
 GT_FILE_NAME_FIELD = "dataset.groundtruth"
 GT_FILE_NAME_TEMPLATE_FIELD = "dataset.groundtruth.template"
 VIDEO_DIR_FIELD = "dataset.video"
@@ -487,13 +466,7 @@ ENV_SPECIFIC_KEYS = [
 
 class _CaseGenerator:
     """Verbatim port of regression_test/case_generator.py::CaseGenerator.
-    Supports both shapes seen in real configs:
-      - a plain dict of key -> value (or key -> [value, ...] for a matrix axis)
-      - a list of [key, val] pairs, where key/val may themselves be lists to
-        express grouped/coupled fields (e.g. samples_config.json-style and
-        regression.json-style test_sets entries).
-    Only depends on itertools/functools/operator (stdlib), so this stays
-    fully standalone."""
+    Supports both dict-shaped and list-of-[key,val]-pairs-shaped test_sets entries."""
 
     @staticmethod
     def get_keys_and_values(container):
@@ -542,18 +515,14 @@ class _CaseGenerator:
 
 
 class _SafeDict(dict):
-    """Dict that leaves unknown '{missing.key}' placeholders untouched instead
-    of raising KeyError, so we don't need to fully replicate every optional
-    config key just to resolve the two fields we actually care about."""
+    """Dict that leaves unknown '{missing.key}' placeholders untouched instead of raising KeyError."""
 
     def __missing__(self, key):
         return "{" + key + "}"
 
 
 class _DotNameFormatter(string.Formatter):
-    """Mirrors regression_test/case_parser.py::DotNameFormatter - treats a
-    dotted field name like 'dataset.video' as one flat dict key instead of
-    doing attribute/index traversal."""
+    """Mirrors case_parser.py::DotNameFormatter - 'dataset.video' is one flat dict key."""
 
     def get_field(self, field_name, args, kwargs):
         return self.get_value(field_name, args, kwargs), field_name
@@ -594,11 +563,7 @@ def _find_test_case(config_path: str, test_name: str, env_context: str, video_di
 
 def resolve_test_paths(config_path: str, test_name: str, gt_dir: str, pred_dir: str,
                        env_context: str = "host", video_dir: Optional[str] = None) -> Tuple[str, str, str]:
-    """Resolves (gt_path, pred_path, video_path) for `test_name` as defined in
-    `config_path` (a functional_tests test-suite config, e.g.
-    pipeline_test/configs_ov2/common/samples.json), without running any of
-    the actual test-runner machinery (no model/label/proc resolution needed
-    for this)."""
+    """Resolves (gt_path, pred_path, video_path) for `test_name` in `config_path`."""
     merged = _find_test_case(config_path, test_name, env_context, video_dir)
     safe = _SafeDict(merged)
     formatter = _DotNameFormatter()
@@ -615,12 +580,8 @@ def resolve_test_paths(config_path: str, test_name: str, gt_dir: str, pred_dir: 
                        f"field to resolve the source video from")
     raw_template = merged[template_field]
 
-    # Anchor on the literal '{dataset.video}/<filename>' placeholder in the
-    # *unresolved* template rather than regex-matching a file extension out of
-    # the fully-formatted command. The latter breaks for templates like
-    # GStreamer's 'filesrc location={dataset.video}/foo.mp4' where there is no
-    # whitespace/comma separating an option name from the path, so a plain
-    # extension-based scan would incorrectly capture 'location=/tmp/.../foo.mp4'.
+    # Anchor on the unresolved '{dataset.video}/<filename>' placeholder, not a regex extension
+    # match on the formatted command (breaks on 'filesrc location={dataset.video}/foo.mp4').
     video_dir_value = merged.get(VIDEO_DIR_FIELD)
     if not video_dir_value:
         raise KeyError(f"Test case '{test_name}' does not define '{VIDEO_DIR_FIELD}'")
@@ -631,9 +592,7 @@ def resolve_test_paths(config_path: str, test_name: str, gt_dir: str, pred_dir: 
                          f"reference '{placeholder}' - cannot locate the source video path:\n{raw_template}")
     remainder = raw_template[anchor + len(placeholder):]
 
-    # What follows '{dataset.video}/' is either another placeholder (e.g.
-    # regression.json-style '{dataset.video}/{dataset.video.name}') or a
-    # literal filename (e.g. samples.json-style '{dataset.video}/foo.mp4').
+    # What follows is either another placeholder (regression.json-style) or a literal filename.
     nested_field_match = re.match(r"\{([^{}]+)\}", remainder)
     if nested_field_match:
         field_name = nested_field_match.group(1)
@@ -738,22 +697,14 @@ def main():
                 args.config, args.test_name, args.gt_dir, args.pred_dir,
                 env_context=args.env_context, video_dir=args.video_dir)
         except KeyError as err:
-            # Expected/normal when a caller (e.g. a CI step) probes multiple
-            # *_final.json configs looking for the one that defines this test
-            # case - print a short message instead of a full traceback and
-            # use a distinct exit code so it's clearly "not in this config",
-            # not a real bug.
+            # Normal when a caller probes multiple *_final.json configs for this test.
             print(f"Test not found in this config: {err}", file=sys.stderr)
             sys.exit(2)
         print(f"Resolved from config: gt={gt_path} pred={pred_path} video={video_path}")
 
         if not os.path.isfile(pred_path):
-            # "sample"/"benchmark_performance" test types write their predicted json
-            # directly under the framework's flat 'dataset.artifacts' dir (e.g. docker
-            # CI's /tmp/results), NOT under --pred-dir's 'metadata' subfolder that
-            # "pipeline" type tests use - if the CI's post-run step that relocates
-            # them into metadata/ hasn't (yet) put it there, fall back to pred-dir's
-            # parent directory before giving up.
+            # "sample"/"benchmark_performance" tests land in the flat 'dataset.artifacts' dir,
+            # not --pred-dir's 'metadata' subfolder - fall back to pred-dir's parent.
             fallback_dir = os.path.dirname(os.path.normpath(args.pred_dir))
             fallback_path = os.path.join(fallback_dir, os.path.basename(pred_path))
             if fallback_dir and os.path.isfile(fallback_path):
@@ -769,8 +720,7 @@ def main():
                     "or --gt/--pred/--video (direct mode)")
 
     if not os.path.isfile(pred_path):
-        # Most common cause: the test itself failed before writing any output (pipeline
-        # crash/error), so there is genuinely nothing to diff - not a script bug.
+        # Most likely cause: the test crashed/errored before writing any output.
         print(f"No predicted-output file at {pred_path} - the test likely produced no "
              f"output at all (e.g. pipeline crashed/errored before writing results). "
              f"Check the test's own run log for the real failure cause; there is nothing to diff.",
@@ -791,8 +741,7 @@ def main():
         print(f"Failed to generate diff report: {type(err).__name__}: {err}", file=sys.stderr)
         sys.exit(1)
 
-    # Written so downstream tooling (e.g. ai_verdict.py / propose_gt_update.py)
-    # can reuse the exact resolved paths instead of re-deriving them.
+    # Lets downstream tooling (ai_verdict.py etc.) reuse the resolved paths.
     with open(os.path.join(args.output_dir, "paths.json"), "w") as f:
         json.dump({"gt_path": gt_path, "pred_path": pred_path, "video_path": video_path}, f, indent=2)
 

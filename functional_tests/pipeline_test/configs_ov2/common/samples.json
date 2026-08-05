@@ -316,7 +316,7 @@
         },
         "yolov5nu_GPU": {
             "name": "yolov5nu_GPU",
-            "dataset.groundtruth": "detection_yolov5nu_GPU.json",
+            "dataset.groundtruth": "yolov5nu_pexels_video_4786_GPU.json",
             "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolov5nu,GPU,{dataset.video}/Pexels_Videos_4786.mp4,json,,FP32"
         },
         "yolov5nu_int8_GPU": {

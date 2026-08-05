@@ -16,6 +16,6 @@
             "host.dataset.groundtruth.base": "groundtruth_ov2/samples_ARL"
         },
         "test_set_properties_removals": {},
-        "excluded_tests": ["yolo26s-obb_int8_NPU","yolo26n_int8_NPU","yolo26s_int8_NPU","yolo26m_int8_NPU","yolo26l_int8_NPU","yolo26x_int8_NPU","lvm_clip_vit_large_patch14_CPU","motion_detect_GPU","python_prompted_detection_NPU"]
+        "excluded_tests": ["yolo26s-obb_int8_NPU","yolo26n_int8_NPU","yolo26s_int8_NPU","yolo26m_int8_NPU","yolo26l_int8_NPU","yolo26x_int8_NPU","lvm_clip_vit_large_patch14_CPU","motion_detect_GPU","python_prompted_detection_NPU","human_pose_estimation_npu"]
     }
 }

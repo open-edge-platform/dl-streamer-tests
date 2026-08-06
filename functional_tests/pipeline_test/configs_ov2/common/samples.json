@@ -76,8 +76,13 @@
         },
         "python_draw_face_attributes_CPU": {
             "name": "python_draw_face_attributes_CPU",
-            "dataset.groundtruth": "python_draw_face_attributes.json",
-            "sample.command": "{sample.dir}/python/draw_face_attributes/draw_face_attributes.sh,{dataset.video}/Fun_at_a_Fair.mp4,json"
+            "dataset.groundtruth": "python_draw_face_attributes_CPU.json",
+            "sample.command": "{sample.dir}/python/draw_face_attributes/draw_face_attributes.sh,{dataset.video}/Fun_at_a_Fair.mp4,json,CPU"
+        },
+        "python_draw_face_attributes_GPU": {
+            "name": "python_draw_face_attributes_GPU",
+            "dataset.groundtruth": "python_draw_face_attributes_GPU.json",
+            "sample.command": "{sample.dir}/python/draw_face_attributes/draw_face_attributes.sh,{dataset.video}/Fun_at_a_Fair.mp4,json,GPU"
         },
         "benchmark_one_cpu_cpu": {
             "name": "benchmark_one_cpu_cpu",

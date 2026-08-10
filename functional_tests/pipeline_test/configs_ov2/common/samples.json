@@ -424,6 +424,11 @@
             "dataset.groundtruth": "instance_segmentation_yolo26s-seg_GPU.json",
             "sample.command": "{sample.dir}/gst_launch/instance_segmentation/instance_segmentation.sh,--model,yolo26s-seg,--device,GPU,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--benchmark_sink,{identity_100},--output,json"
         },
+        "instance_segmentation_yolo26s-seg_NPU": {
+            "name": "instance_segmentation_yolo26s-seg_NPU",
+            "dataset.groundtruth": "instance_segmentation_yolo26s-seg_NPU.json",
+            "sample.command": "{sample.dir}/gst_launch/instance_segmentation/instance_segmentation.sh,--model,yolo26s-seg,--device,NPU,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--benchmark_sink,{identity_100},--output,json"
+        },
         "instance_segmentation_yolo11s-seg_CPU": {
             "name": "instance_segmentation_yolo11s-seg_CPU",
             "dataset.groundtruth": "instance_segmentation_yolo11s-seg_CPU.json",
@@ -433,6 +438,11 @@
             "name": "instance_segmentation_yolo11s-seg_GPU",
             "dataset.groundtruth": "instance_segmentation_yolo11s-seg_GPU.json",
             "sample.command": "{sample.dir}/gst_launch/instance_segmentation/instance_segmentation.sh,--model,yolo11s-seg,--device,GPU,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--benchmark_sink,{identity_100},--output,json"
+        },
+        "instance_segmentation_yolo11s-seg_NPU": {
+            "name": "instance_segmentation_yolo11s-seg_NPU",
+            "dataset.groundtruth": "instance_segmentation_yolo11s-seg_NPU.json",
+            "sample.command": "{sample.dir}/gst_launch/instance_segmentation/instance_segmentation.sh,--model,yolo11s-seg,--device,NPU,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--benchmark_sink,{identity_100},--output,json"
         },
         "lvm_clip_vit_large_patch14_CPU": {
             "name": "lvm_clip_vit_large_patch14_CPU",

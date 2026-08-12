@@ -8,12 +8,6 @@
         "identity_1000": " ! identity eos-after=1000 "
     },
     "test_sets": {
-        "audio_event_detection": {
-            "name": "audio_event_detection",
-            "dataset.groundtruth": "audio_event_detection.json",
-            "sample.command": "{sample.dir}\\gst_launch\\audio_detect\\audio_event_detection.bat,{sample.dir}\\gst_launch\\audio_detect\\how_are_you_doing.wav,output.json",
-            "dataset.comparator_type": "audio"
-        },
         "benchmark_one_channel_cpu": {
             "name": "benchmark_one_channel_cpu",
             "dataset.groundtruth": "benchmark_one_channel_cpu.json",

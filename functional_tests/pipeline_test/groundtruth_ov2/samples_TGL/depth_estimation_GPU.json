@@ -1,0 +1,2 @@
+{"objects":[{"classification_layer_name:depth":{"confidence":1.0,"label":"0.00","label_id":0,"model":{"name":"Model0"}},"detection":{"bounding_box":{"x_max":0.6,"x_min":0.4,"y_max":0.6,"y_min":0.4},"confidence":0.9,"label_id":1},"h":144,"region_id":0,"tensors":[{"format":"depth_metrics","name":"depth_metrics","center":0.0,"mean":0.0,"median":0.0,"min":0.0,"max":0.0,"stddev":0.0,"valid_count":0,"valid_ratio":0.0}],"w":256,"x":512,"y":288}],"resolution":{"height":720,"width":1280},"timestamp":0}
+

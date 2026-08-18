@@ -745,6 +745,16 @@
             "dataset.groundtruth": "python_prompted_detection_NPU.json",
             "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,white car,NPU,json"
         },
+        "depth_estimation_CPU": {
+            "name": "depth_estimation_CPU",
+            "dataset.groundtruth": "depth_estimation_CPU.json",
+            "sample.command": "{sample.dir}/gst_launch/depth_estimation/depth_estimation.sh,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,CPU,CPU,json"
+        },
+        "depth_estimation_GPU": {
+            "name": "depth_estimation_GPU",
+            "dataset.groundtruth": "depth_estimation_GPU.json",
+            "sample.command": "{sample.dir}/gst_launch/depth_estimation/depth_estimation.sh,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,GPU,GPU,json"
+        },
         "python_watermark_meta": {
             "name": "python_watermark_meta",
             "dataset.comparator_type": "watermark",

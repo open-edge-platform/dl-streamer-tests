@@ -725,6 +725,16 @@
             "dataset.groundtruth": "python_gvaanalytics_tripwire_vehicle_counter_NPU.json",
             "sample.command": "{sample.dir}/python/gvaanalytics_tripwire/vehicle_counter.sh,file://{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,,,NPU,output.json"
         },
+        "python_smart_nvr_CPU": {
+            "name": "python_smart_nvr_CPU",
+            "dataset.groundtruth": "python_smart_nvr_CPU.json",
+            "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,--input,{dataset.video}/Pexels_Videos_2431853-hd_1920_1080_25fps.mp4,--device,CPU,--output,json"
+        },
+        "python_smart_nvr_GPU": {
+            "name": "python_smart_nvr_GPU",
+            "dataset.groundtruth": "python_smart_nvr_GPU.json",
+            "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,--input,{dataset.video}/Pexels_Videos_2431853-hd_1920_1080_25fps.mp4,--device,GPU,--output,json"
+        },
         "python_face_detection_and_classification_CPU": {
             "name": "python_face_detection_and_classification_CPU",
             "dataset.groundtruth": "python_face_detection_and_classification_CPU.json",

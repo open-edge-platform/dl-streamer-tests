@@ -735,6 +735,21 @@
             "dataset.groundtruth": "python_smart_nvr_GPU.json",
             "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,--input,{dataset.video}/Pexels_Videos_2431853-hd_1920_1080_25fps.mp4,--device,GPU,--output,json"
         },
+        "python_loitering_detection_CPU": {
+            "name": "python_loitering_detection_CPU",
+            "dataset.groundtruth": "python_loitering_detection_CPU.json",
+            "sample.command": "{sample.dir}/python/loitering_detection/loitering_detection.sh,{dataset.video}/loitering.mp4,,,CPU,,output.json"
+        },
+        "python_loitering_detection_GPU": {
+            "name": "python_loitering_detection_GPU",
+            "dataset.groundtruth": "python_loitering_detection_GPU.json",
+            "sample.command": "{sample.dir}/python/loitering_detection/loitering_detection.sh,{dataset.video}/loitering.mp4,,,GPU,,output.json"
+        },
+        "python_loitering_detection_NPU": {
+            "name": "python_loitering_detection_NPU",
+            "dataset.groundtruth": "python_loitering_detection_NPU.json",
+            "sample.command": "{sample.dir}/python/loitering_detection/loitering_detection.sh,{dataset.video}/loitering.mp4,,,NPU,,output.json"
+        },
         "python_face_detection_and_classification_CPU": {
             "name": "python_face_detection_and_classification_CPU",
             "dataset.groundtruth": "python_face_detection_and_classification_CPU.json",

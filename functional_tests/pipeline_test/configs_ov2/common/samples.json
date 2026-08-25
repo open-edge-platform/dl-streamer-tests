@@ -768,17 +768,17 @@
         "python_prompted_detection_CPU": {
             "name": "python_prompted_detection_CPU",
             "dataset.groundtruth": "python_prompted_detection_CPU.json",
-            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--prompt,white car,--device,CPU,--output,json"
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--prompt,car,--device,CPU,--output,json"
         },
         "python_prompted_detection_GPU": {
             "name": "python_prompted_detection_GPU",
             "dataset.groundtruth": "python_prompted_detection_GPU.json",
-            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--prompt,white car,--device,GPU,--output,json"
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--prompt,car,--device,GPU,--output,json"
         },
         "python_prompted_detection_NPU": {
             "name": "python_prompted_detection_NPU",
             "dataset.groundtruth": "python_prompted_detection_NPU.json",
-            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--prompt,white car,--device,NPU,--output,json"
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--prompt,car,--device,NPU,--output,json"
         },
         "python_watermark_meta": {
             "name": "python_watermark_meta",

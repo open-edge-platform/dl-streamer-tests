@@ -753,29 +753,17 @@
         "python_face_detection_and_classification_CPU": {
             "name": "python_face_detection_and_classification_CPU",
             "dataset.groundtruth": "python_face_detection_and_classification_CPU.json",
-            "face_detection.model.name": "arnabdhar_YOLOv8-Face-Detection",
-            "face_detection.model.precision": "FP16",
-            "face_classification.model.name": "dima806_fairface_age_image_detection",
-            "face_classification.model.precision": "FP16",
-            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,CPU,--output,json,--det-model,{face_detection.model.path},--cls-model,{face_classification.model.path}"
+            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,CPU,--output,json"
         },
         "python_face_detection_and_classification_GPU": {
             "name": "python_face_detection_and_classification_GPU",
             "dataset.groundtruth": "python_face_detection_and_classification_GPU.json",
-            "face_detection.model.name": "arnabdhar_YOLOv8-Face-Detection",
-            "face_detection.model.precision": "FP16",
-            "face_classification.model.name": "dima806_fairface_age_image_detection",
-            "face_classification.model.precision": "FP16",
-            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,GPU,--output,json,--det-model,{face_detection.model.path},--cls-model,{face_classification.model.path}"
+            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,GPU,--output,json"
         },
         "python_face_detection_and_classification_NPU": {
             "name": "python_face_detection_and_classification_NPU",
             "dataset.groundtruth": "python_face_detection_and_classification_NPU.json",
-            "face_detection.model.name": "arnabdhar_YOLOv8-Face-Detection",
-            "face_detection.model.precision": "FP16",
-            "face_classification.model.name": "dima806_fairface_age_image_detection",
-            "face_classification.model.precision": "FP16",
-            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,NPU,--output,json,--det-model,{face_detection.model.path},--cls-model,{face_classification.model.path}"
+            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,NPU,--output,json"
 },
         "python_prompted_detection_CPU": {
             "name": "python_prompted_detection_CPU",

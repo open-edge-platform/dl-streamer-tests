@@ -738,17 +738,17 @@
         "python_loitering_detection_CPU": {
             "name": "python_loitering_detection_CPU",
             "dataset.groundtruth": "python_loitering_detection_CPU.json",
-            "sample.command": "{sample.dir}/python/loitering_detection/loitering_detection.sh,{dataset.video}/loitering.mp4,,,CPU,,output.json"
+            "sample.command": "{sample.dir}/gst_launch/python-elements/loitering_detection/loitering_detection.sh,{dataset.video}/loitering.mp4,,,CPU,,output.json"
         },
         "python_loitering_detection_GPU": {
             "name": "python_loitering_detection_GPU",
             "dataset.groundtruth": "python_loitering_detection_GPU.json",
-            "sample.command": "{sample.dir}/python/loitering_detection/loitering_detection.sh,{dataset.video}/loitering.mp4,,,GPU,,output.json"
+            "sample.command": "{sample.dir}/gst_launch/python-elements/loitering_detection/loitering_detection.sh,{dataset.video}/loitering.mp4,,,GPU,,output.json"
         },
         "python_loitering_detection_NPU": {
             "name": "python_loitering_detection_NPU",
             "dataset.groundtruth": "python_loitering_detection_NPU.json",
-            "sample.command": "{sample.dir}/python/loitering_detection/loitering_detection.sh,{dataset.video}/loitering.mp4,,,NPU,,output.json"
+            "sample.command": "{sample.dir}/gst_launch/python-elements/loitering_detection/loitering_detection.sh,{dataset.video}/loitering.mp4,,,NPU,,output.json"
         },
         "python_face_detection_and_classification_CPU": {
             "name": "python_face_detection_and_classification_CPU",

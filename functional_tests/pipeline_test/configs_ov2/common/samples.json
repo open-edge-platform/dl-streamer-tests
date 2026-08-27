@@ -753,18 +753,18 @@
         "python_face_detection_and_classification_CPU": {
             "name": "python_face_detection_and_classification_CPU",
             "dataset.groundtruth": "python_face_detection_and_classification_CPU.json",
-            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,CPU,json"
+            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,CPU,--output,json"
         },
         "python_face_detection_and_classification_GPU": {
             "name": "python_face_detection_and_classification_GPU",
             "dataset.groundtruth": "python_face_detection_and_classification_GPU.json",
-            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,GPU,json"
+            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,GPU,--output,json"
         },
         "python_face_detection_and_classification_NPU": {
             "name": "python_face_detection_and_classification_NPU",
             "dataset.groundtruth": "python_face_detection_and_classification_NPU.json",
-            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,NPU,json"
-},
+            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,NPU,--output,json"
+        },  
         "python_prompted_detection_CPU": {
             "name": "python_prompted_detection_CPU",
             "dataset.groundtruth": "python_prompted_detection_CPU.json",

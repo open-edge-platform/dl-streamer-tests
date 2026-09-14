@@ -14,7 +14,11 @@ if [[ -z "$LABELS_PATH" ]]; then
     echo "WARNING: LABELS_PATH environment variable is not set"
 fi
 
-pip3 install -r $SCRIPTDIR/requirements.txt
+if command -v uv >/dev/null 2>&1; then
+    uv pip install -r $SCRIPTDIR/requirements.txt
+else
+    pip3 install -r $SCRIPTDIR/requirements.txt
+fi
 
 # Some configs require working dir be set to level of regression_tests dir location
 WORK_DIR="$(dirname "$(dirname "${SCRIPTDIR}" )" )"

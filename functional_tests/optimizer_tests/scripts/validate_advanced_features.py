@@ -14,6 +14,8 @@ from typing import Dict, List, Tuple, Optional, Any
 
 class OptimizerValidator:
     """Validator for optimizer test outputs"""
+
+    NO_OPTIMIZED_PIPELINE_MESSAGE = "No optimized pipeline found that outperforms the original pipeline."
     
     def __init__(self, config_file: str):
         with open(config_file, 'r') as f:
@@ -496,7 +498,7 @@ class OptimizerValidator:
             print(f"  ❌ Error validating allowed devices: {e}")
             return False
     
-    def validate_standard_test(self, content: str, test_config: Dict) -> bool:
+    def validate_standard_test(self, content: str, test_config: Dict, log_content: Optional[str] = None) -> bool:
         """Validate standard test - check FPS improvement and golden FPS comparison from JSON"""
         print("🔍 Validating standard test performance...")
         
@@ -530,6 +532,11 @@ class OptimizerValidator:
             fps_improvement = None
             if original_fps is not None and optimized_fps is not None:
                 fps_improvement = optimized_fps - original_fps
+
+            no_optimized_pipeline_reported = bool(
+                log_content and self.NO_OPTIMIZED_PIPELINE_MESSAGE in log_content
+            )
+            fps_for_golden = optimized_fps if optimized_fps is not None else original_fps
             
             # Display extracted values
             print(f"  📊 Original pipeline FPS: {original_fps if original_fps is not None else 'N/A'}")
@@ -546,28 +553,33 @@ class OptimizerValidator:
             checks = []
             
             # Check 1: FPS values extracted successfully
-            if original_fps is None or optimized_fps is None:
+            if original_fps is None or (optimized_fps is None and not no_optimized_pipeline_reported):
                 checks.append(("❌", "FPS extraction", "Could not extract FPS values from JSON"))
                 success = False
             else:
-                checks.append(("✅", "FPS extraction", f"Original: {original_fps}, Optimized: {optimized_fps}"))
+                if optimized_fps is None:
+                    checks.append(("✅", "FPS extraction", f"Original: {original_fps}, no optimized pipeline reported"))
+                else:
+                    checks.append(("✅", "FPS extraction", f"Original: {original_fps}, Optimized: {optimized_fps}"))
                 
                 # Check 2: Performance improvement
-                if fps_improvement > 0:
+                if fps_improvement is not None and fps_improvement > 0:
                     checks.append(("✅", "Performance improvement", f"{fps_improvement:.2f} fps improvement"))
+                elif no_optimized_pipeline_reported:
+                    checks.append(("✅", "Performance improvement", "Optimizer reported no faster pipeline found"))
                 else:
                     checks.append(("❌", "Performance improvement", f"No improvement: {fps_improvement:.2f} fps"))
                     success = False
                 
                 # Check 3: Golden FPS comparison (if specified)
                 if golden_fps:
-                    fps_diff = abs(optimized_fps - golden_fps)
+                    fps_diff = abs(fps_for_golden - golden_fps)
                     tolerance_value = golden_fps * (tolerance / 100.0)
                     
                     if fps_diff <= tolerance_value:
-                        checks.append(("✅", "Golden FPS match", f"Within tolerance: {optimized_fps:.2f} vs {golden_fps} (±{tolerance_value:.2f})"))
+                        checks.append(("✅", "Golden FPS match", f"Within tolerance: {fps_for_golden:.2f} vs {golden_fps} (±{tolerance_value:.2f})"))
                     else:
-                        checks.append(("❌", "Golden FPS match", f"Outside tolerance: {optimized_fps:.2f} vs {golden_fps} (±{tolerance_value:.2f})"))
+                        checks.append(("❌", "Golden FPS match", f"Outside tolerance: {fps_for_golden:.2f} vs {golden_fps} (±{tolerance_value:.2f})"))
                         success = False
                 else:
                     checks.append(("ℹ️", "Golden FPS match", "No golden FPS specified, skipping"))
@@ -575,6 +587,8 @@ class OptimizerValidator:
             # Check 4: Detections extracted successfully
             if original_detections is not None and optimized_detections is not None:
                 checks.append(("✅", "Detections extraction", f"Original: {original_detections}, Optimized: {optimized_detections}"))
+            elif original_detections is not None and no_optimized_pipeline_reported:
+                checks.append(("✅", "Detections extraction", f"Original: {original_detections}, no optimized pipeline reported"))
             else:
                 checks.append(("⚠️", "Detections extraction", "Could not extract detection counts"))
             
@@ -583,6 +597,8 @@ class OptimizerValidator:
                 # Truncate long pipelines for display
                 display_pipeline = optimized_pipeline[:80] + "..." if len(optimized_pipeline) > 80 else optimized_pipeline
                 checks.append(("✅", "Optimized pipeline", f"Found: {display_pipeline}"))
+            elif no_optimized_pipeline_reported:
+                checks.append(("✅", "Optimized pipeline", "Optimizer reported no faster pipeline found"))
             else:
                 checks.append(("❌", "Optimized pipeline", "No optimized pipeline found in JSON"))
                 success = False
@@ -654,7 +670,11 @@ class OptimizerValidator:
 
             # Route to appropriate validation method
             if test_type == 'standard':
-                return self.validate_standard_test(content, test_config)
+                log_content = None
+                if log_file and os.path.exists(log_file):
+                    with open(log_file, 'r') as f:
+                        log_content = f.read()
+                return self.validate_standard_test(content, test_config, log_content)
 
             elif test_type == 'output_flag':
                 return self.validate_output_flag(content)

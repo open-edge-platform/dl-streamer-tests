@@ -376,8 +376,8 @@ run_validation() {
             validation_cmd="$validation_cmd --output-file $json_file"
         fi
         
-        # Add log file for verbose tests
-        if [[ "$test_type" == "verbose_flag" ]]; then
+        # Add log file for validations that inspect optimizer logs
+        if [[ "$test_type" == "verbose_flag" || "$test_type" == "standard" ]]; then
             validation_cmd="$validation_cmd --log-file $log_file"
         fi
         

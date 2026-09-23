@@ -293,9 +293,12 @@ RUN_CMD+="$*" # Remaining options
 
 # Check if NPU device acceleration is available
 DEVICE_ACCEL=""
+DEVICE_ACCEL_DMA=""
 if ls /dev/accel* >/dev/null 2>&1; then
     DEVICE_ACCEL="--device /dev/accel"
     echo "NPU device acceleration enabled"
+    DEVICE_ACCEL_DMA="--device /dev/dma_heap"
+    echo "NPU device acceleration for DMA enabled"
 else
     echo "NPU device acceleration not enabled"
 fi
@@ -306,6 +309,9 @@ EXTRA_PARAMS=""
 RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
 if [[ -n "$RENDER_GROUP_ID" ]]; then
     EXTRA_PARAMS+="--group-add $RENDER_GROUP_ID "
+fi
+if [[ -n "$DEVICE_ACCEL_DMA" ]]; then
+    EXTRA_PARAMS+="--group-add $(stat -c "%g" /dev/dma_heap/system)"
 fi
 
 
@@ -393,6 +399,7 @@ else
     $RUN_PREFIX docker run --rm \
         --device=/dev/dri \
         $DEVICE_ACCEL \
+        $DEVICE_ACCEL_DMA \
         -v $VIDEO_EXAMPLES_PATH:/tmp/video-examples \
         -v $LOCALHOST_RESULTS_PATH:/tmp/results \
         -v $MODELS_PATH:/tmp/models \

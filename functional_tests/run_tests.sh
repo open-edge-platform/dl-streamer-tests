@@ -346,6 +346,7 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
 
     # Test-specific overrides not covered by the setup script
     export TERM=xterm
+    export GST_DEBUG=GVA_common:3
     export PYTHONPATH=$HOME_DIR/python:$PYTHONPATH
     export PATH=$HOME_DIR/.virtualenvs/dlstreamer/bin:$PATH
     export LABELS_PATH=/opt/intel/dlstreamer/samples/labels
@@ -397,6 +398,7 @@ else
         -v $(dirname "$(realpath "${BASH_SOURCE[0]}")")/:$TESTS_DIR \
         -v $HOST_MODIFIED_CONFIG_DIR:$DOCKER_MODIFIED_CONFIG_DIR \
         -e MODELS_PATH=/tmp/models \
+        -e GST_DEBUG=GVA_common:3 \
         -e MODEL_PROC_PATH=/home/dlstreamer/dlstreamer/samples/gstreamer/model_proc \
         -e MODEL_PROCS_PATH=/home/dlstreamer/dlstreamer/samples/gstreamer/model_proc \
         -e LABELS_PATH=/home/dlstreamer/dlstreamer/samples/labels \

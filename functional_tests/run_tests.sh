@@ -367,6 +367,7 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
     echo "GST_VAAPI_DRM_DEVICE: ${GST_VAAPI_DRM_DEVICE}"
     echo "GST_VAAPI_ALL_DRIVERS: ${GST_VAAPI_ALL_DRIVERS}"
     echo "GI_TYPELIB_PATH: ${GI_TYPELIB_PATH}"
+    echo "GST_DEBUG: ${GST_DEBUG}"
     echo "Starting test in local host mode"
 
     # Run on host tests

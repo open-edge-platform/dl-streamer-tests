@@ -252,7 +252,7 @@
             "pipeline.out_frames_dir": "yolo11s-seg_pixel_CPU",
             "dataset.pixel_threshold": 2,
             "dataset.bad_pixel_fraction": 0.001,
-            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo11s-seg,CPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP32,/tmp/results/metadata/{pipeline.out_frames_dir}/"
+            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo11s-seg,CPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP32,/tmp/results/{pipeline.out_frames_dir}/"
         },
         "yolo11s-pose_CPU": {
             "name": "yolo11s-pose_CPU",
@@ -321,7 +321,7 @@
             "pipeline.out_frames_dir": "yolo26s-seg_pixel_CPU",
             "dataset.pixel_threshold": 2,
             "dataset.bad_pixel_fraction": 0.001,
-            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-seg,CPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP16,/tmp/results/metadata/{pipeline.out_frames_dir}/"
+            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-seg,CPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP16,/tmp/results/{pipeline.out_frames_dir}/"
         },
         "yolo26s-pose_fp16_CPU": {
             "name": "yolo26s-pose_fp16_CPU",
@@ -400,7 +400,7 @@
             "pipeline.out_frames_dir": "yolo11s-seg_pixel_GPU",
             "dataset.pixel_threshold": 2,
             "dataset.bad_pixel_fraction": 0.001,
-            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo11s-seg,GPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP32,/tmp/results/metadata/{pipeline.out_frames_dir}/"
+            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo11s-seg,GPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP32,/tmp/results/{pipeline.out_frames_dir}/"
         },
 		"yolo11s-pose_GPU": {
             "name": "yolo11s-pose_GPU",
@@ -569,7 +569,7 @@
             "pipeline.out_frames_dir": "yolo26s-seg_pixel_GPU",
             "dataset.pixel_threshold": 2,
             "dataset.bad_pixel_fraction": 0.001,
-            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-seg,GPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP16,/tmp/results/metadata/{pipeline.out_frames_dir}/"
+            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-seg,GPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP16,/tmp/results/{pipeline.out_frames_dir}/"
         },
         "yolo26s-pose_fp16_GPU": {
             "name": "yolo26s-pose_fp16_GPU",
@@ -649,7 +649,7 @@
             "pipeline.out_frames_dir": "yolo11s-seg_pixel_NPU",
             "dataset.pixel_threshold": 2,
             "dataset.bad_pixel_fraction": 0.001,
-            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo11s-seg,NPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP32,/tmp/results/metadata/{pipeline.out_frames_dir}/"
+            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo11s-seg,NPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP32,/tmp/results/{pipeline.out_frames_dir}/"
         },
         "yolo26s-seg_pixel_NPU": {
             "name": "yolo26s-seg_pixel_NPU",
@@ -658,7 +658,7 @@
             "pipeline.out_frames_dir": "yolo26s-seg_pixel_NPU",
             "dataset.pixel_threshold": 2,
             "dataset.bad_pixel_fraction": 0.001,
-            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-seg,NPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP16,/tmp/results/metadata/{pipeline.out_frames_dir}/"
+            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo26s-seg,NPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_30},png,,FP16,/tmp/results/{pipeline.out_frames_dir}/"
         },
         "yolo11s-pose_NPU": {
             "name": "yolo11s-pose_NPU",

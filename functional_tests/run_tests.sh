@@ -298,7 +298,7 @@ if ls /dev/accel* >/dev/null 2>&1; then
     DEVICE_ACCEL="--device /dev/accel"
     echo "NPU device acceleration enabled"
     DEVICE_ACCEL_DMA="--device /dev/dma_heap"
-    echo "NPU device acceleration for DMA enabled"
+    echo "NPU device acceleration for DMA enabled [NPU zero copy]"
 else
     echo "NPU device acceleration not enabled"
 fi
@@ -349,7 +349,7 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
 
     # Test-specific overrides not covered by the setup script
     export TERM=xterm
-    export GST_DEBUG=GVA_common:3
+    export GST_DEBUG=GVA_common:2 # enable ERROR and WARN logging
     export PYTHONPATH=$HOME_DIR/python:$PYTHONPATH
     export PATH=$HOME_DIR/.virtualenvs/dlstreamer/bin:$PATH
     export LABELS_PATH=/opt/intel/dlstreamer/samples/labels

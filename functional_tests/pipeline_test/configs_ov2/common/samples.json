@@ -17,7 +17,7 @@
         "identity_500": " ! identity eos-after=500 ",
         "identity_400": " ! identity eos-after=400 ",
         "identity_100": " ! identity eos-after=100 ",
-        "identity_30": " ! identity eos-after=30"
+        "identity_30": "identity eos-after=30 !"
     },
     "test_sets": {
         "face_detection_and_classification_cpu": {

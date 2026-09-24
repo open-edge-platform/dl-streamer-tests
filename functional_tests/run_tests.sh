@@ -310,9 +310,6 @@ RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
 if [[ -n "$RENDER_GROUP_ID" ]]; then
     EXTRA_PARAMS+="--group-add $RENDER_GROUP_ID "
 fi
-if [[ -n "$DEVICE_ACCEL_DMA" ]]; then
-    EXTRA_PARAMS+="--group-add $(stat -c "%g" /dev/dma_heap/system)"
-fi
 
 
 # Run tests in local host enviroment without docker image

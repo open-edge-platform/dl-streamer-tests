@@ -18,6 +18,7 @@ from pipeline_test.regression_test.config_keys import *
 
 PIXEL_THRESHOLD_DEFAULT = 2
 BAD_PIXEL_FRACTION_DEFAULT = 0.001
+ALLOW_INCOMPLETE_FRAMES = "watermark.allow_incomplete_frames"
 
 
 class PngFrameComparator(BaseGTComparator):
@@ -84,7 +85,17 @@ class PngFrameComparator(BaseGTComparator):
         gt_frames = sorted(glob.glob(os.path.join(gt_dir, "frame_*.png")))
         pred_frames = sorted(glob.glob(os.path.join(prediction_dir, "frame_*.png")))
 
-        if len(gt_frames) != len(pred_frames):
+        allow_incomplete = str(self._test_case.input.get(ALLOW_INCOMPLETE_FRAMES, "false")).lower() in (
+            "1", "true", "yes"
+        )
+        if not pred_frames:
+            self._test_case.result.add_error("No prediction frames generated")
+            return
+        if len(pred_frames) < len(gt_frames) and allow_incomplete:
+            self._logger.warning(
+                "Comparing incomplete prediction: GT=%d, test=%d; missing trailing frames are ignored",
+                len(gt_frames), len(pred_frames))
+        elif len(gt_frames) != len(pred_frames):
             self._test_case.result.add_error(
                 "Frame count mismatch: GT={}, test={}".format(len(gt_frames), len(pred_frames)))
             return

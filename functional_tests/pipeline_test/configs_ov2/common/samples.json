@@ -849,6 +849,21 @@
             "pipeline.out_frames_dir": "python_watermark_meta",
             "dataset.groundtruth": "python_watermark_meta",
             "sample.command": "python3,{sample.dir}/python/watermark_meta/watermark_meta.py,videotestsrc,{dataset.artifacts}/python_watermark_meta"
+        },
+        "pallet_defect_detection_CPU": {
+            "name": "pallet_defect_detection_CPU",
+            "dataset.groundtruth": "pallet_defect_detection_CPU.json",
+            "sample.command": "{sample.dir}/gst_launch/geti_deployment/geti_sample.sh,detection,public/pallet_defect_detection/INT8/pallet_defect_detection.xml,CPU,opencv,{dataset.video}/warehouse.avi,json"
+        },
+        "pallet_defect_detection_GPU": {
+            "name": "pallet_defect_detection_GPU",
+            "dataset.groundtruth": "pallet_defect_detection_GPU.json",
+            "sample.command": "{sample.dir}/gst_launch/geti_deployment/geti_sample.sh,detection,public/pallet_defect_detection/INT8/pallet_defect_detection.xml,GPU,va-surface-sharing,{dataset.video}/warehouse.avi,json"
+        },
+        "pallet_defect_detection_NPU": {
+            "name": "pallet_defect_detection_NPU",
+            "dataset.groundtruth": "pallet_defect_detection_NPU.json",
+            "sample.command": "{sample.dir}/gst_launch/geti_deployment/geti_sample.sh,detection,public/pallet_defect_detection/INT8/pallet_defect_detection.xml,NPU,va,{dataset.video}/warehouse.avi,json"
         }
     }
 }

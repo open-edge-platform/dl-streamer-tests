@@ -402,6 +402,7 @@ else
         -e MODEL_PROC_PATH=/home/dlstreamer/dlstreamer/samples/gstreamer/model_proc \
         -e MODEL_PROCS_PATH=/home/dlstreamer/dlstreamer/samples/gstreamer/model_proc \
         -e LABELS_PATH=/home/dlstreamer/dlstreamer/samples/labels \
+        -e GST_DEBUG=GVA_common:2 \
         $EXTRA_PARAMS \
         $IMAGE_NAME \
         $RUN_CMD

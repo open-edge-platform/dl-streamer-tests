@@ -352,6 +352,7 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
     export MODEL_PROC_PATH=/opt/intel/dlstreamer/samples/gstreamer/model_proc
     export MODEL_PROCS_PATH=/opt/intel/dlstreamer/samples/gstreamer/model_proc
     export MODELS_PATH=$MODELS_PATH
+    export GST_DEBUG=GVA_common:2
     echo "LIBVA_DRIVER_NAME: ${LIBVA_DRIVER_NAME}"
     echo "GST_PLUGIN_PATH: ${GST_PLUGIN_PATH}"
     echo "LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}"
@@ -366,6 +367,7 @@ if [[ "$RUN_LOCAL_APTGET" = true ]]; then
     echo "GST_VAAPI_DRM_DEVICE: ${GST_VAAPI_DRM_DEVICE}"
     echo "GST_VAAPI_ALL_DRIVERS: ${GST_VAAPI_ALL_DRIVERS}"
     echo "GI_TYPELIB_PATH: ${GI_TYPELIB_PATH}"
+    echo "GST_DEBUG: ${GST_DEBUG}"
     echo "Starting test in local host mode"
 
     # Run on host tests
@@ -400,6 +402,7 @@ else
         -e MODEL_PROC_PATH=/home/dlstreamer/dlstreamer/samples/gstreamer/model_proc \
         -e MODEL_PROCS_PATH=/home/dlstreamer/dlstreamer/samples/gstreamer/model_proc \
         -e LABELS_PATH=/home/dlstreamer/dlstreamer/samples/labels \
+        -e GST_DEBUG=GVA_common:2 \
         $EXTRA_PARAMS \
         $IMAGE_NAME \
         $RUN_CMD

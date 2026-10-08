@@ -76,6 +76,16 @@ def copy_cell(src, dst):
         dst.number_format = src.number_format
 
 
+def fix_data_bars(sheet):
+    """openpyxl drops the Excel 2010 data bar extension and falls back to 2007 bars, which have
+    a 10% minimum length by default - so 0% would still show a red bar. Make 0% render empty."""
+    for cf in sheet.conditional_formatting:
+        for rule in cf.rules:
+            if rule.type == 'dataBar' and rule.dataBar is not None:
+                rule.dataBar.minLength = 0
+                rule.dataBar.maxLength = 100
+
+
 def check_layout(wb, path: Path):
     """Fail fast if report was not produced by XlsxReporter (e.g. XlsxBenchmarkReporter has other layout)"""
     expected = {COL_SUITE: "Test suite", COL_TEST: "Test", COL_RESULT: "Result"}
@@ -162,6 +172,8 @@ def merge(base_path: Path, retry_paths: list, output_path: Path):
     main['B5'].font = copy(main['B1'].font)
     main['C5'] = len(flaky)
     main['C5'].alignment = copy(main['C1'].alignment)
+
+    fix_data_bars(main)
 
     # Summary cells are formulas without cached values after openpyxl save - force recalculation
     wb.calculation.fullCalcOnLoad = True

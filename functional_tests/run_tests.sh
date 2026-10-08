@@ -30,6 +30,7 @@ show_help() {
     echo "  [--results-path=<path>] Path to folder for tests results"
     echo "  [--report-name=<name>]  Base name for test reports"
     echo "  [--on-host]             Run tests on local host, without docker image. DLS installed via apt on bare metal system."
+    echo "  [--only-tests=<names>]  Run only test sets with given names (comma or space separated), e.g. to re-run failed tests"
     exit 0
 }
 
@@ -82,6 +83,10 @@ case $i in
     ;;
     --on-host)
         RUN_LOCAL_APTGET=true
+        shift
+    ;;
+    --only-tests=*)
+        ONLY_TESTS="${i#*=}"
         shift
     ;;
     --) # End of input
@@ -262,10 +267,25 @@ for meta_cfg in "${meta_configs_arr[@]}"; do
         done
     fi
 
+    # Keep only selected test sets (keys of 'test_sets' are the names used in reports)
+    if [[ -n "$ONLY_TESTS" ]]; then
+        echo "  Filtering test sets to: $ONLY_TESTS"
+        ONLY_TESTS_JSON=$(tr ', ' '\n\n' <<<"$ONLY_TESTS" | jq -R . | jq -s 'map(select(length > 0))')
+        jq --argjson only "$ONLY_TESTS_JSON" \
+           '.test_sets |= with_entries(select(.key as $k | $only | index($k)))' \
+           "$HOST_FINAL_CONFIG_PATH" > "$HOST_FINAL_CONFIG_PATH.tmp" && mv "$HOST_FINAL_CONFIG_PATH.tmp" "$HOST_FINAL_CONFIG_PATH"
+        if [[ "$(jq '.test_sets | length' "$HOST_FINAL_CONFIG_PATH")" -eq 0 ]]; then
+            echo "  No selected tests in $meta_cfg - skipping this config"
+            continue
+        fi
+    fi
+
     # Add final config to the list
     CONFIGS_TO_RUN+="$FINAL_CONFIG_PATH "
     echo "  Generated: $HOST_FINAL_CONFIG_PATH"
 done
+
+[ -z "$CONFIGS_TO_RUN" ] && error "ERROR: No tests to run (none of --only-tests found in meta-configs): $ONLY_TESTS"
 
 echo "Final configs to run: $CONFIGS_TO_RUN"
 

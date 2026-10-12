@@ -76,10 +76,11 @@ class RawInferenceMetaComparator(ClassProvider):
                         ## The pr_meta_item['name'] == age validation should go through _compare_raw_tensor pass
                         if pr_meta_item['name'] != 'age':
                             self.num_labels_failed += 1
-                            self._logger.info("\n \t\t >>> [{}] Meta objects {} have different labels: {} /// {}".format(timestamp,
-                                                                                                                         pr_meta_item['name'],
-                                                                                                                         pr_meta_item['label'],
-                                                                                                                         gt_meta_item['label']))
+                            # per-frame detail is debug-only; aggregate counts are logged once in video_gt_comparator summary
+                            self._logger.debug("\n \t\t >>> [{}] Meta objects {} have different labels: {} /// {}".format(timestamp,
+                                                                                                                          pr_meta_item['name'],
+                                                                                                                          pr_meta_item['label'],
+                                                                                                                          gt_meta_item['label']))
 
     def _compare_raw_tensor(self, pr_meta_item: dict, gt_meta_item: dict):
         if 'data' in pr_meta_item and 'data' in gt_meta_item:

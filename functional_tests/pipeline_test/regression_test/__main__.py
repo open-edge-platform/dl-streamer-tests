@@ -15,6 +15,7 @@ from gst_pipeline_launcher import GstPipelineLauncher
 from gt_comparators.base_gt_comparator import GTComparator, RuntimeTestCase, TestType
 from gt_comparators.video_gt_comparator import create_video_gt_comparator
 from gt_comparators.audio_gt_comparator import AudioGTComparator
+from gt_comparators.genai_gt_comparator import GenAIGTComparator
 from gt_comparators.benchmark_gt_comparator import BenchmarkComparator
 from gt_comparators.watermark_test import PngFrameComparator
 from gt_comparators.video_comparators.object_classification_comparator import CheckLevel
@@ -84,6 +85,8 @@ def create_gt_comparator(args, test_case: RuntimeTestCase, logger):
         return create_video_gt_comparator(test_case, args, logger)
     elif comp_type == GTComparator.audio:
         return AudioGTComparator(test_case, logger=logger)
+    elif comp_type == GTComparator.genai:
+        return GenAIGTComparator(test_case, logger=logger)
     elif comp_type == GTComparator.watermark:
         return PngFrameComparator(test_case, logger=logger)
     elif comp_type == GTComparator.performance:

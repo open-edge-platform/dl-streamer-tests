@@ -841,6 +841,30 @@
             "dataset.groundtruth": "python_prompted_detection_NPU.json",
             "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--prompt,white car,--device,NPU,--output,json"
         },
+        "python_vlm_alerts_GPU": {
+            "name": "python_vlm_alerts_GPU",
+            "dataset.comparator_type": "genai",
+            "dataset.groundtruth": "python_vlm_alerts_GPU.json",
+            "sample.command": "python3,{sample.dir}/python/vlm_alerts/vlm_alerts.py,--video-path,{dataset.video}/Pexels_Videos_2103099-hd_1280_720_60fps.mp4,--model-path,OpenGVLab_InternVL3_5-2B,--prompt,Is there a car in the image? Answer yes or no.,--device,GPU,--max-tokens,1,--num-beams,4,--frame-rate,0.2,--results-dir,{dataset.artifacts},--output-json,output.json"
+        },
+        "python_vlm_alerts_NPU": {
+            "name": "python_vlm_alerts_NPU",
+            "dataset.comparator_type": "genai",
+            "dataset.groundtruth": "python_vlm_alerts_NPU.json",
+            "sample.command": "python3,{sample.dir}/python/vlm_alerts/vlm_alerts.py,--video-path,{dataset.video}/Pexels_Videos_2103099-hd_1280_720_60fps.mp4,--model-path,OpenGVLab_InternVL3_5-2B,--prompt,Is there a car in the image? Answer yes or no.,--device,NPU,--max-tokens,1,--num-beams,4,--frame-rate,0.2,--results-dir,{dataset.artifacts},--output-json,output.json"
+        },
+        "python_vlm_self_checkout_GPU": {
+            "name": "python_vlm_self_checkout_GPU",
+            "dataset.comparator_type": "genai",
+            "dataset.groundtruth": "python_vlm_self_checkout_GPU.json",
+            "sample.command": "python3,{sample.dir}/python/vlm_self_checkout/vlm_self_checkout.py,--video-path,{dataset.video}/Pexels_Videos_14936073_1920_1080_30fps.mp4,--detect-model-path,public/yolo26s/INT8/yolo26s.xml,--vlm-model-path,OpenGVLab_InternVL3_5-2B,--detect-device,GPU,--genai-device,GPU,--results-dir,{dataset.artifacts},--output-json,output.json"
+        },
+        "python_vlm_self_checkout_NPU": {
+            "name": "python_vlm_self_checkout_NPU",
+            "dataset.comparator_type": "genai",
+            "dataset.groundtruth": "python_vlm_self_checkout_NPU.json",
+            "sample.command": "python3,{sample.dir}/python/vlm_self_checkout/vlm_self_checkout.py,--video-path,{dataset.video}/Pexels_Videos_14936073_1920_1080_30fps.mp4,--detect-model-path,public/yolo26s/INT8/yolo26s.xml,--vlm-model-path,OpenGVLab_InternVL3_5-2B,--detect-device,GPU,--genai-device,NPU,--results-dir,{dataset.artifacts},--output-json,output.json"
+        },
         "python_watermark_meta": {
             "name": "python_watermark_meta",
             "dataset.comparator_type": "watermark",

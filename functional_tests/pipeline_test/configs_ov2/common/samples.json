@@ -40,6 +40,36 @@
             "dataset.groundtruth": "vehicle_pedestrian_tracking_20_gpu.json",
             "sample.command": "{sample.dir}/gst_launch/vehicle_pedestrian_tracking/vehicle_pedestrian_tracking.sh,{dataset.video}/Pexels_Videos_4786.mp4,20,GPU,json"
         },
+        "people_detection_tracking_pixel_CPU": {
+            "name": "people_detection_tracking_pixel_CPU",
+            "dataset.comparator_type": "watermark",
+            "dataset.groundtruth": "people_detection_tracking_pixel_CPU",
+            "pipeline.out_frames_dir": "people_detection_tracking_pixel_CPU",
+            "dataset.pixel_threshold": 2,
+            "dataset.bad_pixel_fraction": 0.003,
+            "watermark.allow_incomplete_frames": true,
+            "sample.command": "{sample.dir}/gst_launch/deepsort/people_detection_tracking.sh,{dataset.video}/Pexels_Videos_4786.mp4,CPU,frames,50,{dataset.artifacts}/{pipeline.out_frames_dir}/"
+        },
+        "people_detection_tracking_pixel_GPU": {
+            "name": "people_detection_tracking_pixel_GPU",
+            "dataset.comparator_type": "watermark",
+            "dataset.groundtruth": "people_detection_tracking_pixel_GPU",
+            "pipeline.out_frames_dir": "people_detection_tracking_pixel_GPU",
+            "dataset.pixel_threshold": 2,
+            "dataset.bad_pixel_fraction": 0.003,
+            "watermark.allow_incomplete_frames": true,
+            "sample.command": "{sample.dir}/gst_launch/deepsort/people_detection_tracking.sh,{dataset.video}/Pexels_Videos_4786.mp4,GPU,frames,50,{dataset.artifacts}/{pipeline.out_frames_dir}/"
+        },
+        "people_detection_tracking_pixel_NPU": {
+            "name": "people_detection_tracking_pixel_NPU",
+            "dataset.comparator_type": "watermark",
+            "dataset.groundtruth": "people_detection_tracking_pixel_NPU",
+            "pipeline.out_frames_dir": "people_detection_tracking_pixel_NPU",
+            "dataset.pixel_threshold": 2,
+            "dataset.bad_pixel_fraction": 0.003,
+            "watermark.allow_incomplete_frames": true,
+            "sample.command": "{sample.dir}/gst_launch/deepsort/people_detection_tracking.sh,{dataset.video}/Pexels_Videos_4786.mp4,NPU,frames,50,{dataset.artifacts}/{pipeline.out_frames_dir}/"
+        },
         "human_pose_estimation_cpu": {
             "name": "human_pose_estimation_cpu",
             "dataset.groundtruth": "human_pose_estimation_cpu.json",

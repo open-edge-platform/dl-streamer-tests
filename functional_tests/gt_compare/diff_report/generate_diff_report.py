@@ -9,8 +9,8 @@ When a pipeline_test video comparison fails (or is close to the failure
 threshold) it is currently very hard to tell *why* just from the reported
 "X% of frames differ" number. This tool renders the actual video frames for
 the most divergent timestamps with both the groundtruth (GT) and the
-predicted bounding boxes drawn on top, and produces a single self-contained
-HTML report sorted from "worst" to "least bad" frame.
+predicted test output bounding boxes drawn on top, and produces a single
+self-contained HTML report sorted from "worst" to "least bad" frame.
 
 It is intentionally CI-agnostic and safe: it never modifies the groundtruth
 or test results, it only reads the two JSON-lines files produced by
@@ -66,7 +66,7 @@ import cv2
 import numpy as np
 
 GT_COLOR = (0, 200, 0)      # green (BGR) - groundtruth
-PRED_COLOR = (0, 0, 230)    # red (BGR) - predicted
+PRED_COLOR = (0, 0, 230)    # red (BGR) - test output
 
 # Default severity weights, also used in the HTML report's explanation text.
 IOU_WEIGHT = 1.0
@@ -257,8 +257,8 @@ def _draw_boxes(frame: np.ndarray, boxes: List[Box], color: Tuple[int, int, int]
 
 
 def _draw_legend(frame: np.ndarray):
-    """Burns a small 'GT' / 'Predicted' color legend into the top-left corner."""
-    entries = [("GT", GT_COLOR), ("Predicted", PRED_COLOR)]
+    """Burns a small 'Groundtruth' / 'Test output' color legend into the top-left corner."""
+    entries = [("Groundtruth", GT_COLOR), ("Test output", PRED_COLOR)]
     pad, swatch, line_h = 6, 14, 20
     text_w = max(cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0][0] for text, _ in entries)
     box_w = pad * 3 + swatch + text_w
@@ -312,11 +312,11 @@ def _pairs_table_html(diff: FrameDiff) -> str:
         )
     extra = ""
     if diff.unmatched_gt:
-        extra += f"<p>{diff.unmatched_gt} GT box(es) with no matching prediction (missed detection).</p>"
+        extra += f"<p>{diff.unmatched_gt} GT box(es) with no matching test output prediction (missed detection).</p>"
     if diff.unmatched_pred:
-        extra += f"<p>{diff.unmatched_pred} predicted box(es) with no matching GT (false positive).</p>"
+        extra += f"<p>{diff.unmatched_pred} test output box(es) with no matching GT box(es) (false positive).</p>"
     table = (
-        "<table><tr><th>label</th><th>GT conf</th><th>pred conf</th><th>IoU</th></tr>"
+        "<table><tr><th>label</th><th>Groundtruth conf</th><th>Test output conf</th><th>IoU</th></tr>"
         + "".join(rows) + "</table>"
     ) if rows else ""
     return table + extra
@@ -373,7 +373,7 @@ def build_html_report(diffs: List[FrameDiff], rendered: Dict[int, str], output_d
     body = f"""<!doctype html>
 <html><head><meta charset="utf-8"><title>GT diff report</title><style>{REPORT_CSS}</style></head>
 <body>
-<h1>Groundtruth vs. predicted - visual diff report</h1>
+<h1>Test output vs. Groundtruth - visual diff report</h1>
 <div class="summary">
   <p>This report highlights the frames where the pipeline test's predicted detections/classifications
   diverge the most from the groundtruth (GT), so a reviewer can quickly judge whether a failing test
@@ -381,21 +381,21 @@ def build_html_report(diffs: List[FrameDiff], rendered: Dict[int, str], output_d
   in <b style="color:rgb(0,150,0)">green</b> and predicted boxes in <b style="color:rgb(230,0,0)">red</b>
   (also labelled on the image itself), sorted worst-to-least-bad by severity.</p>
   <p><b>GT file:</b> {html.escape(gt_path)}<br/>
-     <b>Predicted file:</b> {html.escape(pred_path)}<br/>
+     <b>Test output file:</b> {html.escape(pred_path)}<br/>
      <b>Video:</b> {html.escape(video_path)}</p>
   {metadata_block}
   {f'<p><b>Groundtruth update proposal:</b> <a href="{html.escape(os.path.relpath(gt_update_proposal_path, output_dir))}">{html.escape(os.path.relpath(gt_update_proposal_path, output_dir))}</a> (copy of the predicted file, drop-in replacement for the current GT if this diff turns out to be an intentional/cosmetic change)</p>' if gt_update_proposal_path else ''}
   <details class="severity-explainer">
     <summary>What does "severity" mean?</summary>
-    <p>Severity is a per-frame score estimating how different the predicted output is from the
+    <p>Severity is a per-frame score estimating how different the predicted test output is from the
     groundtruth; higher means worse. It has no fixed upper bound and is <em>not</em> a percentage.
     It is the sum of, over all GT/predicted boxes in the frame:</p>
     <ul>
       <li><b>Missing/extra boxes:</b> {MISSING_WEIGHT:g} points for each GT box with no matching
-      prediction (missed detection) or predicted box with no matching GT (false positive).</li>
+      test output (missed detection) or test output box with no matching GT (false positive).</li>
       <li><b>Box position mismatch:</b> {IOU_WEIGHT:g} &times; (1 - IoU) for each matched GT/predicted
       pair, where IoU (Intersection over Union) is 0 for no overlap and 1 for a perfect box match.</li>
-      <li><b>Confidence mismatch:</b> {PROB_WEIGHT:g} &times; |GT confidence - predicted confidence|
+      <li><b>Confidence mismatch:</b> {PROB_WEIGHT:g} &times; |GT confidence - test output confidence|
       for each matched pair (only when both confidences are available).</li>
     </ul>
     <p>Boxes are matched greedily by highest IoU, only between boxes sharing the same label.
@@ -708,7 +708,7 @@ def main():
             fallback_dir = os.path.dirname(os.path.normpath(args.pred_dir))
             fallback_path = os.path.join(fallback_dir, os.path.basename(pred_path))
             if fallback_dir and os.path.isfile(fallback_path):
-                print(f"Predicted output not found at {pred_path}, using fallback at {fallback_path}")
+                print(f"Test output not found at {pred_path}, using fallback at {fallback_path}")
                 pred_path = fallback_path
     elif args.gt or args.pred or args.video:
         missing = [name for name, val in [("--gt", args.gt), ("--pred", args.pred), ("--video", args.video)] if not val]
@@ -721,7 +721,7 @@ def main():
 
     if not os.path.isfile(pred_path):
         # Most likely cause: the test crashed/errored before writing any output.
-        print(f"No predicted-output file at {pred_path} - the test likely produced no "
+        print(f"No test output file at {pred_path} - the test likely produced no "
              f"output at all (e.g. pipeline crashed/errored before writing results). "
              f"Check the test's own run log for the real failure cause; there is nothing to diff.",
              file=sys.stderr)

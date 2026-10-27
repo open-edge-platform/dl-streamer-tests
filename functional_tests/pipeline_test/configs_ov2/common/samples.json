@@ -876,7 +876,7 @@
             "dataset.comparator_type": "genai",
             "dataset.genai.confidence_thr": 0.1,
             "dataset.groundtruth": "python_vlm_alerts_GPU.json",
-            "sample.command": "python3,{sample.dir}/python/vlm_alerts/vlm_alerts.py,--video-path,{dataset.video}/Pexels_Videos_2103099-hd_1280_720_60fps.mp4,--prompt,Is there a car in the image? Answer yes or no.,--device,GPU,--max-tokens,1,--num-beams,4,--frame-rate,0.2,--results-dir,{dataset.artifacts},--output-json,output.json"
+            "sample.command": "python3,{sample.dir}/python/vlm_alerts/vlm_alerts.py,--video-path,{dataset.video}/Pexels_Videos_2103099-hd_1280_720_60fps.mp4,--prompt,Is there a car in the image? Answer yes or no.,--device,GPU,--results-dir,{dataset.artifacts},--output-json,output.json"
         },
         "python_vlm_self_checkout_GPU": {
             "name": "python_vlm_self_checkout_GPU",

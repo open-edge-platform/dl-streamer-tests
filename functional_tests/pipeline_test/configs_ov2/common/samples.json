@@ -35,12 +35,12 @@
             "dataset.comparator_type": "genai",
             "dataset.genai.confidence_thr": 0.1,
             "dataset.groundtruth": "python_vlm_alerts_GPU.json",
-            "sample.command": "python3,{sample.dir}/python/vlm_alerts/vlm_alerts.py,--video-path,{dataset.video}/Pexels_Videos_2103099-hd_1280_720_60fps.mp4,--prompt,Is there a car in the image? Answer yes or no.,--device,GPU,--results-dir,{dataset.artifacts},--output-json,output.json"
+            "sample.command": "python3,{sample.dir}/python/vlm_alerts/vlm_alerts.py,--video-path,{dataset.video}/Pexels_Videos_2103099-hd_1280_720_60fps.mp4,--prompt,Is there a police car? Answer yes or no.,--device,GPU,--frame-rate,0.5,--results-dir,{dataset.artifacts},--output-json,output.json"
         },
         "python_vlm_self_checkout_GPU": {
             "name": "python_vlm_self_checkout_GPU",
             "dataset.comparator_type": "genai",
-            "dataset.genai.compare_text": false,
+            "dataset.genai.confidence_thr": 0,
             "dataset.groundtruth": "python_vlm_self_checkout_GPU.json",
             "sample.command": "python3,{sample.dir}/python/vlm_self_checkout/vlm_self_checkout.py,--video-path,{dataset.video}/Pexels_Videos_14936073_1920_1080_30fps.mp4,--detect-device,GPU,--genai-device,GPU,--results-dir,{dataset.artifacts},--output-json,output.json"
         },

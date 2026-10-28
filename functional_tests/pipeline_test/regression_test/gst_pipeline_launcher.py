@@ -55,6 +55,11 @@ class GstPipelineLauncher:
             if first_cmd.endswith('.bat') or first_cmd.endswith('.cmd'):
                 process_cmd.insert(0, "cmd")
                 process_cmd.insert(1, "/c")
+            elif first_cmd.endswith('.ps1'):
+                process_cmd.insert(0, "powershell.exe")
+                process_cmd.insert(1, "-ExecutionPolicy")
+                process_cmd.insert(2, "Bypass")
+                process_cmd.insert(3, "-File")
             else:
                 process_cmd.insert(0, "bash.exe")
             

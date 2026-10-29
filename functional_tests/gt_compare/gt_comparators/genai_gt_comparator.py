@@ -26,6 +26,9 @@ MIN_KEYWORD_HITS_FIELD = "dataset.genai.min_keyword_hits"
 DEFAULT_CONFIDENCE_THR = 0.05
 DEFAULT_MIN_KEYWORD_HITS = 1
 ERRORS_TO_REPORT = 10
+# Multi-value options are comma-separated strings, never JSON lists: CaseGenerator turns
+# every list-valued test case property into a separate test case (a parameter sweep).
+LIST_SEPARATOR = ","
 
 
 class GenAIMode(str, Enum):
@@ -54,6 +57,23 @@ def normalize_text(text: str) -> str:
     return normalized.strip(" .,;:!?\"'")
 
 
+def parse_text_list(test_input: dict, field: str) -> list:
+    """Parse a comma-separated option into a list of normalized, non-empty entries.
+
+    A JSON list must not be used here: CaseGenerator expands every list-valued property
+    of a test case into a separate test case, so a list would silently multiply the test
+    and hand each copy a single value.
+    """
+    raw = test_input.get(field, "")
+    if isinstance(raw, (list, tuple)):
+        raise TypeError(
+            "'{}' must be a '{}'-separated string, not a list. List values are expanded by "
+            "CaseGenerator into separate test cases instead of being passed through.".format(
+                field, LIST_SEPARATOR))
+    entries = [normalize_text(entry) for entry in str(raw).split(LIST_SEPARATOR)]
+    return [entry for entry in entries if entry]
+
+
 class GenAIGTComparator(BaseGTComparator):
     """Compares JSON Lines produced by the gvagenai element.
 
@@ -72,6 +92,11 @@ class GenAIGTComparator(BaseGTComparator):
       for pipelines whose record count depends on detection/tracking results and whose
       wording is free-form, where a strict comparison would be flaky by construction.
       The ground truth file must still exist and serves as a reference sample.
+
+    Multi-value options ('allowed_results', 'required_keywords') are comma-separated
+    strings. A JSON list must not be used: CaseGenerator expands every list-valued test
+    case property into a separate test case, so a list silently multiplies the test and
+    passes a single value to each copy.
     """
 
     def __init__(self, test_case: RuntimeTestCase, logger: logging.Logger = None):
@@ -80,8 +105,7 @@ class GenAIGTComparator(BaseGTComparator):
         self._mode = self._parse_mode(test_input)
         self._reject_fields_of_other_mode(test_input)
 
-        allowed_results = test_input.get(ALLOWED_RESULTS_FIELD, [])
-        self._allowed_results = [normalize_text(result) for result in allowed_results]
+        self._allowed_results = parse_text_list(test_input, ALLOWED_RESULTS_FIELD)
 
         if self._mode == GenAIMode.strict:
             self._compare_text = test_input.get(COMPARE_TEXT_FIELD, True)
@@ -89,8 +113,7 @@ class GenAIGTComparator(BaseGTComparator):
             self._confidence_thr = float(test_input.get(CONFIDENCE_THR_FIELD, DEFAULT_CONFIDENCE_THR))
         else:
             self._min_records = self._parse_min_records(test_input)
-            required_keywords = test_input.get(REQUIRED_KEYWORDS_FIELD, [])
-            self._required_keywords = [normalize_text(keyword) for keyword in required_keywords]
+            self._required_keywords = parse_text_list(test_input, REQUIRED_KEYWORDS_FIELD)
             self._min_keyword_hits = int(test_input.get(MIN_KEYWORD_HITS_FIELD, DEFAULT_MIN_KEYWORD_HITS))
             if self._min_keyword_hits > len(self._required_keywords):
                 raise ValueError(

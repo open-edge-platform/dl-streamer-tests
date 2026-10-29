@@ -874,6 +874,7 @@
         "python_vlm_alerts_GPU": {
             "name": "python_vlm_alerts_GPU",
             "dataset.comparator_type": "genai",
+            "dataset.genai.mode": "strict",
             "dataset.genai.confidence_thr": 0.1,
             "dataset.groundtruth": "python_vlm_alerts_GPU.json",
             "sample.command": "python3,{sample.dir}/python/vlm_alerts/vlm_alerts.py,--video-path,{dataset.video}/Pexels_Videos_2103099-hd_1280_720_60fps.mp4,--prompt,Is there a police car? Answer yes or no.,--device,GPU,--frame-rate,0.5,--results-dir,{dataset.artifacts},--output-json,output.json"
@@ -881,7 +882,10 @@
         "python_vlm_self_checkout_GPU": {
             "name": "python_vlm_self_checkout_GPU",
             "dataset.comparator_type": "genai",
-            "dataset.genai.confidence_thr": 0,
+            "dataset.genai.mode": "smoke",
+            "dataset.genai.min_records": 3,
+            "dataset.genai.required_keywords": ["apple", "banana", "coca-cola"],
+            "dataset.genai.min_keyword_hits": 2,
             "dataset.groundtruth": "python_vlm_self_checkout_GPU.json",
             "sample.command": "python3,{sample.dir}/python/vlm_self_checkout/vlm_self_checkout.py,--video-path,{dataset.video}/Pexels_Videos_14936073_1920_1080_30fps.mp4,--detect-device,GPU,--genai-device,GPU,--results-dir,{dataset.artifacts},--output-json,output.json"
         },

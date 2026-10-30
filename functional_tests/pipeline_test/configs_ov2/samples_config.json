@@ -26,6 +26,6 @@
             "test.exclude": ["npu"]
         },
         "test_set_properties_removals": {},
-        "excluded_tests": ["lvm_clip_vit_large_patch14_CPU","python_smart_nvr_CPU","python_smart_nvr_GPU","gvapython_GPU","gvapython_CPU"]
+        "excluded_tests": ["lvm_clip_vit_large_patch14_CPU","python_smart_nvr_CPU","python_smart_nvr_GPU","gvapython_cpu","gvapython_gpu"]
     }
 }

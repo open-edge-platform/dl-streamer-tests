@@ -22,8 +22,7 @@
         "test_config": "common/samples.json",
         "test_set_properties_additions": {
             "docker.dataset.groundtruth.base": "groundtruth_ov2/samples_PTL",
-            "host.dataset.groundtruth.base": "groundtruth_ov2/samples_PTL",
-            "test.exclude": ["npu"]
+            "host.dataset.groundtruth.base": "groundtruth_ov2/samples_PTL"
         },
         "test_set_properties_removals": {},
         "excluded_tests": ["lvm_clip_vit_large_patch14_CPU","python_smart_nvr_CPU","python_smart_nvr_GPU","gvapython_cpu","gvapython_gpu"]

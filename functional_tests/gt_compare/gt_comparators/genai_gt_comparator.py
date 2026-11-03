@@ -85,7 +85,8 @@ class GenAIGTComparator(BaseGTComparator):
 
     * 'strict' - the prediction must match the ground truth record by record. Use it for
       pipelines whose record count and wording are reproducible. Tuned with
-      'compare_text', 'compare_timestamps' and 'confidence_thr'.
+      'compare_text', 'compare_timestamps' and 'confidence_thr'. Setting 'confidence_thr'
+      to 0 drops the confidence check.
     * 'smoke' - the ground truth content is not matched at all; the prediction only has
       to look sane: at least 'min_records' records, no empty generations and at least
       'min_keyword_hits' of 'required_keywords' somewhere in the generated text. Use it
@@ -111,6 +112,9 @@ class GenAIGTComparator(BaseGTComparator):
             self._compare_text = test_input.get(COMPARE_TEXT_FIELD, True)
             self._compare_timestamps = test_input.get(COMPARE_TIMESTAMPS_FIELD, True)
             self._confidence_thr = float(test_input.get(CONFIDENCE_THR_FIELD, DEFAULT_CONFIDENCE_THR))
+            if self._confidence_thr < 0:
+                raise ValueError("'{}' must not be negative, got {}".format(
+                    CONFIDENCE_THR_FIELD, self._confidence_thr))
         else:
             self._min_records = self._parse_min_records(test_input)
             self._required_keywords = parse_text_list(test_input, REQUIRED_KEYWORDS_FIELD)
@@ -122,6 +126,38 @@ class GenAIGTComparator(BaseGTComparator):
                         len(self._required_keywords), REQUIRED_KEYWORDS_FIELD))
 
         self._logger.info("GenAI comparator mode: {}".format(self._mode))
+        self._logger.info("GenAI comparator checks: {}".format(self._describe_checks()))
+
+    def _describe_checks(self) -> str:
+        """Spell out which checks are active.
+
+        A disabled check is reported as explicitly as an enabled one, so a passing run
+        cannot be misread as verifying more than it does.
+        """
+        enabled, disabled = [], []
+        if self._mode == GenAIMode.strict:
+            enabled.append("record count")
+            (enabled if self._compare_text else disabled).append("text")
+            (enabled if self._compare_timestamps else disabled).append("timestamps")
+            if self._confidence_thr:
+                enabled.append("confidence (tolerance {})".format(self._confidence_thr))
+            else:
+                disabled.append("confidence")
+        else:
+            enabled.append("at least {} records".format(self._min_records))
+            enabled.append("no empty generations")
+            if self._required_keywords:
+                enabled.append("at least {} of keywords {}".format(
+                    self._min_keyword_hits, self._required_keywords))
+            else:
+                disabled.append("required keywords")
+            disabled.append("ground truth content")
+        if self._allowed_results:
+            enabled.append("results limited to {}".format(self._allowed_results))
+        description = "comparing {}".format(", ".join(enabled))
+        if disabled:
+            description += "; NOT compared: {}".format(", ".join(disabled))
+        return description
 
     @staticmethod
     def _parse_mode(test_input: dict) -> GenAIMode:

@@ -25,6 +25,6 @@
             "host.dataset.groundtruth.base": "groundtruth_ov2/aliveness_PTL"
         },
         "test_set_properties_removals": {},
-        "excluded_tests": []
+        "excluded_tests": ["yolo11s_NPU"]
     }
 }

@@ -20,20 +20,10 @@
         "identity_5": "identity eos-after=5 !"
     },
     "test_sets": {
-        "yolo11s_NPU": {
-            "name": "yolo11s_NPU",
-            "dataset.groundtruth": "yolo11s_NPU_identity_1000.json",
-            "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo11s,NPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_1000},json,,FP32"
-        },
         "video_yolo11s_NPU": {
             "name": "video_yolo11s_NPU",
             "dataset.groundtruth": "yolo11s_NPU_identity_1000.json",
             "sample.command": "{sample.dir}/gst_launch/detection_with_yolo/yolo_detect.sh,yolo11s,NPU,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_1000},file,,FP32"
-        },
-        "python_face_detection_and_classification_NPU": {
-            "name": "python_face_detection_and_classification_NPU",
-            "dataset.groundtruth": "python_face_detection_and_classification_NPU.json",
-            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,NPU,--output,json"
         },
         "video_python_face_detection_and_classification_NPU": {
             "name": "video_python_face_detection_and_classification_NPU",

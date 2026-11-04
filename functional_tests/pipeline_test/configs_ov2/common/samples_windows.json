@@ -5,7 +5,8 @@
         "dataset.video": "C:\\videos\\videos",
         "dataset.artifacts": "results",
         "dataset.groundtruth.base": "groundtruth_ov2/samples_ARL/windows",
-        "identity_1000": " ! identity eos-after=1000 "
+        "identity_1000": " ! identity eos-after=1000 ",
+        "identity_100": " ! identity eos-after=100 "
     },
     "test_sets": {
         "benchmark_one_channel_cpu": {
@@ -16,22 +17,32 @@
         "face_detection_and_classification_cpu": {
             "name": "face_detection_and_classification_cpu",
             "dataset.groundtruth": "face_detection_and_classification_cpu.json",
-            "sample.command": "{sample.dir}\\gst_launch\\face_detection_and_classification\\face_detection_and_classification.ps1,-InputSource,{dataset.video}\\Fun_at_a_Fair.mp4,-Device,CPU,-OutputType,json,-JsonFile,output.json,-FrameLimiter,{identity_1000}"
+            "sample.command": "{sample.dir}\\gst_launch\\face_detection_and_classification\\face_detection_and_classification.ps1,-InputSource,{dataset.video}\\Fun_at_a_Fair.mp4,-Device,CPU,-OutputType,json,-JsonFile,output.json,-FrameLimiter,{identity_100}"
         },
         "yolov8s_fp32_CPU": {
             "name": "yolov8s_fp32_CPU",
             "dataset.groundtruth": "detection_yolo_base_yolo-v8s_cpu.json",
-            "sample.command": "{sample.dir}\\gst_launch\\detection_with_yolo\\yolo_detect.ps1,-Model,yolov8s,-Device,CPU,-InputSource,{dataset.video}\\Pexels_Videos_4786.mp4,-OutputType,json,-PreprocessBackend,opencv,-Precision,FP32,-FrameLimiter,{identity_1000}"
+            "sample.command": "{sample.dir}\\gst_launch\\detection_with_yolo\\yolo_detect.ps1,-Model,yolov8s,-Device,CPU,-InputSource,{dataset.video}\\Pexels_Videos_4786.mp4,-OutputType,json,-PreprocessBackend,opencv,-Precision,FP32,-FrameLimiter,{identity_100}"
         },
-        "yolov8s_fp32_GPU": {
-            "name": "yolov8s_fp32_GPU",
+        "yolov8s_fp32_GPU_d3d11_surface_sharing": {
+            "name": "yolov8s_fp32_GPU_d3d11_surface_sharing",
             "dataset.groundtruth": "detection_yolov8s_GPU.json",
-            "sample.command": "{sample.dir}\\gst_launch\\detection_with_yolo\\yolo_detect.ps1,-Model,yolov8s,-Device,GPU,-InputSource,{dataset.video}\\Pexels_Videos_4786.mp4,-OutputType,json,-PreprocessBackend,d3d11,-Precision,FP32,-FrameLimiter,{identity_1000}"
+            "sample.command": "{sample.dir}\\gst_launch\\detection_with_yolo\\yolo_detect.ps1,-Model,yolov8s,-Device,GPU,-InputSource,{dataset.video}\\Pexels_Videos_4786.mp4,-OutputType,json,-PreprocessBackend,d3d11-surface-sharing,-Precision,FP32,-FrameLimiter,{identity_1000}"
         },
-        "yolo11s_fp32_NPU": {
-            "name": "yolo11s_fp32_NPU",
+        "yolov8s_fp32_GPU_d3d12_surface_sharing": {
+            "name": "yolov8s_fp32_GPU_d3d12_surface_sharing",
+            "dataset.groundtruth": "detection_yolov8s_GPU_d3d12.json",
+            "sample.command": "{sample.dir}\\gst_launch\\detection_with_yolo\\yolo_detect.ps1,-Model,yolov8s,-Device,GPU,-InputSource,{dataset.video}\\Pexels_Videos_4786.mp4,-OutputType,json,-PreprocessBackend,d3d12-surface-sharing,-Precision,FP32,-FrameLimiter,{identity_1000}"
+        },
+        "yolo11s_fp32_NPU_d3d11": {
+            "name": "yolo11s_fp32_NPU_d3d11",
             "dataset.groundtruth": "yolo11s_NPU_identity_1000.json",
             "sample.command": "{sample.dir}\\gst_launch\\detection_with_yolo\\yolo_detect.ps1,-Model,yolo11s,-Device,NPU,-InputSource,{dataset.video}\\Pexels_Videos_1192116-sd_640_360_30fps.mp4,-OutputType,json,-PreprocessBackend,d3d11,-Precision,FP32,-FrameLimiter,{identity_1000}"
+        },
+        "yolo11s_fp32_NPU_d3d12": {
+            "name": "yolo11s_fp32_NPU_d3d12",
+            "dataset.groundtruth": "yolo11s_NPU_d3d12_identity_1000.json",
+            "sample.command": "{sample.dir}\\gst_launch\\detection_with_yolo\\yolo_detect.ps1,-Model,yolo11s,-Device,NPU,-InputSource,{dataset.video}\\Pexels_Videos_1192116-sd_640_360_30fps.mp4,-OutputType,json,-PreprocessBackend,d3d12,-Precision,FP32,-FrameLimiter,{identity_1000}"
         }
     }
 }

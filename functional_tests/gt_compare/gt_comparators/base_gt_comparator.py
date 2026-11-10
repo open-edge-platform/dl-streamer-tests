@@ -65,6 +65,7 @@ class GTComparator(str, Enum):
     audio = "audio"
     watermark = "watermark"
     performance = "performance"
+    genai = "genai"
 
     def __str__(self):
         return self.value

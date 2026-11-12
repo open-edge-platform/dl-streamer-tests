@@ -321,6 +321,25 @@ else
 fi
 echo ""
 
+# NPU zero-copy (DMA-BUF) on Core Ultra Series 3 needs /dev/dma_heap/system, which is root-only by default.
+# Grant the 'render' group access until reboot (same as scripts/DLS_install_prerequisites.sh).
+DMA_HEAP_PARAMS=""
+if [[ -n "$DEVICE_ACCEL" ]]; then
+    echo "Device acceleration enabled, checking for DMA heap access..."
+    CPU_MODEL_NAME=$(lscpu | grep "Model name:" | awk -F: '{print $2}' | xargs)
+    if [[ -e /dev/dma_heap/system ]] && echo "$CPU_MODEL_NAME" | grep -qiE 'Core.*Ultra.*\b3[0-9]{2}[A-Z]*\b'; then
+        if ! { sudo -n chgrp render /dev/dma_heap/system && sudo -n chmod 0660 /dev/dma_heap/system; } 2>/dev/null; then
+            echo "WARNING: Could not grant access to /dev/dma_heap/system (sudo required)."
+        else
+            DMA_HEAP_PARAMS="--device /dev/dma_heap/system --group-add $(stat -c "%g" /dev/dma_heap/system)"
+            echo "DMA heap device enabled: /dev/dma_heap/system"
+        fi
+    else
+        echo "DMA heap device not available or CPU model not supported"
+    fi
+fi
+echo ""
+
 # Extra parameters for docker run
 EXTRA_PARAMS=""
 RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
@@ -413,6 +432,7 @@ else
     $RUN_PREFIX docker run --rm \
         --device=/dev/dri \
         $DEVICE_ACCEL \
+        $DMA_HEAP_PARAMS \
         -v $VIDEO_EXAMPLES_PATH:/tmp/video-examples \
         -v $LOCALHOST_RESULTS_PATH:/tmp/results \
         -v $MODELS_PATH:/tmp/models \

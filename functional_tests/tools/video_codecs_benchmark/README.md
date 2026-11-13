@@ -212,21 +212,21 @@ for res in 360p 1080p; do
         input="videos/source/1192116-hd_1920_1080_30fps.mp4"
     fi
 
-    ffmpeg -y -i "$input" -map 0:v:0 -an -t 30 -r 30 \
+    ffmpeg -y -stream_loop 4 -i "$input" -map 0:v:0 -an -r 30 \
         -c:v libx264 -preset medium -crf 23 -pix_fmt yuv420p \
         "videos/$res/h264.mp4"
 
-    ffmpeg -y -i "$input" -map 0:v:0 -an -t 30 -r 30 \
+    ffmpeg -y -stream_loop 4 -i "$input" -map 0:v:0 -an -r 30 \
         -c:v libvpx-vp9 -b:v 0 -crf 32 -pix_fmt yuv420p \
         "videos/$res/vp9.mp4"
 
-    ffmpeg -y -i "$input" -map 0:v:0 -an -t 30 -r 30 \
+    ffmpeg -y -stream_loop 4 -i "$input" -map 0:v:0 -an -r 30 \
         -c:v libaom-av1 -cpu-used 6 -row-mt 1 -b:v 0 -crf 35 \
         -pix_fmt yuv420p "videos/$res/av1.mp4"
 done
 ```
 
-This generates all six MP4 inputs from the two source clips, with a maximum duration of **30 seconds** per file and a target rate of **30 FPS**. The H.264, VP9, and AV1 files at each resolution use the same source clip. Encoding can take some time, particularly with AV1. The generated `videos/360p/` and `videos/1080p/` directories are ignored by Git; only the source clips are committed. If the originals are shorter than 30 seconds, the resulting files will also be shorter.
+This generates all six MP4 inputs from the two source clips. The H.264, VP9, and AV1 files at each resolution use the same source clip. Encoding can take some time, particularly with AV1. The generated `videos/360p/` and `videos/1080p/` directories are ignored by Git.
 
 Check the resulting files before running the benchmark:
 

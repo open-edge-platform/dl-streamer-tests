@@ -1,0 +1,31 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Generated benchmark videos
+videos/360p/
+videos/1080p/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Results
+results/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Editor files
+.vscode/
+.idea/
+*~
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db

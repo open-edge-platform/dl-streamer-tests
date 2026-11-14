@@ -11,6 +11,7 @@
         "benchmark_two_model_args_gap": ",,,,,,",
         "benchmark_sink": "gvametaconvert add-tensor-data=true ! gvametapublish file-path=output.json file-format=json-lines ! fakesink",
         "identity_3000": " ! identity eos-after=3000 ",
+        "identity_1200": " ! identity eos-after=1200 ",
         "identity_1000": " ! identity eos-after=1000 ",
         "identity_800": " ! identity eos-after=800 ",
         "identity_600": " ! identity eos-after=600 ",
@@ -23,7 +24,7 @@
         "face_detection_and_classification_cpu": {
             "name": "face_detection_and_classification_cpu",
             "dataset.groundtruth": "face_detection_and_classification_cpu.json",
-            "sample.command": "{sample.dir}/gst_launch/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,CPU,json"
+            "sample.command": "{sample.dir}/gst_launch/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4 {identity_1200},CPU,json"
         },
         "face_detection_and_classification_gpu": {
             "name": "face_detection_and_classification_gpu",
@@ -88,7 +89,7 @@
         "gvapython_cpu": {
             "name": "gvapython_cpu",
             "dataset.groundtruth": "gvapython_cpu.json",
-            "sample.command": "{sample.dir}/gst_launch/gvapython/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4,CPU,json"
+            "sample.command": "{sample.dir}/gst_launch/gvapython/face_detection_and_classification/face_detection_and_classification.sh,{dataset.video}/Fun_at_a_Fair.mp4 {identity_1200},CPU,json"
         },
         "gvapython_gpu": {
             "name": "gvapython_gpu",
@@ -108,12 +109,12 @@
         "python_draw_face_attributes_CPU": {
             "name": "python_draw_face_attributes_CPU",
             "dataset.groundtruth": "python_draw_face_attributes_CPU.json",
-            "sample.command": "{sample.dir}/python/draw_face_attributes/draw_face_attributes.sh,{dataset.video}/Fun_at_a_Fair.mp4,json,CPU"
+            "sample.command": "{sample.dir}/python/draw_face_attributes/draw_face_attributes.sh,{dataset.video}/Fun_at_a_Fair.mp4 {identity_1200},json,CPU"
         },
         "python_draw_face_attributes_GPU": {
             "name": "python_draw_face_attributes_GPU",
             "dataset.groundtruth": "python_draw_face_attributes_GPU.json",
-            "sample.command": "{sample.dir}/python/draw_face_attributes/draw_face_attributes.sh,{dataset.video}/Fun_at_a_Fair.mp4,json,GPU"
+            "sample.command": "{sample.dir}/python/draw_face_attributes/draw_face_attributes.sh,{dataset.video}/Fun_at_a_Fair.mp4 {identity_1200},json,GPU"
         },
         "benchmark_one_cpu_cpu": {
             "name": "benchmark_one_cpu_cpu",
@@ -168,17 +169,17 @@
         "benchmark_two_cpu_cpu": {
             "name": "benchmark_two_cpu_cpu",
             "dataset.groundtruth": "benchmark_two_cpu_cpu.json",
-            "sample.command": "{sample.dir}/benchmark/benchmark_two_models.sh,{dataset.video}/People_On_The_Street.mp4,,,CPU,CPU{benchmark_two_model_args_gap}{benchmark_sink}"
+            "sample.command": "{sample.dir}/benchmark/benchmark_two_models.sh,{dataset.video}/People_On_The_Street.mp4 {identity_1000},,,CPU,CPU{benchmark_two_model_args_gap}{benchmark_sink}"
         },
         "benchmark_two_gpu_cpu": {
             "name": "benchmark_two_gpu_cpu",
             "dataset.groundtruth": "benchmark_two_gpu_cpu.json",
-            "sample.command": "{sample.dir}/benchmark/benchmark_two_models.sh,{dataset.video}/People_On_The_Street.mp4,,,GPU,CPU{benchmark_two_model_args_gap}{benchmark_sink}"
+            "sample.command": "{sample.dir}/benchmark/benchmark_two_models.sh,{dataset.video}/People_On_The_Street.mp4 {identity_1000},,,GPU,CPU{benchmark_two_model_args_gap}{benchmark_sink}"
         },
         "benchmark_two_auto_cpu": {
             "name": "benchmark_two_auto_cpu",
             "dataset.groundtruth": "benchmark_two_auto_cpu.json",
-            "sample.command": "{sample.dir}/benchmark/benchmark_two_models.sh,{dataset.video}/People_On_The_Street.mp4,,,AUTO,CPU{benchmark_two_model_args_gap}{benchmark_sink}"
+            "sample.command": "{sample.dir}/benchmark/benchmark_two_models.sh,{dataset.video}/People_On_The_Street.mp4 {identity_1000},,,AUTO,CPU{benchmark_two_model_args_gap}{benchmark_sink}"
         },
         "benchmark_two_cpu_gpu": {
             "name": "benchmark_two_cpu_gpu",
@@ -754,7 +755,7 @@
         "custom_postproc_detect_CPU": {
             "name": "custom_postproc_detect_CPU",
             "dataset.groundtruth": "custom_postproc_detect_CPU.json",
-            "sample.command": "{sample.dir}/gst_launch/custom_postproc/detect/build_and_run.sh,CPU,json,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4"
+            "sample.command": "{sample.dir}/gst_launch/custom_postproc/detect/build_and_run.sh,CPU,json,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4 {identity_1000}"
         },
         "custom_postproc_detect_GPU": {
             "name": "custom_postproc_detect_GPU",
@@ -799,7 +800,7 @@
         "depth_estimation_GPU": {
             "name": "depth_estimation_GPU",
             "dataset.groundtruth": "depth_estimation_GPU.json",
-            "sample.command": "{sample.dir}/gst_launch/depth_estimation/depth_estimation.sh,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,GPU,GPU,json"
+            "sample.command": "{sample.dir}/gst_launch/depth_estimation/depth_estimation.sh,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,GPU,GPU,json,470"
         },
         "python_gvaanalytics_tripwire_vehicle_counter_CPU": {
             "name": "python_gvaanalytics_tripwire_vehicle_counter_CPU",
@@ -819,12 +820,12 @@
         "python_smart_nvr_CPU": {
             "name": "python_smart_nvr_CPU",
             "dataset.groundtruth": "python_smart_nvr_CPU.json",
-            "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,--input,{dataset.video}/Pexels_Videos_2431853-hd_1920_1080_25fps.mp4,--device,CPU,--output,json"
+            "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,--input,{dataset.video}/Pexels_Videos_2431853-hd_1920_1080_25fps.mp4,--device,CPU,--output,json,--eos-frame,750"
         },
         "python_smart_nvr_GPU": {
             "name": "python_smart_nvr_GPU",
             "dataset.groundtruth": "python_smart_nvr_GPU.json",
-            "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,--input,{dataset.video}/Pexels_Videos_2431853-hd_1920_1080_25fps.mp4,--device,GPU,--output,json"
+            "sample.command": "python3,{sample.dir}/python/smart_nvr/smart_nvr.py,--input,{dataset.video}/Pexels_Videos_2431853-hd_1920_1080_25fps.mp4,--device,GPU,--output,json,--eos-frame,750"
         },
         "python_loitering_detection_CPU": {
             "name": "python_loitering_detection_CPU",
@@ -844,12 +845,12 @@
         "python_face_detection_and_classification_CPU": {
             "name": "python_face_detection_and_classification_CPU",
             "dataset.groundtruth": "python_face_detection_and_classification_CPU.json",
-            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,CPU,--output,json"
+            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,CPU,--output,json,--eos-frame,470"
         },
         "python_face_detection_and_classification_GPU": {
             "name": "python_face_detection_and_classification_GPU",
             "dataset.groundtruth": "python_face_detection_and_classification_GPU.json",
-            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,GPU,--output,json"
+            "sample.command": "python3,{sample.dir}/python/face_detection_and_classification/face_detection_and_classification.py,--input,{dataset.video}/Pexels_Videos_18553046-hd_1280_720_30fps.mp4,--device,GPU,--output,json,--eos-frame,470"
         },
         "python_face_detection_and_classification_NPU": {
             "name": "python_face_detection_and_classification_NPU",
@@ -859,7 +860,7 @@
         "python_prompted_detection_CPU": {
             "name": "python_prompted_detection_CPU",
             "dataset.groundtruth": "python_prompted_detection_CPU.json",
-            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--prompt,white car,--device,CPU,--output,json"
+            "sample.command": "python3,{sample.dir}/python/prompted_detection/prompted_detection.py,--input,{dataset.video}/Pexels_Videos_1192116-sd_640_360_30fps.mp4,--prompt,white car,--device,CPU,--output,json,--eos-frame,1000"
         },
         "python_prompted_detection_GPU": {
             "name": "python_prompted_detection_GPU",

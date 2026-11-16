@@ -1,0 +1,12 @@
+# Python virtual environment
+.venv/
+
+# Benchmark results
+results/
+
+# Generated test videos
+videos/
+
+# Python cache
+__pycache__/
+*.pyc

@@ -12,6 +12,7 @@ INFERENCE_MODE=CPU
 GPU_TELEMETRY=intel_gpu_top
 OUTPUT=none
 DESCRIPTION=false
+PREPARE_VIDEOS=
 GPU_INTERVAL_MS=${GPU_INTERVAL_MS:-100}
 GPU_DEVICE=${GPU_DEVICE:-}
 
@@ -35,6 +36,8 @@ Options:
   --gpu-telemetry NAME    intel_gpu_top | qmassa                (default: intel_gpu_top)
   --output NAME           none | xlsx                          (default: none)
   --description           Show codec descriptions and exit
+  --prepare-videos PATH   Generate H.264, VP9 and AV1 test files from one MP4
+                          (640x360 or 1920x1080, repeat 5 times, no scaling)
   --help                  Show this message and exit
 
 Examples:
@@ -42,6 +45,7 @@ Examples:
   ./benchmark.sh --decoder vah264dec --mode decode
   ./benchmark.sh --mode decode-inference --inference-device ALL --output xlsx
   ./benchmark.sh --description
+  ./benchmark.sh --prepare-videos /path/to/h264_video.mp4
   ./benchmark.sh --gpu-telemetry qmassa --mode decode-inference
   ./benchmark.sh --decoder all --gpu-telemetry intel_gpu_top --output xlsx
 
@@ -61,7 +65,7 @@ parse_arguments() {
         DESCRIPTION=true
         shift
         ;;
-      --decoder | --mode | --inference-device | --gpu-telemetry | --output)
+      --decoder | --mode | --inference-device | --gpu-telemetry | --output | --prepare-videos)
         if (($# < 2)) || [[ "$2" == --* ]]; then
           echo "Missing value for $1 (see --help)" >&2
           exit 2
@@ -72,6 +76,7 @@ parse_arguments() {
           --inference-device) INFERENCE_MODE=$2 ;;
           --gpu-telemetry) GPU_TELEMETRY=$2 ;;
           --output) OUTPUT=$2 ;;
+          --prepare-videos) PREPARE_VIDEOS=$2 ;;
         esac
         shift 2
         ;;
@@ -188,6 +193,84 @@ check_requirements() {
     }
   fi
 }
+
+# =============================================================================
+# 2. VIDEO PREPARATION (FFmpeg only; independent of the benchmark)
+# =============================================================================
+
+prepare_videos() (
+  local input=$1 probe codec width height res output_dir tmp_dir source_duration total_duration
+  local -a encoder
+
+  for cmd in ffmpeg ffprobe; do
+    command -v "$cmd" > /dev/null || {
+      echo "Missing: $cmd (required for --prepare-videos)" >&2
+      return 1
+    }
+  done
+  [[ -f "$input" ]] || {
+    echo "Input video not found: $input" >&2
+    return 1
+  }
+
+  probe=$(ffprobe -v error -select_streams v:0 \
+    -show_entries stream=codec_name,width,height -of csv=p=0 "$input") || {
+    echo "Unable to inspect input video: $input" >&2
+    return 1
+  }
+  IFS=, read -r codec width height <<< "$probe"
+  [[ "$codec" == h264 ]] || {
+    echo "Expected an H.264 input video (detected: ${codec:-none})" >&2
+    return 1
+  }
+  case "${width}x${height}" in
+    640x360) res=360p ;;
+    1920x1080) res=1080p ;;
+    *)
+      echo "Unsupported resolution: ${width}x${height} (use 640x360 or 1920x1080)" >&2
+      return 1
+      ;;
+  esac
+
+  source_duration=$(ffprobe -v error -show_entries format=duration \
+    -of default=noprint_wrappers=1:nokey=1 "$input") || {
+    echo "Unable to determine input video duration" >&2
+    return 1
+  }
+  total_duration=$(awk -v d="$source_duration" 'BEGIN {
+    if (d + 0 <= 0) exit 1
+    printf "%.6f", d * 5
+  }') || {
+    echo "Invalid input video duration: $source_duration" >&2
+    return 1
+  }
+
+  output_dir="videos/$res"
+  mkdir -p "$output_dir"
+  tmp_dir=$(mktemp -d "$output_dir/.prepare.XXXXXX")
+  trap 'rm -rf "$tmp_dir"' EXIT
+
+  for codec in h264 vp9 av1; do
+    case "$codec" in
+      h264) encoder=(libx264 -preset medium -crf 23) ;;
+      vp9)  encoder=(libvpx-vp9 -b:v 0 -crf 32) ;;
+      av1)  encoder=(libaom-av1 -cpu-used 6 -row-mt 1 -b:v 0 -crf 35) ;;
+    esac
+    echo "Generating $output_dir/$codec.mp4 (5x duration)..."
+    if ! ffmpeg -hide_banner -loglevel warning -stats -stats_period 1 \
+      -nostdin -y -stream_loop 4 -i "$input" \
+      -map 0:v:0 -an -c:v "${encoder[@]}" -pix_fmt yuv420p \
+      "$tmp_dir/$codec.mp4"; then
+      printf "\nFailed to generate %s/%s.mp4\n" "$output_dir" "$codec" >&2
+      return 1
+    fi
+  done
+
+  for codec in h264 vp9 av1; do
+    mv -f -- "$tmp_dir/$codec.mp4" "$output_dir/$codec.mp4"
+  done
+  echo "Prepared three test videos in $output_dir/"
+)
 
 prepare_runtime() {
   cd "$(dirname "$0")"
@@ -803,7 +886,15 @@ run_tests() {
 
 main() {
   parse_arguments "$@"
+  # Resolve the source against the caller's directory before changing cwd.
+  if [[ -n "$PREPARE_VIDEOS" && "$PREPARE_VIDEOS" != /* ]]; then
+    PREPARE_VIDEOS="$PWD/$PREPARE_VIDEOS"
+  fi
   cd "$(dirname "$0")"
+  if [[ -n "$PREPARE_VIDEOS" ]]; then
+    prepare_videos "$PREPARE_VIDEOS"
+    return
+  fi
   check_requirements
   prepare_runtime
   run_tests

@@ -19,6 +19,7 @@ from gt_comparators.genai_gt_comparator import GenAIGTComparator
 from gt_comparators.benchmark_gt_comparator import BenchmarkComparator
 from gt_comparators.watermark_test import PngFrameComparator
 from gt_comparators.video_comparators.object_classification_comparator import CheckLevel
+import stream_density_runner
 from junit_xml_reporter import JunitXmlReporter
 from utils import create_logger
 from tqdm import tqdm
@@ -89,14 +90,20 @@ def create_gt_comparator(args, test_case: RuntimeTestCase, logger):
         return GenAIGTComparator(test_case, logger=logger)
     elif comp_type == GTComparator.watermark:
         return PngFrameComparator(test_case, logger=logger)
-    elif comp_type == GTComparator.performance:
+    elif comp_type == GTComparator.stream_density or comp_type == GTComparator.performance:
         return BenchmarkComparator(test_case, logger=logger)
     raise RuntimeError("Unknown type of ground truth comparison")
 
 
 def run_test_case(test_case: RuntimeTestCase, args, logger, timeout_in_sec: int = None):
     logger.warning(f"Running test case: {test_case.name}")  # Logging test name
-    if args.output_type == 'json':
+    if test_case.input.get(TEST_TYPE) == TestType.benchmark_stream_density:
+        logger.info("Running stream density test with multiple parallel streams")
+        stream_density_runner.run_stream_density_test(test_case, logger)
+        gt_comparator = create_gt_comparator(args, test_case, logger)
+        gt_comparator.compare()
+
+    elif args.output_type == 'json':
         gt_comparator = create_gt_comparator(args, test_case, logger)
         GstPipelineLauncher(logger=logger).launch(test_case, timeout_in_sec)
         gt_comparator.pipeline_results_processing()
@@ -160,6 +167,8 @@ def main():
             for test_case in tqdm(test_cases, total=len(test_cases), desc="Test cases processing", leave=False,
                                   disable=args.disable_tqdm):
                 if test_case.input[TEST_TYPE] == TestType.benchmark_performance:
+                    running_benchmark = True
+                if test_case.input[TEST_TYPE] == TestType.benchmark_stream_density:
                     running_benchmark = True
                 try:
                     if not test_case.result.has_error:

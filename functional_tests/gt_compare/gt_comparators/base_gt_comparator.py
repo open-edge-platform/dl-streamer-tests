@@ -65,6 +65,7 @@ class GTComparator(str, Enum):
     audio = "audio"
     watermark = "watermark"
     performance = "performance"
+    stream_density = "stream_density"
     genai = "genai"
 
     def __str__(self):
@@ -75,6 +76,7 @@ class TestType(str, Enum):
     sample = "sample"
     pipeline = "pipeline"
     benchmark_performance = "benchmark_performance"
+    benchmark_stream_density = "benchmark_stream_density"
 
     def __str__(self):
         return self.value

@@ -31,6 +31,9 @@ SAMPLE_COMMAND_TEMPLATE = "sample.command"
 BENCHMARK_PERFORMANCE_COMMAND_TEMPLATE="benchmark_performance.command"
 BENCHMARK_PERFORMANCE_FPS_FPI = "dataset.target_fps_kpi"
 BENCHMARK_PERFORMANCE_FPS_PASS_THRESHOLD = "dataset.percentage_fps_pass_threshold"
+BENCHMARK_PERFORMANCE_FPS_MINIMUM_ONLY = "dataset.fps_kpi_minimum_only"
+BENCHMARK_STREAM_DENSITY_BASE_COMMAND = "benchmark_stream_density.base_command"
+BENCHMARK_STREAM_DENSITY_TARGET_STREAMS = "dataset.target_streams_kpi"
 
 # Environment-specific configuration keys that can have docker.* and host.* variants
 ENVIRONMENT_SPECIFIC_KEYS = [

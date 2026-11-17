@@ -27,7 +27,9 @@ class GstPipelineLauncher:
         log_file_path = os.path.join(self._log_dir, "{}.log".format(test_case_name))
         self._log_file = open(log_file_path, 'a')
         pipeline_cmd = []
-        if test_case.input[TEST_TYPE] == TestType.pipeline or test_case.input[TEST_TYPE] == TestType.benchmark_performance:
+        if (test_case.input[TEST_TYPE] == TestType.pipeline or
+                test_case.input[TEST_TYPE] == TestType.benchmark_performance or
+                test_case.input[TEST_TYPE] == TestType.benchmark_stream_density):
             pipeline_cmd.append("gst-launch-1.0")
             pipeline_cmd.extend(test_case.input[PIPELINE_CMD_FIELD].split(' '))
             self.cwd = "."

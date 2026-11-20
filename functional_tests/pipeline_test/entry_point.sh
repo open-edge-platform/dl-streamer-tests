@@ -15,9 +15,13 @@ if [[ -z "$LABELS_PATH" ]]; then
 fi
 
 if command -v uv >/dev/null 2>&1; then
-    uv pip install -r $SCRIPTDIR/requirements.txt
+    VENV_DIR="/tmp/dlstreamer-pipeline-test-venv"
+    uv venv --allow-existing --system-site-packages "$VENV_DIR"
+    uv pip install --python "$VENV_DIR/bin/python" -r "$SCRIPTDIR/requirements.txt"
+    PYTHON_BIN="$VENV_DIR/bin/python"
 else
     pip3 install -r $SCRIPTDIR/requirements.txt
+    PYTHON_BIN="python3"
 fi
 
 # Some configs require working dir be set to level of regression_tests dir location
@@ -25,6 +29,6 @@ WORK_DIR="$(dirname "$(dirname "${SCRIPTDIR}" )" )"
 pushd $WORK_DIR
 
 echo "Working dir is: `pwd`"
-PYTHONPATH=$SCRIPTDIR:$PYTHONPATH python3 -u -m regression_test ${arguments}
+PYTHONPATH=$SCRIPTDIR:$PYTHONPATH "$PYTHON_BIN" -u -m regression_test ${arguments}
 
 popd

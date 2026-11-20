@@ -130,7 +130,7 @@ class VideoGTComparator(BaseGTComparator):
     def _extract_data_from_json_file(self, file_path: str) -> dict:
         if not os.path.exists(file_path):
             raise FileExistsError("The {} path to json file not found".format(file_path))
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r', encoding='utf-8') as file:
             raw_frames = []
             for line in file:
                 line = line.strip()  # Remove leading/trailing spaces & newlines

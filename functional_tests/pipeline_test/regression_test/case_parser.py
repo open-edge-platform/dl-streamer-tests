@@ -142,7 +142,9 @@ class CaseParser:
                 if not self._is_features_available(test_case.input.get('features', [])):
                     continue
 
-                if test_case.input[TEST_TYPE] == TestType.pipeline or test_case.input[TEST_TYPE] == TestType.benchmark_performance:
+                if (test_case.input[TEST_TYPE] == TestType.pipeline or
+                    test_case.input[TEST_TYPE] == TestType.benchmark_performance or
+                    test_case.input[TEST_TYPE] == TestType.benchmark_stream_density):
                     try:
                         self._model_explorer.generate_paths_ip(test_case.input)
                         self._model_proc_explorer.generate_paths_ip(test_case.input)
@@ -166,6 +168,10 @@ class CaseParser:
                     self._generate_value_from_template(test_case.input, BENCHMARK_PERFORMANCE_COMMAND_TEMPLATE, PIPELINE_CMD_FIELD, True)
                     self._generate_value_from_template(test_case.input, BENCHMARK_PERFORMANCE_FPS_FPI, BENCHMARK_PERFORMANCE_FPS_FPI, True)
                     self._generate_value_from_template(test_case.input, BENCHMARK_PERFORMANCE_FPS_PASS_THRESHOLD, BENCHMARK_PERFORMANCE_FPS_PASS_THRESHOLD, False)
+                elif test_case.input[TEST_TYPE] == TestType.benchmark_stream_density:
+                    self._generate_value_from_template(test_case.input, BENCHMARK_STREAM_DENSITY_BASE_COMMAND, PIPELINE_CMD_FIELD, True)
+                    if BENCHMARK_STREAM_DENSITY_TARGET_STREAMS not in test_case.input:
+                        raise ValueError("Stream density test requires '{}' parameter".format(BENCHMARK_STREAM_DENSITY_TARGET_STREAMS))
                 else:
                     raise ValueError("'{}' - unknown test type in CaseParser".format(test_case.input[TEST_TYPE]))
                 test_set_dict[test_set_name].append(test_case)

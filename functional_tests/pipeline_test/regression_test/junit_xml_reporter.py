@@ -8,7 +8,7 @@ import logging
 
 from junit_xml import TestSuite, TestCase
 from config_keys import *
-from gt_comparators.base_gt_comparator import CaseResult, RuntimeTestCase
+from gt_comparators.base_gt_comparator import CaseResult, RuntimeTestCase, TestType
 
 
 class JunitXmlReporter():
@@ -22,6 +22,16 @@ class JunitXmlReporter():
             ts = TestSuite(test_set_name, list())
             for test_case_id, test_case in enumerate(test_cases):
                 stdout = test_case.input.get(PIPELINE_CMD_FIELD, "") + "\n" + test_case.result.stdout
+                if test_case.input.get(TEST_TYPE) == TestType.benchmark_stream_density:
+                    stdout += (
+                        "\n--- Stream Density Summary ---"
+                        f"\nAchieved streams: {getattr(test_case.result, 'streams_achieved', 'n/a')}"
+                        f"\nTarget streams (KPI): {getattr(test_case.result, 'streams_target', 'n/a')}"
+                        f"\nTarget FPS/stream: {getattr(test_case.result, 'target_fps', 'n/a')}"
+                        f"\nMin FPS/stream: {getattr(test_case.result, 'min_fps', 'n/a')}"
+                        f"\nHighest PASS sample: {getattr(test_case.result, 'highest_pass_sample', 'n/a')}"
+                        f"\nLowest FAIL sample: {getattr(test_case.result, 'lowest_fail_sample', 'n/a')}"
+                    )
                 test_case_name = test_case.input.get(TC_NAME_FIELD, "test_case_{}".format(test_case_id))
                 tc = TestCase(
                     test_case_name,

@@ -29,7 +29,7 @@ Two ways to point it at its inputs:
         --gt-dir pipeline_test/groundtruth_ov2/samples_TGL \
         --pred-dir /tmp/results/metadata \
         --output-dir /tmp/diff_report_detection_yolov5su_GPU \
-        --top-percent 20
+        --top-percent 10
 
    This works both in CI (paths point at the checked-out repo / uploaded
    artifacts) and locally on a developer machine investigating a failure -
@@ -43,7 +43,7 @@ Two ways to point it at its inputs:
         --pred /tmp/results/detection_yolov5su_GPU.json \
         --video /tmp/video-examples/Cars.mp4 \
         --output-dir /tmp/diff_report_detection_yolov5su_GPU \
-        --top-percent 20
+        --top-percent 10
 
 The report (index.html + frames/*.png + summary.json) can then be published
 as a CI artifact / attached to a PR or issue comment.
@@ -617,7 +617,7 @@ def resolve_test_paths(config_path: str, test_name: str, gt_dir: str, pred_dir: 
 
 
 def generate_report(gt_path: str, pred_path: str, video_path: str, output_dir: str,
-                     top_percent: float = 20.0, max_frames: Optional[int] = None,
+                     top_percent: float = 10.0, max_frames: Optional[int] = None,
                      dls_branch: Optional[str] = None, dls_commit: Optional[str] = None,
                      test_repo_branch: Optional[str] = None) -> str:
     gt = load_frames(gt_path)
@@ -675,8 +675,8 @@ def main():
     direct.add_argument("--video", help="Path to the source input video")
 
     parser.add_argument("--output-dir", required=True, help="Directory to write the HTML report into")
-    parser.add_argument("--top-percent", type=float, default=20.0,
-                        help="Percent of the most divergent frames to render (default: 20)")
+    parser.add_argument("--top-percent", type=float, default=10.0,
+                        help="Percent of the most divergent frames to render (default: 10)")
     parser.add_argument("--max-frames", type=int, default=None,
                         help="Optional hard cap on number of rendered frames")
 
